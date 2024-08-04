@@ -37,24 +37,26 @@ privateClient.interceptors.response.use(
 
       try {
         const user = window.localStorage.getItem("user");
-        const parsedUser = JSON.parse(user);
-        const token = parsedUser.refresh_token;
+        if (user) {
+          const parsedUser = JSON.parse(user);
+          const token = parsedUser.refresh_token;
 
-        // Attempt to refresh the access token
-        const response = await axios.get(`${baseURL}auth/refresh`, {
-          params: {
-            refreshToken: token,
-          },
-        });
+          // Attempt to refresh the access token
+          const response = await axios.get(`${baseURL}auth/refresh`, {
+            params: {
+              refresh_token: token,
+            },
+          });
 
-        window.localStorage.setItem("user", JSON.stringify(response.data));
+          window.localStorage.setItem("user", JSON.stringify(response.data));
 
-        // Retry the original request
-        return await privateClient(originalRequest);
+          // Retry the original request
+          return await privateClient(originalRequest);
+        }
       } catch (refreshError) {
         // The refresh token is invalid or expired
         // Removing the user from local storage will trigger a redirect to the login page
-        localStorage.removeItem("user");
+        // localStorage.removeItem("user");
         return Promise.reject(refreshError?.response?.data?.message);
       }
     }

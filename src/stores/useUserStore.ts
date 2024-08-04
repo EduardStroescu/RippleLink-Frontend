@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import { UserState } from "../types/interfaces";
+import { UserStore } from "../types/storeInterfaces";
 
-export const useUserStore = create<UserState>()((set) => ({
+export const useUserStore = create<UserStore>()((set) => ({
   user: null,
 
   actions: {

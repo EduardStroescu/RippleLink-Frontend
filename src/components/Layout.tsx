@@ -1,7 +1,6 @@
 import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
 import { useUserStore, useUserStoreActions } from "@/stores/useUserStore";
-import { User } from "@/types/interfaces";
-import { Link } from "@tanstack/react-router";
+import { User } from "@/types/user";
 import { useEffect } from "react";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -16,25 +15,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const background = user?.background ? user.background : "/background.png";
+  const background = user?.backgroundUrl
+    ? user.backgroundUrl
+    : "https://r4.wallpaperflare.com/wallpaper/175/524/956/digital-digital-art-artwork-fantasy-art-drawing-hd-wallpaper-d8562dc820d0acd8506c415eb8e2a49a.jpg";
   return (
     <>
-      <nav className="px-6 w-full bg-black text-white h-[40px] flex flex-row justify-between items-center">
-        {[
-          ["/", "Home"],
-          ["/chat", "Chat"],
-          ["/chat/settings", "Settings"],
-        ].map(([to, label]) => {
-          return (
-            <Link key={to as string} to={to}>
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
       <div
         style={{ backgroundImage: `url(${background})` }}
-        className="flex flex-col h-[calc(100vh-40px)] bg-cover bg-center justify-center"
+        className="flex flex-col h-screen bg-cover bg-center justify-center"
       >
         <main className="w-[90%] h-[90%] self-center border-slate-700 border-[1px] rounded bg-black/40 backdrop-blur">
           {children}

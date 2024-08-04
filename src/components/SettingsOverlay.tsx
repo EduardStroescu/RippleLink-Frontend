@@ -5,6 +5,7 @@ import { useUserStoreActions } from "@/stores/useUserStore";
 import userApi from "@/api/modules/user.api";
 import { useRouter } from "@tanstack/react-router";
 import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface SettingsOverlayProps {
   children: React.ReactNode;
@@ -13,15 +14,19 @@ interface SettingsOverlayProps {
 export const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
   children,
 }) => {
+  const queryClient = useQueryClient();
   const { setUser } = useUserStoreActions();
   const { setItem } = useLocalStorage("user");
   const router = useRouter();
+
   const handleLogout = async () => {
     await userApi.logout();
     setItem(null);
     setUser(null);
+    queryClient.removeQueries();
     router.navigate({ to: "/" });
   };
+
   const hamburgerFunctions = [
     { name: "Change Password", fn: () => console.log("change password") },
     {
@@ -31,8 +36,7 @@ export const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
           prevUser
             ? {
                 ...prevUser,
-                background:
-                  "https://r4.wallpaperflare.com/wallpaper/175/524/956/digital-digital-art-artwork-fantasy-art-drawing-hd-wallpaper-d8562dc820d0acd8506c415eb8e2a49a.jpg",
+                backgroundUrl: "/background.png",
               }
             : prevUser
         );

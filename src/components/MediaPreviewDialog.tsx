@@ -9,7 +9,7 @@ import {
 } from "@/components/Dialog";
 import clsx from "clsx";
 
-interface CustomDialogTriggerProps {
+interface MediaPreviewDialogProps {
   header?: string;
   content?: React.ReactElement<{
     setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
@@ -19,7 +19,7 @@ interface CustomDialogTriggerProps {
   className?: string;
 }
 
-const CustomDialogTrigger: React.FC<CustomDialogTriggerProps> = ({
+const MediaPreviewDialog: React.FC<MediaPreviewDialogProps> = ({
   header,
   content,
   children,
@@ -36,13 +36,9 @@ const CustomDialogTrigger: React.FC<CustomDialogTriggerProps> = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger className={clsx("", className)}>{children}</DialogTrigger>
       <DialogContent
-        className="h-screen
-        block
-        sm:h-[440px]
-        overflow-y-auto
-        w-full
-        border-[#282637]
-        border-[1px]
+        closeButtonEnabled={false}
+        className="block
+        border-none bg-transparent shadow-none outline-none
       "
       >
         <DialogHeader>
@@ -55,4 +51,4 @@ const CustomDialogTrigger: React.FC<CustomDialogTriggerProps> = ({
   );
 };
 
-export default CustomDialogTrigger;
+export default MediaPreviewDialog;

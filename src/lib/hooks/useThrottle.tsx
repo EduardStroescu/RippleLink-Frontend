@@ -1,11 +1,15 @@
 import { useCallback, useRef } from "react";
 
-type ThrottleFunction = (...args: unknown[]) => void;
+// Define a type for functions that can be throttled
+type ThrottleFunction<T extends unknown[]> = (...args: T) => void;
 
-function throttle<T extends ThrottleFunction>(func: T, wait: number) {
+function throttle<T extends unknown[]>(
+  func: ThrottleFunction<T>,
+  wait: number
+): ThrottleFunction<T> {
   let isCalled = false;
 
-  return function (...args: Parameters<T>) {
+  return function (...args: T) {
     if (!isCalled) {
       func(...args);
       isCalled = true;
@@ -16,13 +20,24 @@ function throttle<T extends ThrottleFunction>(func: T, wait: number) {
   };
 }
 
-export const useThrottle = <T extends ThrottleFunction>(
-  func: T,
+export const useThrottle = <T extends unknown[]>(
+  func: ThrottleFunction<T>,
   wait: number
 ) => {
-  const throttledFunc = useRef(throttle(func, wait));
+  const funcRef = useRef(func);
+  const waitRef = useRef(wait);
 
-  return useCallback((...args: Parameters<T>) => {
-    throttledFunc.current(...args);
-  }, []);
+  funcRef.current = func;
+  waitRef.current = wait;
+
+  const throttledFunc = useRef(
+    throttle((...args: T) => funcRef.current(...args), waitRef.current)
+  ).current;
+
+  return useCallback(
+    (...args: T) => {
+      throttledFunc(...args);
+    },
+    [throttledFunc]
+  );
 };

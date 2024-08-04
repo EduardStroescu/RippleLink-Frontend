@@ -11,17 +11,19 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as SignupImport } from './routes/signup'
+import { Route as RegisterImport } from './routes/register'
 import { Route as LoginImport } from './routes/login'
 import { Route as ChatImport } from './routes/chat'
+import { Route as SplatImport } from './routes/$'
 import { Route as IndexImport } from './routes/index'
 import { Route as ChatSettingsImport } from './routes/chat.settings'
+import { Route as ChatCreateChatImport } from './routes/chat.create-chat'
 import { Route as ChatChatIdImport } from './routes/chat.$chatId'
 
 // Create/Update Routes
 
-const SignupRoute = SignupImport.update({
-  path: '/signup',
+const RegisterRoute = RegisterImport.update({
+  path: '/register',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -35,6 +37,11 @@ const ChatRoute = ChatImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const SplatRoute = SplatImport.update({
+  path: '/$',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const IndexRoute = IndexImport.update({
   path: '/',
   getParentRoute: () => rootRoute,
@@ -42,6 +49,11 @@ const IndexRoute = IndexImport.update({
 
 const ChatSettingsRoute = ChatSettingsImport.update({
   path: '/settings',
+  getParentRoute: () => ChatRoute,
+} as any)
+
+const ChatCreateChatRoute = ChatCreateChatImport.update({
+  path: '/create-chat',
   getParentRoute: () => ChatRoute,
 } as any)
 
@@ -61,6 +73,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/$': {
+      id: '/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof SplatImport
+      parentRoute: typeof rootRoute
+    }
     '/chat': {
       id: '/chat'
       path: '/chat'
@@ -75,11 +94,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginImport
       parentRoute: typeof rootRoute
     }
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupImport
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterImport
       parentRoute: typeof rootRoute
     }
     '/chat/$chatId': {
@@ -87,6 +106,13 @@ declare module '@tanstack/react-router' {
       path: '/$chatId'
       fullPath: '/chat/$chatId'
       preLoaderRoute: typeof ChatChatIdImport
+      parentRoute: typeof ChatImport
+    }
+    '/chat/create-chat': {
+      id: '/chat/create-chat'
+      path: '/create-chat'
+      fullPath: '/chat/create-chat'
+      preLoaderRoute: typeof ChatCreateChatImport
       parentRoute: typeof ChatImport
     }
     '/chat/settings': {
@@ -103,9 +129,14 @@ declare module '@tanstack/react-router' {
 
 export const routeTree = rootRoute.addChildren({
   IndexRoute,
-  ChatRoute: ChatRoute.addChildren({ ChatChatIdRoute, ChatSettingsRoute }),
+  SplatRoute,
+  ChatRoute: ChatRoute.addChildren({
+    ChatChatIdRoute,
+    ChatCreateChatRoute,
+    ChatSettingsRoute,
+  }),
   LoginRoute,
-  SignupRoute,
+  RegisterRoute,
 })
 
 /* prettier-ignore-end */
@@ -117,29 +148,38 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/$",
         "/chat",
         "/login",
-        "/signup"
+        "/register"
       ]
     },
     "/": {
       "filePath": "index.tsx"
     },
+    "/$": {
+      "filePath": "$.jsx"
+    },
     "/chat": {
       "filePath": "chat.tsx",
       "children": [
         "/chat/$chatId",
+        "/chat/create-chat",
         "/chat/settings"
       ]
     },
     "/login": {
       "filePath": "login.tsx"
     },
-    "/signup": {
-      "filePath": "signup.tsx"
+    "/register": {
+      "filePath": "register.tsx"
     },
     "/chat/$chatId": {
       "filePath": "chat.$chatId.tsx",
+      "parent": "/chat"
+    },
+    "/chat/create-chat": {
+      "filePath": "chat.create-chat.tsx",
       "parent": "/chat"
     },
     "/chat/settings": {

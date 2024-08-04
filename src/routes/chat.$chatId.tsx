@@ -1,186 +1,211 @@
-import { createFileRoute, useParams, useRouter } from "@tanstack/react-router";
-import { EmojiPicker } from "@/components/EmojiPicker";
-import { FormEvent, useEffect, useRef, useState } from "react";
-import { ImageIcon, SendIcon } from "@/components/Icons";
+import { createFileRoute, useParams } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef } from "react";
 import { useSocketContext } from "@/providers/SocketProvider";
 import { useUserStore } from "@/stores/useUserStore";
 import { AvatarCoin } from "@/components/AvatarCoin";
-import { useThrottle } from "@/lib/hooks/useThrottle";
 import { TypingIndicator } from "@/components/TypingIndicator";
 import chatApi from "@/api/modules/chat.api";
 import { placeholderAvatar } from "@/lib/const";
 import { adaptTimezone } from "@/lib/hepers";
+import { Message } from "@/types/message";
+import { DeleteButton } from "@/components/DeleteButton";
+import { Chat } from "@/types/chat";
+import { CreateMessageForm } from "@/components/CreateMessageForm";
+import { AddUsersIcon, CheckIcon } from "@/components/Icons";
+import { useMessageEvents } from "@/lib/hooks/useMessageEvents";
+import { useUserTyping } from "@/lib/hooks/useUserTyping";
+import { useMessageFilters } from "@/lib/hooks/useMessageFilters";
+import { useCreateMessage } from "@/lib/hooks/useCreateMessage";
+import { useMessageReadStatus } from "@/lib/hooks/useMessageReadStatus";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import MediaPreviewDialog from "@/components/MediaPreviewDialog";
 
 export const Route = createFileRoute("/chat/$chatId")({
-  beforeLoad: ({ params: { chatId } }) => {
+  beforeLoad: async ({ params: { chatId } }) => {
     const messagesQuery = {
       queryKey: ["messages", chatId],
       queryFn: () => chatApi.getMessagesByChatId(chatId),
       enabled: !!chatId,
+      placeholderData: [],
     };
-
     return { messagesQuery };
   },
-  loader: async ({ context: { queryClient, queryContent, messagesQuery } }) => {
-    return {
-      messagesData: await queryClient.ensureQueryData(messagesQuery),
-      chatData: await queryClient.ensureQueryData(queryContent),
-    };
-  },
+  loader: async ({ context: { messagesQuery } }) => messagesQuery,
   component: ChatId,
 });
 
-type Message = {
-  chatId: string;
-  content: string;
-  createdAt: string;
-  updatedAt: string;
-  userId: string;
-};
-
 function ChatId() {
-  const { socket } = useSocketContext();
   const user = useUserStore((state) => state.user);
-  const { messagesData, chatData } = Route.useLoaderData();
-  const [message, setMessage] = useState<string>("");
-  const [messages, setMessages] = useState<Message[] | []>([]);
-  const [userIsTyping, setUserIsTyping] = useState<boolean>(false);
-  const params = useParams({ from: "/chat/$chatId" });
+  const queryClient = useQueryClient();
+  const messagesQuery = Route.useLoaderData();
+  const { data: messages } = useQuery(messagesQuery);
+  const chatData = queryClient.getQueryData<Chat[] | []>(["chats"]);
+
+  const { socket } = useSocketContext();
   const scrollToBottomRef = useRef<HTMLDivElement>(null);
+  const params = useParams({ from: "/chat/$chatId" });
+
+  const currentChat = useMemo(
+    () => chatData?.filter((chat) => chat._id === params.chatId)?.[0],
+    [chatData, params.chatId]
+  );
+  const interlocutor = useMemo(
+    () =>
+      currentChat &&
+      currentChat?.users?.filter((person) => person._id !== user?._id)[0],
+    [currentChat, user?._id]
+  );
+
+  const {
+    handleSubmitMessage,
+    message,
+    imagePreview,
+    messageType,
+    setMessage,
+    setGif,
+    setImagePreview,
+    setMessageType,
+  } = useCreateMessage(params);
+  const {
+    interlocutorIsTyping,
+    isInterlocutorOnline,
+    setMessages,
+    setIsInterlocutorOnline,
+  } = useMessageEvents(params, user, scrollToBottomRef);
+  useMessageFilters(interlocutor, setIsInterlocutorOnline);
+  useUserTyping(params, message);
+  useMessageReadStatus(messages, setMessages, user, params);
 
   useEffect(() => {
-    if (!messagesData) return;
-    setMessages(messagesData);
-  }, []);
-
-  useEffect(() => {
-    if (!socket) return;
-    const room = params.chatId;
-    socket.emit("joinRoom", { room });
-    socket.on("messageCreated", ({ content }) => {
-      setMessages((prev) => [...prev, content]);
-    });
-    socket.on("messageUpdated", (data) => {
-      setMessages((prev) => {
-        const index = prev.findIndex((item) => item.content === data.content);
-        if (index === -1) return prev;
-        prev[index].content = data.content.message;
-        return [...prev];
-      });
-    });
-    socket.on("messageDeleted", (data) => {
-      setMessages((prev) => {
-        return prev.filter((item) => item.content !== data.content);
-      });
-    });
-    socket.on("userIsTyping", (data) => {
-      if (data.content.isTyping === true) {
-        setUserIsTyping(true);
-      } else {
-        setUserIsTyping(false);
-      }
-    });
-
-    return () => {
-      socket.off("userIsTyping");
-      socket.off("messageCreated");
-      socket.off("messageUpdated");
-      socket.off("messageDeleted");
-
-      socket.emit("leaveRoom", { room });
-    };
-  }, []);
-
-  const handleTyping = useThrottle(() => {
-    if (!socket) return;
-    socket.emit("typing", { room: params.chatId, isTyping: true });
-  }, 2000);
-
-  useEffect(() => {
-    if (!socket) return;
-    if (!message) {
-      socket.emit("typing", { room: params.chatId, isTyping: false });
-    } else {
-      handleTyping();
-    }
-  }, [socket, message, handleTyping, params.chatId]);
-
-  const handleSubmitMessage = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (message.length === 0) return;
-    const payload = { room: params.chatId, message };
-
-    socket?.emit("createMessage", payload);
-    setMessage("");
-  };
-
-  useEffect(() => {
-    if (userIsTyping || messages) {
+    setTimeout(() => {
       scrollToBottomRef?.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, userIsTyping]);
+    }, 400);
+  }, []);
+
+  const handleDelete = (messageId: string) => {
+    if (!socket) return;
+    socket.emit("deleteMessage", { room: params.chatId, messageId });
+  };
 
   return (
     <div className="w-full h-full flex flex-col overflow-hidden">
-      <div className="flex flex-row gap-2 text-white min-h-[56px] p-2 items-center">
-        <AvatarCoin
-          source={chatData?.[0].users[1]?.avatarUrl || placeholderAvatar}
-          width={50}
-          alt=""
-        />
-        <p>{chatData?.[0].users[1]?.displayName}</p>
-      </div>
-      <div className="w-full flex-1  h-full p-4 text-white overflow-y-auto flex flex-col gap-4">
-        {messages?.map((message, idx) => (
-          <div
-            key={idx}
-            className={`${
-              message.userId === String(user?._id)
-                ? "self-end bg-green-600/60"
-                : "self-start bg-black/60"
-            } flex flex-row py-2 px-4 max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl rounded-xl`}
-          >
-            <div className="flex flex-col w-full">
-              <p className="break-words whitespace-normal">{message.content}</p>
-              <p className="text-xs self-end">
-                {adaptTimezone(message.createdAt, "ro-RO")}
+      <div className="flex justify-between p-2 items-center">
+        <div className="flex flex-row gap-2 text-white min-h-[56px]  items-center">
+          <AvatarCoin
+            source={interlocutor?.avatarUrl || placeholderAvatar}
+            width={50}
+            alt={`${interlocutor?.displayName || currentChat?.name || "User"}'s avatar`}
+          />
+          <div>
+            <p>{interlocutor?.displayName || "User"}</p>
+            {interlocutor?.status?.lastSeen && (
+              <p className="text-xs">
+                {isInterlocutorOnline
+                  ? "online"
+                  : `Last seen ${interlocutor.status.lastSeen.slice(0, 10)}`}
               </p>
-            </div>
+            )}
           </div>
-        ))}
-        <TypingIndicator ref={scrollToBottomRef} userIsTyping={userIsTyping} />
+        </div>
+        <div className="mr-4">
+          {/* TODO: FINISH IMPLEMENTING THIS */}
+          <button className="group">
+            <AddUsersIcon />
+          </button>
+        </div>
+      </div>
+      <div className="w-full flex-1 h-full p-4 text-white overflow-y-auto flex flex-col gap-4">
+        {!!messages?.length &&
+          messages?.map((message) => {
+            const isOwnMessage = message.senderId._id === user?._id;
+            return (
+              <div
+                key={message._id}
+                className={`${
+                  isOwnMessage ? "self-end" : "self-start"
+                } group flex flex-row gap-2 items-center`}
+              >
+                <div
+                  className={`${
+                    isOwnMessage ? "bg-green-600/60" : "bg-black/60"
+                  } relative flex flex-row py-2 px-4 max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl rounded-xl overflow-hidden`}
+                >
+                  <div className="flex flex-col w-full">
+                    {displayMessageByType(message)}
+                    <div className="flex gap-1 items-center self-end">
+                      <p className="text-xs">
+                        {adaptTimezone(message.createdAt, "ro-RO")}
+                      </p>
+                      {message.read && isOwnMessage && <CheckIcon />}
+                    </div>
+                  </div>
+                  {isOwnMessage && (
+                    <div className="w-[50px] h-[40px] absolute justify-end py-2 px-2.5 -right-1 -top-1 hidden group-hover:flex bg-message-gradient pointer-events-none">
+                      <DeleteButton
+                        className="group h-fit pointer-events-auto"
+                        onClick={() => handleDelete(message._id)}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        <TypingIndicator
+          ref={scrollToBottomRef}
+          interlocutorIsTyping={interlocutorIsTyping}
+        />
       </div>
 
-      <form
-        onSubmit={handleSubmitMessage}
-        className=" py-3 px-6 flex justify-center items-center gap-4 text-white border-t-slate-700 border-t-[1px]"
-      >
-        <label
-          className="flex flex-col gap-2 cursor-pointer group"
-          htmlFor="image"
-        >
-          <ImageIcon />
-        </label>
-        <input
-          type="file"
-          id="image"
-          placeholder="Upload Image"
-          className="hidden"
-        />
-        <EmojiPicker getValue={(emoji) => setMessage(message + emoji)}>
-          😏
-        </EmojiPicker>
-        <input
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type a message"
-          className="w-full p-2 bg-black/40 rounded-xl"
-        />
-        <button type="submit" className="px-2 py-1 rounded-full group">
-          <SendIcon />
-        </button>
-      </form>
+      <CreateMessageForm
+        handleSubmitMessage={handleSubmitMessage}
+        message={message}
+        imagePreview={imagePreview}
+        messageType={messageType}
+        setMessage={setMessage}
+        setGif={setGif}
+        setImagePreview={setImagePreview}
+        setMessageType={setMessageType}
+      />
     </div>
+  );
+}
+
+const displayMessageByType = (message: Message) => {
+  switch (message.type) {
+    case "text":
+      return <p className="break-words whitespace-normal">{message.content}</p>;
+    case "image":
+      return (
+        <MediaPreviewDialog
+          content={<FullScreenImage message={message} />}
+          className="group w-full"
+        >
+          <img
+            src={message.content}
+            alt="User Uploaded Image"
+            width={300}
+            className="rounded-xl aspect-auto object-cover p-2 cursor-pointer"
+          />
+        </MediaPreviewDialog>
+      );
+    case "file":
+      return <p className="break-words whitespace-normal">{message.content}</p>;
+    case "video":
+      return <video src={message.content} controls />;
+    case "audio":
+      return <audio src={message.content} controls />;
+    default:
+      return <p className="break-words whitespace-normal">{message.content}</p>;
+  }
+};
+
+function FullScreenImage({ message }: { message: Message }) {
+  return (
+    <img
+      className="w-full h-full aspect-square object-cover rounded-md"
+      src={message.content}
+      alt={`Image sent by ${message.senderId.displayName}`}
+    />
   );
 }

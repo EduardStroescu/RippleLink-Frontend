@@ -25,8 +25,8 @@ export function SocketProvider({ children }: SocketProviderProps) {
         _id: user?._id,
         displayName: user?.displayName,
       },
-      auth: {
-        token: user?.access_token,
+      extraHeaders: {
+        Authorization: user?.access_token,
       },
     });
 
@@ -40,7 +40,12 @@ export function SocketProvider({ children }: SocketProviderProps) {
       console.log("disconnected");
     });
 
+    socketInstance.on("error", ({ message }) => {
+      console.log(message);
+    });
+
     return () => {
+      socketInstance.off("error");
       socketInstance.disconnect();
     };
   }, [user]);

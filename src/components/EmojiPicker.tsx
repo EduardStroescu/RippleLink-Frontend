@@ -1,5 +1,5 @@
 import React from "react";
-import Picker from "emoji-picker-react";
+import Picker, { Theme } from "emoji-picker-react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/Popover";
 
@@ -18,7 +18,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
   return (
     <div className="flex items-center">
       <Popover>
-        <PopoverTrigger className="hover:animate-spin-slow cursor-pointer bg-black/60 hover:bg-black/80 rounded-full p-1 text-xl">
+        <PopoverTrigger className="text-[25px] origin-center hover:animate-spin-slow cursor-pointer">
           {children}
         </PopoverTrigger>
         <PopoverContent
@@ -26,7 +26,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
           border-none
         "
         >
-          <Picker onEmojiClick={onClick} />
+          <Picker onEmojiClick={onClick} theme={Theme.DARK} />
         </PopoverContent>
       </Popover>
     </div>
