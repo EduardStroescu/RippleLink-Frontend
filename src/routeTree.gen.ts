@@ -16,9 +16,9 @@ import { Route as LoginImport } from './routes/login'
 import { Route as ChatImport } from './routes/chat'
 import { Route as SplatImport } from './routes/$'
 import { Route as IndexImport } from './routes/index'
-import { Route as ChatSettingsImport } from './routes/chat.settings'
 import { Route as ChatCreateChatImport } from './routes/chat.create-chat'
 import { Route as ChatChatIdImport } from './routes/chat.$chatId'
+import { Route as ChatChatIdDetailsImport } from './routes/chat.$chatId.details'
 
 // Create/Update Routes
 
@@ -47,11 +47,6 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const ChatSettingsRoute = ChatSettingsImport.update({
-  path: '/settings',
-  getParentRoute: () => ChatRoute,
-} as any)
-
 const ChatCreateChatRoute = ChatCreateChatImport.update({
   path: '/create-chat',
   getParentRoute: () => ChatRoute,
@@ -60,6 +55,11 @@ const ChatCreateChatRoute = ChatCreateChatImport.update({
 const ChatChatIdRoute = ChatChatIdImport.update({
   path: '/$chatId',
   getParentRoute: () => ChatRoute,
+} as any)
+
+const ChatChatIdDetailsRoute = ChatChatIdDetailsImport.update({
+  path: '/details',
+  getParentRoute: () => ChatChatIdRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -115,12 +115,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatCreateChatImport
       parentRoute: typeof ChatImport
     }
-    '/chat/settings': {
-      id: '/chat/settings'
-      path: '/settings'
-      fullPath: '/chat/settings'
-      preLoaderRoute: typeof ChatSettingsImport
-      parentRoute: typeof ChatImport
+    '/chat/$chatId/details': {
+      id: '/chat/$chatId/details'
+      path: '/details'
+      fullPath: '/chat/$chatId/details'
+      preLoaderRoute: typeof ChatChatIdDetailsImport
+      parentRoute: typeof ChatChatIdImport
     }
   }
 }
@@ -131,9 +131,8 @@ export const routeTree = rootRoute.addChildren({
   IndexRoute,
   SplatRoute,
   ChatRoute: ChatRoute.addChildren({
-    ChatChatIdRoute,
+    ChatChatIdRoute: ChatChatIdRoute.addChildren({ ChatChatIdDetailsRoute }),
     ChatCreateChatRoute,
-    ChatSettingsRoute,
   }),
   LoginRoute,
   RegisterRoute,
@@ -164,8 +163,7 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "chat.tsx",
       "children": [
         "/chat/$chatId",
-        "/chat/create-chat",
-        "/chat/settings"
+        "/chat/create-chat"
       ]
     },
     "/login": {
@@ -176,15 +174,18 @@ export const routeTree = rootRoute.addChildren({
     },
     "/chat/$chatId": {
       "filePath": "chat.$chatId.tsx",
-      "parent": "/chat"
+      "parent": "/chat",
+      "children": [
+        "/chat/$chatId/details"
+      ]
     },
     "/chat/create-chat": {
       "filePath": "chat.create-chat.tsx",
       "parent": "/chat"
     },
-    "/chat/settings": {
-      "filePath": "chat.settings.tsx",
-      "parent": "/chat"
+    "/chat/$chatId/details": {
+      "filePath": "chat.$chatId.details.tsx",
+      "parent": "/chat/$chatId"
     }
   }
 }

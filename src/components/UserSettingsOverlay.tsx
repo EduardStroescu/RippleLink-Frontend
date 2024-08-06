@@ -2,11 +2,11 @@ import React from "react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/Popover";
 
-interface ChangeAvatarOverlayProps {
+interface UserSettingsOverlayProps {
   children: React.ReactNode;
 }
 
-export const ChangeAvatarOverlay: React.FC<ChangeAvatarOverlayProps> = ({
+export const UserSettingsOverlay: React.FC<UserSettingsOverlayProps> = ({
   children,
 }) => {
   const avatarFunctions = [

@@ -1,7 +1,7 @@
 {
   "name": "ripplelink",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,6 +13,7 @@
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-dialog": "^1.1.1",
     "@radix-ui/react-popover": "^1.1.1",
+    "@radix-ui/react-switch": "^1.1.0",
     "@tanstack/react-query": "^5.51.9",
     "@tanstack/react-query-devtools": "^5.51.21",
     "@tanstack/react-router": "^1.45.6",

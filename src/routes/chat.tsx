@@ -10,7 +10,7 @@ import { isAuthenticated } from "@/lib/isAuthenticated";
 import { SettingsOverlay } from "@/components/SettingsOverlay";
 import { AddIcon, SettingsIcon } from "@/components/Icons";
 import { AvatarCoin } from "@/components/AvatarCoin";
-import { ChangeAvatarOverlay } from "@/components/ChangeAvatarOverlay";
+import { UserSettingsOverlay } from "@/components/UserSettingsOverlay";
 import chatApi from "@/api/modules/chat.api";
 import CustomDialogTrigger from "@/components/CustomDialogTrigger";
 import { SearchUsersForm } from "@/components/SearchUsersForm";
@@ -24,6 +24,7 @@ import { adaptTimezone } from "@/lib/hepers";
 import { useChatEvents } from "@/lib/hooks/useChatEvents";
 import { useChatsFilters } from "@/lib/hooks/useChatsFilters";
 import { FilterOption } from "@/types/filterOptions";
+import { useAppStore } from "@/stores/useAppStore";
 
 export const Route = createFileRoute("/chat")({
   beforeLoad: async ({ location }) => {
@@ -35,6 +36,9 @@ export const Route = createFileRoute("/chat")({
         },
       });
     }
+    const setIsDrawerOpen = useAppStore.getState().actions.setIsDrawerOpen;
+    setIsDrawerOpen(true);
+
     const queryContent = {
       queryKey: ["chats"],
       queryFn: chatApi.getAllChats,
@@ -52,6 +56,7 @@ export const Route = createFileRoute("/chat")({
 
 function ChatWrapper() {
   const user = useUserStore((state) => state.user);
+  const isDrawerOpen = useAppStore((state) => state.isDrawerOpen);
   const queryContent = Route.useLoaderData();
   useQuery(queryContent);
   const queryClient = useQueryClient();
@@ -80,16 +85,18 @@ function ChatWrapper() {
 
   return (
     <div className="flex flex-row w-full h-full">
-      <section className="flex flex-col flex-1 max-w-[20%]">
+      <aside
+        className={`${isDrawerOpen ? "flex" : "hidden"} sm:flex flex-col flex-1 sm:max-w-[20%]`}
+      >
         <div className="flex flex-row justify-between text-white min-h-[66px] py-2 px-4 items-center">
           <div className="flex items-center gap-2">
-            <ChangeAvatarOverlay>
+            <UserSettingsOverlay>
               <AvatarCoin
                 source={user?.avatarUrl || placeholderAvatar}
                 width={50}
                 alt=""
               />
-            </ChangeAvatarOverlay>
+            </UserSettingsOverlay>
             <p>{user?.displayName}</p>
           </div>
           <div className="flex flex-row gap-2">
@@ -106,7 +113,7 @@ function ChatWrapper() {
               content={<SearchUsersForm />}
               className="group"
             >
-              <AddIcon />
+              <AddIcon title="Start new chat" />
             </CustomDialogTrigger>
           </div>
           <div className="flex justify-around items-center gap-2 py-2 text-white border-b-[1px] border-slate-700">
@@ -177,8 +184,10 @@ function ChatWrapper() {
             })}
           </div>
         </div>
-      </section>
-      <section className="flex flex-col flex-1 h-full border-l-[1px] border-slate-700">
+      </aside>
+      <section
+        className={`${isDrawerOpen ? "hidden" : "flex"} sm:flex flex-col flex-1 h-full border-l-[1px] border-slate-700`}
+      >
         <Outlet />
       </section>
     </div>

@@ -9,9 +9,13 @@ import { CreateMessageForm } from "@/components/CreateMessageForm";
 import { Chat } from "@/types/chat";
 import { Message } from "@/types/message";
 import { useUserStore } from "@/stores/useUserStore";
+import { useAppStore } from "@/stores/useAppStore";
 
 export const Route = createFileRoute("/chat/create-chat")({
   beforeLoad: async ({ search: { userId }, context: { queryClient } }) => {
+    const setIsDrawerOpen = useAppStore.getState().actions.setIsDrawerOpen;
+    setIsDrawerOpen(false);
+
     const chatsData: Chat[] | [] = queryClient.getQueryData(["chats"]);
     const currentUser = useUserStore.getState().user;
 
@@ -45,7 +49,10 @@ function CreateNewChat() {
 
   const [message, setMessage] = useState<Message["content"]>("");
   const [gif, setGif] = useState<string | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [contentPreview, setContentPreview] = useState<{
+    content: string | null;
+    name: string | null;
+  } | null>(null);
   const [chatType, setChatType] = useState<Chat["type"] | "">("");
   const [chatName, setChatName] = useState("");
   const [messageType, setMessageType] = useState<Message["type"]>("text");
@@ -85,10 +92,6 @@ function CreateNewChat() {
       values.messageType = "image";
     } else {
       if (message.length === 0) return;
-      const imgUrlPattern =
-        /^https?:\/\/.*\.(?:png|jpg|jpeg|gif|bmp|webp|tiff|svg)(?:\?.*)?$/i;
-
-      values.messageType = imgUrlPattern.test(message) ? "image" : "text";
     }
 
     await createChatMutation.mutateAsync(values, {
@@ -122,12 +125,12 @@ function CreateNewChat() {
       <CreateMessageForm
         handleSubmitMessage={handleSubmitMessage}
         message={message}
-        imagePreview={imagePreview}
+        contentPreview={contentPreview}
         messageType={messageType}
         setMessage={setMessage}
         setGif={setGif}
         setMessageType={setMessageType}
-        setImagePreview={setImagePreview}
+        setContentPreview={setContentPreview}
       />
     </div>
   );

@@ -21,11 +21,11 @@ export function useChatsFilters(chats: Chat[] | [] | undefined) {
 
   const handleFilter = (filter: FilterOption) => {
     if (filter === "Unread") {
-      setFilteredChats((prev) =>
-        prev?.filter((chat) => chat.lastMessage.read === false)
+      setFilteredChats(() =>
+        chats?.filter((chat) => chat.lastMessage?.read === false)
       );
     } else if (filter === "Groups") {
-      setFilteredChats((prev) => prev?.filter((chat) => chat.type === "group"));
+      setFilteredChats(() => chats?.filter((chat) => chat?.type === "group"));
     } else {
       setFilteredChats(chats);
     }
@@ -33,7 +33,7 @@ export function useChatsFilters(chats: Chat[] | [] | undefined) {
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.value !== "") {
-      setFilteredChats(
+      setFilteredChats(() =>
         chats?.filter((chat) =>
           chat.users.some((user) =>
             user.displayName

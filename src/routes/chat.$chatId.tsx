@@ -1,27 +1,32 @@
-import { createFileRoute, useParams } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  useParams,
+} from "@tanstack/react-router";
 import { useEffect, useMemo, useRef } from "react";
 import { useSocketContext } from "@/providers/SocketProvider";
 import { useUserStore } from "@/stores/useUserStore";
 import { AvatarCoin } from "@/components/AvatarCoin";
 import { TypingIndicator } from "@/components/TypingIndicator";
-import chatApi from "@/api/modules/chat.api";
 import { placeholderAvatar } from "@/lib/const";
-import { adaptTimezone } from "@/lib/hepers";
-import { Message } from "@/types/message";
-import { DeleteButton } from "@/components/DeleteButton";
 import { Chat } from "@/types/chat";
 import { CreateMessageForm } from "@/components/CreateMessageForm";
-import { AddUsersIcon, CheckIcon } from "@/components/Icons";
+import { AddUsersIcon, BackIcon, CallIcon } from "@/components/Icons";
 import { useMessageEvents } from "@/lib/hooks/useMessageEvents";
 import { useUserTyping } from "@/lib/hooks/useUserTyping";
 import { useMessageFilters } from "@/lib/hooks/useMessageFilters";
 import { useCreateMessage } from "@/lib/hooks/useCreateMessage";
 import { useMessageReadStatus } from "@/lib/hooks/useMessageReadStatus";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import MediaPreviewDialog from "@/components/MediaPreviewDialog";
+import chatApi from "@/api/modules/chat.api";
+import { useAppStore } from "@/stores/useAppStore";
+import { MessageComponent } from "@/components/MessageComponent";
 
 export const Route = createFileRoute("/chat/$chatId")({
   beforeLoad: async ({ params: { chatId } }) => {
+    const setIsDrawerOpen = useAppStore.getState().actions.setIsDrawerOpen;
+    setIsDrawerOpen(false);
     const messagesQuery = {
       queryKey: ["messages", chatId],
       queryFn: () => chatApi.getMessagesByChatId(chatId),
@@ -59,11 +64,11 @@ function ChatId() {
   const {
     handleSubmitMessage,
     message,
-    imagePreview,
+    contentPreview,
     messageType,
     setMessage,
     setGif,
-    setImagePreview,
+    setContentPreview,
     setMessageType,
   } = useCreateMessage(params);
   const {
@@ -82,130 +87,89 @@ function ChatId() {
     }, 400);
   }, []);
 
+  useEffect(() => {
+    setTimeout(() => {
+      if (contentPreview && scrollToBottomRef.current) {
+        console.log("executing");
+        scrollToBottomRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 1000);
+  }, [contentPreview]);
+
   const handleDelete = (messageId: string) => {
     if (!socket) return;
     socket.emit("deleteMessage", { room: params.chatId, messageId });
   };
 
   return (
-    <div className="w-full h-full flex flex-col overflow-hidden">
-      <div className="flex justify-between p-2 items-center">
-        <div className="flex flex-row gap-2 text-white min-h-[56px]  items-center">
-          <AvatarCoin
-            source={interlocutor?.avatarUrl || placeholderAvatar}
-            width={50}
-            alt={`${interlocutor?.displayName || currentChat?.name || "User"}'s avatar`}
-          />
-          <div>
-            <p>{interlocutor?.displayName || "User"}</p>
-            {interlocutor?.status?.lastSeen && (
-              <p className="text-xs">
-                {isInterlocutorOnline
-                  ? "online"
-                  : `Last seen ${interlocutor.status.lastSeen.slice(0, 10)}`}
-              </p>
-            )}
+    <div className="flex w-full h-full">
+      <div className="relative flex-1 flex flex-col overflow-hidden">
+        <div className="flex justify-between p-2 items-center">
+          <div className="flex flex-row gap-2 text-white min-h-[56px]  items-center">
+            <Link to="/chat?" className="flex sm:hidden gap-1 items-center">
+              <BackIcon /> <span className="text-xs">Back</span>
+            </Link>
+            <AvatarCoin
+              source={interlocutor?.avatarUrl || placeholderAvatar}
+              width={50}
+              alt={`${interlocutor?.displayName || currentChat?.name || "User"}'s avatar`}
+            />
+            <div>
+              <p>{interlocutor?.displayName || "User"}</p>
+              {interlocutor?.status?.lastSeen && (
+                <p className="text-xs">
+                  {isInterlocutorOnline
+                    ? "online"
+                    : `Last seen ${interlocutor.status.lastSeen.slice(0, 10)}`}
+                </p>
+              )}
+            </div>
+          </div>
+          {/* TODO: FINISH IMPLEMENTING THIS */}
+          <div className="mr-4 flex gap-6">
+            <button className="group">
+              <CallIcon />
+            </button>
+            <button className="group">
+              <AddUsersIcon />
+            </button>
+            <Link to="/chat/$chatId/details" params={{ chatId: params.chatId }}>
+              info
+            </Link>
           </div>
         </div>
-        <div className="mr-4">
-          {/* TODO: FINISH IMPLEMENTING THIS */}
-          <button className="group">
-            <AddUsersIcon />
-          </button>
+        <div className="w-full flex-1 h-full p-4 text-white overflow-y-auto flex flex-col gap-4">
+          {!!messages?.length &&
+            messages?.map((message) => {
+              const isOwnMessage = message.senderId._id === user?._id;
+              return (
+                <MessageComponent
+                  key={message._id}
+                  isOwnMessage={isOwnMessage}
+                  message={message}
+                  handleDelete={handleDelete}
+                />
+              );
+            })}
+
+          <TypingIndicator
+            ref={scrollToBottomRef}
+            interlocutorIsTyping={interlocutorIsTyping}
+          />
         </div>
-      </div>
-      <div className="w-full flex-1 h-full p-4 text-white overflow-y-auto flex flex-col gap-4">
-        {!!messages?.length &&
-          messages?.map((message) => {
-            const isOwnMessage = message.senderId._id === user?._id;
-            return (
-              <div
-                key={message._id}
-                className={`${
-                  isOwnMessage ? "self-end" : "self-start"
-                } group flex flex-row gap-2 items-center`}
-              >
-                <div
-                  className={`${
-                    isOwnMessage ? "bg-green-600/60" : "bg-black/60"
-                  } relative flex flex-row py-2 px-4 max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl rounded-xl overflow-hidden`}
-                >
-                  <div className="flex flex-col w-full">
-                    {displayMessageByType(message)}
-                    <div className="flex gap-1 items-center self-end">
-                      <p className="text-xs">
-                        {adaptTimezone(message.createdAt, "ro-RO")}
-                      </p>
-                      {message.read && isOwnMessage && <CheckIcon />}
-                    </div>
-                  </div>
-                  {isOwnMessage && (
-                    <div className="w-[50px] h-[40px] absolute justify-end py-2 px-2.5 -right-1 -top-1 hidden group-hover:flex bg-message-gradient pointer-events-none">
-                      <DeleteButton
-                        className="group h-fit pointer-events-auto"
-                        onClick={() => handleDelete(message._id)}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        <TypingIndicator
-          ref={scrollToBottomRef}
-          interlocutorIsTyping={interlocutorIsTyping}
+
+        <CreateMessageForm
+          handleSubmitMessage={handleSubmitMessage}
+          message={message}
+          contentPreview={contentPreview}
+          messageType={messageType}
+          setMessage={setMessage}
+          setGif={setGif}
+          setContentPreview={setContentPreview}
+          setMessageType={setMessageType}
         />
       </div>
-
-      <CreateMessageForm
-        handleSubmitMessage={handleSubmitMessage}
-        message={message}
-        imagePreview={imagePreview}
-        messageType={messageType}
-        setMessage={setMessage}
-        setGif={setGif}
-        setImagePreview={setImagePreview}
-        setMessageType={setMessageType}
-      />
+      <Outlet />
     </div>
-  );
-}
-
-const displayMessageByType = (message: Message) => {
-  switch (message.type) {
-    case "text":
-      return <p className="break-words whitespace-normal">{message.content}</p>;
-    case "image":
-      return (
-        <MediaPreviewDialog
-          content={<FullScreenImage message={message} />}
-          className="group w-full"
-        >
-          <img
-            src={message.content}
-            alt="User Uploaded Image"
-            width={300}
-            className="rounded-xl aspect-auto object-cover p-2 cursor-pointer"
-          />
-        </MediaPreviewDialog>
-      );
-    case "file":
-      return <p className="break-words whitespace-normal">{message.content}</p>;
-    case "video":
-      return <video src={message.content} controls />;
-    case "audio":
-      return <audio src={message.content} controls />;
-    default:
-      return <p className="break-words whitespace-normal">{message.content}</p>;
-  }
-};
-
-function FullScreenImage({ message }: { message: Message }) {
-  return (
-    <img
-      className="w-full h-full aspect-square object-cover rounded-md"
-      src={message.content}
-      alt={`Image sent by ${message.senderId.displayName}`}
-    />
   );
 }

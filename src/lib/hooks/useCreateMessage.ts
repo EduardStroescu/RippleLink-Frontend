@@ -7,20 +7,47 @@ export function useCreateMessage(params: any) {
   const [message, setMessage] = useState<Message["content"]>("");
   const [messageType, setMessageType] = useState<Message["type"]>("text");
   const [gif, setGif] = useState<string | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [contentPreview, setContentPreview] = useState<{
+    content: string | null;
+    name: string | null;
+  } | null>(null);
 
   const handleSubmitMessage = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (gif) {
-      const payload = { room: params.chatId, message: gif, type: "image" };
+      const payload = { room: params.chatId, message: gif, type: "text" };
       socket?.emit("createMessage", payload);
       setGif(null);
+    } else if (contentPreview && messageType === "image") {
+      const payload = {
+        room: params.chatId,
+        message: contentPreview.content,
+        type: "image",
+      };
+      socket?.emit("createMessage", payload);
+      setContentPreview(null);
+    } else if (contentPreview && messageType === "audio") {
+      const payload = {
+        room: params.chatId,
+        message: contentPreview.content,
+        type: "audio",
+      };
+      socket?.emit("createMessage", payload);
+      setContentPreview(null);
+    } else if (contentPreview && messageType === "video") {
+      const payload = {
+        room: params.chatId,
+        message: contentPreview.content,
+        type: "video",
+      };
+      try {
+        socket?.emit("createMessage", payload);
+      } catch (error) {
+        console.log(error);
+      }
+      setContentPreview(null);
     } else {
       if (message.length === 0) return;
-      const imgUrlPattern =
-        /^https?:\/\/.*\.(?:png|jpg|jpeg|gif|bmp|webp|tiff|svg)(?:\?.*)?$/i;
-
-      const messageType = imgUrlPattern.test(message) ? "image" : "text";
 
       const payload = { room: params.chatId, message, type: messageType };
       socket?.emit("createMessage", payload);
@@ -31,11 +58,11 @@ export function useCreateMessage(params: any) {
   return {
     handleSubmitMessage,
     message,
-    imagePreview,
+    contentPreview,
     messageType,
     setMessage,
     setGif,
-    setImagePreview,
     setMessageType,
+    setContentPreview,
   };
 }

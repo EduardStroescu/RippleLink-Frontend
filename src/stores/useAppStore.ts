@@ -1,17 +1,18 @@
-import { AppStore } from "@/types/interfaces";
+import { AppStore } from "@/types/storeInterfaces";
 import { create } from "zustand";
 
 export const useAppStore = create<AppStore>()((set) => ({
-  // isSocketConnected: false,
-  // actions: {
-  //   setIsSocketConnected: (newValue) =>
-  //     set((prevState) => ({
-  //       isSocketConnected:
-  //         typeof newValue === "function"
-  //           ? newValue(prevState.isSocketConnected)
-  //           : newValue,
-  //     })),
-  // },
+  isDrawerOpen: false,
+
+  actions: {
+    setIsDrawerOpen: (newValue) =>
+      set((prevState) => ({
+        isDrawerOpen:
+          typeof newValue === "function"
+            ? newValue(prevState.isDrawerOpen)
+            : newValue,
+      })),
+  },
 }));
 
-// export const useAppStoreActions = () => useAppStore((state) => state.actions);
+export const useAppStoreActions = () => useAppStore((state) => state.actions);

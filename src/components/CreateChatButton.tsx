@@ -6,7 +6,7 @@ export function CreateChatButton() {
   };
   return (
     <button onClick={handleCreateChat} aria-label="add-chat" className="group">
-      <AddIcon />
+      <AddIcon title={"Create a new chat"} />
     </button>
   );
 }

@@ -22,7 +22,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
           {children}
         </PopoverTrigger>
         <PopoverContent
-          className="p-0
+          className="p-0 absolute bottom-16 -left-[4.5rem]
           border-none
         "
         >

@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { InternalAxiosRequestConfig, AxiosRequestHeaders } from "axios";
 import queryString from "query-string";
 
 const baseURL = import.meta.env.VITE_BACKEND_URL + "api/";
@@ -10,57 +10,87 @@ const privateClient = axios.create({
   },
 });
 
-privateClient.interceptors.request.use(async (config) => {
-  const user = window.localStorage.getItem("user");
-  const parsedUser = JSON.parse(user);
-  const token = parsedUser?.access_token;
-  return {
-    ...config,
-    headers: {
+let isRefreshing = false;
+let failedQueue: Array<(token: string) => void> = [];
+
+const processQueue = (error: any, token?: string) => {
+  failedQueue.forEach((callback) => callback(token));
+  failedQueue = [];
+};
+
+privateClient.interceptors.request.use(
+  async (config: InternalAxiosRequestConfig) => {
+    const user = window.localStorage.getItem("user");
+    if (!user) {
+      return {
+        ...config,
+        headers: {
+          "Content-Type": "application/json",
+        } as AxiosRequestHeaders,
+      };
+    }
+
+    const parsedUser = JSON.parse(user);
+    const token = parsedUser?.access_token;
+
+    config.headers = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
-    },
-  };
-});
+    } as AxiosRequestHeaders;
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 privateClient.interceptors.response.use(
-  (response) => {
-    if (response && response.data) return response.data;
-    return response;
-  },
+  (response) => response.data,
   async (error) => {
     const originalRequest = error.config;
 
-    // Check if the error is a 401 Unauthorized
     if (error?.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
+
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push((token: string) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            resolve(privateClient(originalRequest));
+          });
+        });
+      }
+
+      isRefreshing = true;
 
       try {
         const user = window.localStorage.getItem("user");
         if (user) {
           const parsedUser = JSON.parse(user);
-          const token = parsedUser.refresh_token;
+          const refreshToken = parsedUser.refresh_token;
 
-          // Attempt to refresh the access token
-          const response = await axios.get(`${baseURL}auth/refresh`, {
-            params: {
-              refresh_token: token,
-            },
+          const response = await axios.post(`${baseURL}auth/refresh`, {
+            refresh_token: refreshToken,
           });
 
           window.localStorage.setItem("user", JSON.stringify(response.data));
+          isRefreshing = false;
+          processQueue(null, response.data.access_token);
 
-          // Retry the original request
-          return await privateClient(originalRequest);
+          originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`;
+          return privateClient(originalRequest);
         }
       } catch (refreshError) {
-        // The refresh token is invalid or expired
-        // Removing the user from local storage will trigger a redirect to the login page
-        // localStorage.removeItem("user");
-        return Promise.reject(refreshError?.response?.data?.message);
+        window.localStorage.removeItem("user");
+        processQueue(refreshError, null);
+        return Promise.reject(
+          refreshError?.response?.data?.message || "Token refresh failed"
+        );
       }
     }
-    return Promise.reject(error?.response?.data?.message);
+
+    return Promise.reject(
+      error?.response?.data?.message || "An error occurred"
+    );
   }
 );
 
