@@ -15,12 +15,20 @@ export interface UserStore {
 
 export interface AppStore {
   isDrawerOpen: boolean;
+  isChatDetailsDrawerOpen: boolean;
 
   actions: {
     setIsDrawerOpen: (
       newValue:
         | boolean
         | ((prevUser: AppStore["isDrawerOpen"]) => AppStore["isDrawerOpen"])
+    ) => void;
+    setIsChatDetailsDrawerOpen: (
+      newValue:
+        | boolean
+        | ((
+            prevUser: AppStore["isChatDetailsDrawerOpen"]
+          ) => AppStore["isChatDetailsDrawerOpen"])
     ) => void;
   };
 }

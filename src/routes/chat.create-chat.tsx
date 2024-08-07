@@ -1,6 +1,11 @@
-import { AvatarCoin } from "@/components/AvatarCoin";
+import { AvatarCoin } from "@/components/UI/AvatarCoin";
 import { placeholderAvatar } from "@/lib/const";
-import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  redirect,
+  useRouter,
+} from "@tanstack/react-router";
 import { FormEvent, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import chatApi from "@/api/modules/chat.api";
@@ -9,13 +14,15 @@ import { CreateMessageForm } from "@/components/CreateMessageForm";
 import { Chat } from "@/types/chat";
 import { Message } from "@/types/message";
 import { useUserStore } from "@/stores/useUserStore";
+import { BackIcon } from "@/components/Icons";
 import { useAppStore } from "@/stores/useAppStore";
 
 export const Route = createFileRoute("/chat/create-chat")({
   beforeLoad: async ({ search: { userId }, context: { queryClient } }) => {
-    const setIsDrawerOpen = useAppStore.getState().actions.setIsDrawerOpen;
-    setIsDrawerOpen(false);
-
+    useAppStore.setState({
+      isDrawerOpen: false,
+      isChatDetailsDrawerOpen: false,
+    });
     const chatsData: Chat[] | [] = queryClient.getQueryData(["chats"]);
     const currentUser = useUserStore.getState().user;
 
@@ -108,6 +115,13 @@ function CreateNewChat() {
   return (
     <div className="w-full h-full flex flex-col overflow-hidden">
       <div className="flex flex-row gap-2 text-white min-h-[56px] p-2 items-center">
+        <Link
+          to="/chat"
+          preload={false}
+          className="flex sm:hidden gap-1 items-center"
+        >
+          <BackIcon /> <span className="text-xs">Back</span>
+        </Link>
         <AvatarCoin
           source={data?.avatarUrl || placeholderAvatar}
           width={50}

@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+
 export function AvatarCoin({
   source,
   width = 50,
@@ -13,8 +15,8 @@ export function AvatarCoin({
     <img
       src={source}
       width={width}
-      alt={`${alt} avatar`}
-      className={`${className} p-1 rounded-full`}
+      alt={`${alt}'s avatar`}
+      className={cn("p-1 aspect-square object-cover rounded-full", className)}
     />
   );
 }

@@ -30,7 +30,7 @@ export function useMessageEvents(
         }
       );
     },
-    [queryClient]
+    [queryClient, params.chatId]
   );
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export function useMessageEvents(
     return () => {
       socket.emit("leaveRoom", { room: params.chatId });
     };
-  }, [socket]);
+  }, [socket, params.chatId]);
 
   useEffect(() => {
     if (!socket || !user?._id) return;
@@ -58,7 +58,7 @@ export function useMessageEvents(
     return () => {
       socket.off("messagesRead");
     };
-  }, [socket, user?._id]);
+  }, [socket, user?._id, setMessages]);
 
   useEffect(() => {
     if (!socket) return;
@@ -73,8 +73,10 @@ export function useMessageEvents(
         if (!prev) return [content];
         const index = prev.findIndex((item) => item._id === content._id);
         if (index === -1) return prev;
-        prev[index].content = content.content;
-        return [...prev];
+        const newMessages = [...prev];
+        newMessages[index] = content;
+
+        return newMessages;
       });
     };
     const messageDeletedHandler = ({ content }: { content: Message }) => {
@@ -116,7 +118,7 @@ export function useMessageEvents(
       socket.off("messageUpdated");
       socket.off("messageDeleted");
     };
-  }, [socket, scrollToBottomRef]);
+  }, [socket, scrollToBottomRef, setMessages]);
 
   return {
     setMessages,

@@ -9,7 +9,7 @@ import { SearchForm } from "@/components/SearchForm";
 import { isAuthenticated } from "@/lib/isAuthenticated";
 import { SettingsOverlay } from "@/components/SettingsOverlay";
 import { AddIcon, SettingsIcon } from "@/components/Icons";
-import { AvatarCoin } from "@/components/AvatarCoin";
+import { AvatarCoin } from "@/components/UI/AvatarCoin";
 import { UserSettingsOverlay } from "@/components/UserSettingsOverlay";
 import chatApi from "@/api/modules/chat.api";
 import CustomDialogTrigger from "@/components/CustomDialogTrigger";
@@ -17,7 +17,7 @@ import { SearchUsersForm } from "@/components/SearchUsersForm";
 import { useUserStore } from "@/stores/useUserStore";
 import { placeholderAvatar } from "@/lib/const";
 import { Chat } from "@/types/chat";
-import { DeleteButton } from "@/components/DeleteButton";
+import { DeleteButton } from "@/components/UI/DeleteButton";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { adaptTimezone } from "@/lib/hepers";
@@ -36,8 +36,7 @@ export const Route = createFileRoute("/chat")({
         },
       });
     }
-    const setIsDrawerOpen = useAppStore.getState().actions.setIsDrawerOpen;
-    setIsDrawerOpen(true);
+    useAppStore.setState({ isDrawerOpen: true });
 
     const queryContent = {
       queryKey: ["chats"],
@@ -107,7 +106,7 @@ function ChatWrapper() {
         </div>
         <div className="flex flex-col overflow-hidden">
           <div className="flex flex-row m-4 items-center justify-center gap-2">
-            <SearchForm onChange={handleSearch} className="flex-1" />
+            <SearchForm onChange={handleSearch} />
             <CustomDialogTrigger
               header="Start new chat"
               content={<SearchUsersForm />}
@@ -141,11 +140,11 @@ function ChatWrapper() {
                   activeProps={{ className: `font-bold` }}
                   className="flex items-center text-white hover:bg-black/80 group"
                 >
-                  <img
-                    src={interlocutor?.avatarUrl || placeholderAvatar}
-                    width={45}
-                    alt=""
-                    className="m-3 rounded-full"
+                  <AvatarCoin
+                    source={interlocutor?.avatarUrl || placeholderAvatar}
+                    width={50}
+                    alt={interlocutor?.displayName || "User"}
+                    className="m-3 p-0"
                   />
                   <div className="flex flex-col py-5 px-3 border-b-[1px] border-slate-700 flex-1 w-full overflow-hidden">
                     <p>

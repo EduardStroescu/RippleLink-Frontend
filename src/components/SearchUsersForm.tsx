@@ -3,8 +3,8 @@ import { Dispatch, useState } from "react";
 import userApi from "@/api/modules/user.api";
 import { useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Input } from "./Input";
-import { AvatarCoin } from "./AvatarCoin";
+import { Input } from "@/components/UI/Input";
+import { AvatarCoin } from "@/components/UI/AvatarCoin";
 import { placeholderAvatar } from "@/lib/const";
 
 export const SearchUsersForm = ({

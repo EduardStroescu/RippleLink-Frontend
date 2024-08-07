@@ -20,11 +20,17 @@ export const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
   const router = useRouter();
 
   const handleLogout = async () => {
-    await userApi.logout();
-    setItem(null);
-    setUser(null);
-    queryClient.removeQueries();
-    router.navigate({ to: "/" });
+    try {
+      await userApi.logout();
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setItem(null);
+      setUser(null);
+      queryClient.removeQueries();
+      console.log("logout");
+      router.navigate({ to: "/" });
+    }
   };
 
   const hamburgerFunctions = [

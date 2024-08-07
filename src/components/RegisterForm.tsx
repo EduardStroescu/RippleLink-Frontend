@@ -9,7 +9,7 @@ import { RegisterSchema } from "@/lib/formSchemas/auth.schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { placeholderAvatar } from "@/lib/const";
 import { ChangeEvent, useState } from "react";
-import { AvatarCoin } from "./AvatarCoin";
+import { AvatarCoin } from "@/components/UI/AvatarCoin";
 
 export function RegisterForm() {
   const { setUser } = useUserStoreActions();

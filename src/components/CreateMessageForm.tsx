@@ -1,5 +1,4 @@
 import React, { FormEvent, useEffect, useRef, useState } from "react";
-import { EmojiPicker } from "./EmojiPicker";
 import { AddIcon, CloseIcon, FileIcon, GifIcon, SendIcon } from "./Icons";
 import { GifPicker } from "./GifPicker";
 import { FileUploadOverlay } from "./FileUploadOverlay";
@@ -8,6 +7,7 @@ import { FileUploadOverlayContent } from "./FileUploadOverlayContent";
 import { FullscreenImage } from "./UI/FullscreenImage";
 import { VideoComponent } from "./UI/Video";
 import { AudioComponent } from "./UI/Audio";
+import { CustomChatInput } from "./UI/CustomChatInput";
 
 type CreateMessageFormProps = {
   handleSubmitMessage: (e: FormEvent<HTMLFormElement>) => void;
@@ -39,7 +39,6 @@ export const CreateMessageForm = ({
   const [shouldRenderPreview, setShouldRenderPreview] =
     useState(!!contentPreview);
   const formRef = useRef<HTMLFormElement>(null);
-  const chatInputRef = useRef<HTMLTextAreaElement>(null);
 
   const handleGifSelect = (gif: string) => {
     setGif(gif);
@@ -48,39 +47,6 @@ export const CreateMessageForm = ({
         formRef.current.requestSubmit();
       }
     }, 0);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage(e.target.value);
-    autoResize();
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      if (formRef.current) {
-        formRef.current.requestSubmit();
-      }
-    }
-  };
-
-  const insertEmoji = (emoji: string) => {
-    const element = chatInputRef.current;
-    if (element) {
-      const startPos = element.selectionStart;
-      const endPos = element.selectionEnd;
-      const textBefore = element.value.substring(0, startPos);
-      const textAfter = element.value.substring(endPos, element.value.length);
-
-      element.value = textBefore + emoji + textAfter;
-      setMessage(element.value);
-      autoResize();
-
-      // Set cursor position after emoji
-      const newPosition = startPos + emoji.length;
-      element.setSelectionRange(newPosition, newPosition);
-      element.focus();
-    }
   };
 
   const handleInsertFileByType = (
@@ -103,28 +69,11 @@ export const CreateMessageForm = ({
     };
   };
 
-  const autoResize = () => {
-    const element = chatInputRef.current;
-    if (element) {
-      element.style.height = "auto";
-      const maxHeight = window.innerHeight / 4; // Set max height to 1/4 of the viewport height
-      element.style.height = `${Math.min(element.scrollHeight, maxHeight)}px`;
-      element.style.overflowY =
-        element.scrollHeight > maxHeight ? "scroll" : "hidden";
+  const handleKeyDown = () => {
+    if (formRef.current) {
+      formRef.current.requestSubmit();
     }
   };
-
-  useEffect(() => {
-    if (chatInputRef.current) {
-      autoResize();
-    }
-  }, [message]);
-
-  useEffect(() => {
-    if (chatInputRef.current) {
-      chatInputRef.current.focus();
-    }
-  }, []);
 
   useEffect(() => {
     if (contentPreview) {
@@ -169,7 +118,7 @@ export const CreateMessageForm = ({
       )}
       {shouldRenderInput && (
         <div
-          className={`${!contentPreview ? "fade-in-up" : "fade-out-down"} py-3 px-6 flex justify-center items-center gap-4 text-white border-t-slate-700 border-t-[1px]`}
+          className={`${!contentPreview ? "fade-in-up" : "fade-out-down"} py-3 px-2 sm:px-6 flex justify-center items-center gap-1 sm:gap-4 text-white border-t-slate-700 border-t-[1px]`}
         >
           <FileUploadOverlay
             content={
@@ -180,17 +129,11 @@ export const CreateMessageForm = ({
           >
             <AddIcon title="Add File" />
           </FileUploadOverlay>
-          <EmojiPicker getValue={insertEmoji}>😏</EmojiPicker>
-          <textarea
+          <CustomChatInput
             disabled={!!contentPreview}
-            ref={chatInputRef}
-            value={message}
-            rows={1}
-            spellCheck={true}
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a message"
-            className="w-full p-2 bg-black/40 rounded-xl resize-none max-h-[25vh] break-all"
+            message={message}
+            setMessage={setMessage}
+            handleKeyDown={handleKeyDown}
           />
           <GifPicker getValue={handleGifSelect}>
             <GifIcon />

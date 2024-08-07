@@ -1,4 +1,4 @@
-import { TrashIcon } from "./Icons";
+import { TrashIcon } from "@/components/Icons";
 
 export function DeleteButton({
   onClick,

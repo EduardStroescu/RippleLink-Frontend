@@ -446,13 +446,72 @@ export function AudioIcon() {
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
-      className=" group-hover:scale-110 transition-all ease-in-out"
+      className="group-hover:scale-110 transition-all ease-in-out"
     >
       <path d="M9.66984 13.9219C8.92984 13.9219 8.33984 14.5219 8.33984 15.2619C8.33984 16.0019 8.93984 16.5919 9.66984 16.5919C10.4098 16.5919 11.0098 15.9919 11.0098 15.2619C11.0098 14.5219 10.4098 13.9219 9.66984 13.9219Z" />
       <path
         d="M16.19 2H7.81C4.17 2 2 4.17 2 7.81V16.18C2 19.83 4.17 22 7.81 22H16.18C19.82 22 21.99 19.83 21.99 16.19V7.81C22 4.17 19.83 2 16.19 2ZM17.12 9.8C17.12 10.41 16.86 10.95 16.42 11.27C16.14 11.47 15.8 11.58 15.44 11.58C15.23 11.58 15.02 11.54 14.8 11.47L12.51 10.71C12.5 10.71 12.48 10.7 12.47 10.69V15.25C12.47 16.79 11.21 18.05 9.67 18.05C8.13 18.05 6.87 16.79 6.87 15.25C6.87 13.71 8.13 12.45 9.67 12.45C10.16 12.45 10.61 12.59 11.01 12.8V8.63V8.02C11.01 7.41 11.27 6.87 11.71 6.55C12.16 6.23 12.75 6.15 13.33 6.35L15.62 7.11C16.48 7.4 17.13 8.3 17.13 9.2V9.8H17.12Z"
         fill="#D9D9D9"
         className="group-hover:fill-[#e6e7e8]"
+      />
+    </svg>
+  );
+}
+
+export function InfoIcon() {
+  return (
+    <svg
+      width="25px"
+      height="25px"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="group-hover:scale-110 transition-all ease-in-out"
+    >
+      <title>Chat Details</title>
+      <path
+        d="M12 17V11"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        stroke="#D9D9D9"
+        className="group-hover:stroke-[#e6e7e8]"
+      />
+      <circle
+        cx="1"
+        cy="1"
+        r="1"
+        transform="matrix(1 0 0 -1 11 9)"
+        fill="#D9D9D9"
+        className="group-hover:fill-[#e6e7e8]"
+      />
+      <path
+        d="M7 3.33782C8.47087 2.48697 10.1786 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 10.1786 2.48697 8.47087 3.33782 7"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        stroke="#D9D9D9"
+        className="group-hover:stroke-[#e6e7e8]"
+      />
+    </svg>
+  );
+}
+
+export function EditIcon() {
+  return (
+    <svg
+      width="20px"
+      height="20px"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="group-hover:scale-110 transition-all ease-in-out"
+    >
+      <title>Edit Message</title>
+      <path
+        d="M20 12C20 16.4183 16.4183 20 12 20C7.58172 20 4 16.4183 4 12C4 7.58172 7.58172 4 12 4M9.35443 12.4346L15.9429 5.92003C16.4684 5.40046 17.3049 5.3718 17.8647 5.85418C18.4812 6.38542 18.5247 7.32554 17.96 7.91149L11.481 14.6335L9 15L9.35443 12.4346Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        stroke="#D9D9D9"
+        className="group-hover:stroke-[#e6e7e8]"
       />
     </svg>
   );

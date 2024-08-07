@@ -5,6 +5,7 @@ import { Message } from "@/types/message";
 const chatEndpoints = {
   getAllChats: "chats/all",
   getChatById: "chats/:chatId",
+  getSharedFilesByChatId: "chats/sharedFiles/:chatId",
   getMessagesByChatId: "messages/:chatId",
   createChat: "chats",
   deleteChat: "chats/:chatId",
@@ -35,6 +36,12 @@ const chatApi = {
     messageType?: string;
   }): Promise<Chat> => {
     return await privateClient.post(chatEndpoints.createChat, chatData);
+  },
+
+  getSharedFilesByChatId: async (chatId: string): Promise<Message[] | []> => {
+    return await privateClient.get(
+      chatEndpoints.getSharedFilesByChatId.replace(":chatId", chatId)
+    );
   },
 
   deleteChat: async (chatId: string): Promise<{ success: string }> => {

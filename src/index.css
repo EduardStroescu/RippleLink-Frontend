@@ -7,6 +7,10 @@ body {
   background-color: black;
 }
 
+* {
+  scroll-behavior: smooth;
+}
+
 @layer base {
   body {
     @apply text-[#cac2ff];

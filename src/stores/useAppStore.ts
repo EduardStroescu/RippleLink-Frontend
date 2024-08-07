@@ -3,6 +3,7 @@ import { create } from "zustand";
 
 export const useAppStore = create<AppStore>()((set) => ({
   isDrawerOpen: false,
+  isChatDetailsDrawerOpen: false,
 
   actions: {
     setIsDrawerOpen: (newValue) =>
@@ -10,6 +11,13 @@ export const useAppStore = create<AppStore>()((set) => ({
         isDrawerOpen:
           typeof newValue === "function"
             ? newValue(prevState.isDrawerOpen)
+            : newValue,
+      })),
+    setIsChatDetailsDrawerOpen: (newValue) =>
+      set((prevState) => ({
+        isDrawerOpen:
+          typeof newValue === "function"
+            ? newValue(prevState.isChatDetailsDrawerOpen)
             : newValue,
       })),
   },

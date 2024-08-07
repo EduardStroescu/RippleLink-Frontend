@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/Dialog";
+} from "@/components/UI/Dialog";
 import clsx from "clsx";
 
 interface CustomDialogTriggerProps {

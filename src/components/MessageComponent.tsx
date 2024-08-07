@@ -1,34 +1,85 @@
 import { Message } from "@/types/message";
-import { CheckIcon } from "./Icons";
-import { DeleteButton } from "./DeleteButton";
+import { CheckIcon, EditIcon } from "./Icons";
+import { DeleteButton } from "./UI/DeleteButton";
 import { adaptTimezone } from "@/lib/hepers";
 import { FullscreenImage } from "./UI/FullscreenImage";
 import { VideoComponent } from "./UI/Video";
 import { AudioComponent } from "./UI/Audio";
 import { FileComponent } from "./UI/File";
+import { useRef, useState } from "react";
+import { CustomChatInput } from "./UI/CustomChatInput";
+import { useSocketContext } from "@/providers/SocketProvider";
+import { useParams } from "@tanstack/react-router";
 
 export function MessageComponent({
   isOwnMessage,
   message,
   handleDelete,
+  idx,
 }: {
   isOwnMessage: boolean;
   message: Message;
   handleDelete: (messageId: string) => void;
+  idx: number;
 }) {
+  const { socket } = useSocketContext();
+  const [isEditing, setIsEditing] = useState(false);
+  const [updatedMessage, setUpdatedMessage] = useState(message.content);
+  const formRef = useRef<HTMLFormElement>(null);
+  const { chatId } = useParams({ from: "/chat/$chatId" });
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (socket) {
+      setIsEditing(false);
+      socket.emit("updateMessage", {
+        room: chatId,
+        messageId: message._id,
+        message: updatedMessage,
+      });
+    }
+  };
+
+  const handleKeyDown = () => {
+    if (formRef.current) {
+      formRef.current.requestSubmit();
+    }
+  };
   return (
     <div
       className={`${
         isOwnMessage ? "self-end" : "self-start"
       } group flex flex-row gap-2 items-center`}
     >
+      {isOwnMessage && message.type === "text" && (
+        <button
+          onClick={() => setIsEditing((prev) => !prev)}
+          className="hidden group-hover:flex"
+        >
+          <EditIcon />
+        </button>
+      )}
       <div
         className={`${
           isOwnMessage ? "bg-green-600/60" : "bg-black/60"
         } relative flex flex-row py-2 px-4 max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl rounded-xl overflow-hidden`}
       >
         <div className="flex flex-col w-full">
-          {displayMessageByType(message)}
+          {!isEditing ? (
+            displayMessageByType(message)
+          ) : (
+            <form
+              ref={formRef}
+              onSubmit={handleSubmit}
+              className="min-w-[31rem] py-1 flex gap-1 sm:gap-2 text-white"
+            >
+              <CustomChatInput
+                message={updatedMessage}
+                setMessage={setUpdatedMessage}
+                handleKeyDown={handleKeyDown}
+              />
+            </form>
+          )}
           <div className="flex gap-1 items-center self-end">
             <p className="text-xs">
               {adaptTimezone(message.createdAt, "ro-RO")?.slice(0, 6)}
@@ -36,7 +87,7 @@ export function MessageComponent({
             {message.read && isOwnMessage && <CheckIcon />}
           </div>
         </div>
-        {isOwnMessage && (
+        {isOwnMessage && idx !== 0 && (
           <div className="w-[50px] h-[40px] absolute justify-end py-2 px-2.5 -right-1 -top-1 hidden group-hover:flex bg-message-gradient pointer-events-none">
             <DeleteButton
               className="group h-fit pointer-events-auto"
