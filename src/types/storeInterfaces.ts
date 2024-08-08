@@ -16,6 +16,8 @@ export interface UserStore {
 export interface AppStore {
   isDrawerOpen: boolean;
   isChatDetailsDrawerOpen: boolean;
+  incomingCalls: User[];
+  answeredCall: boolean;
 
   actions: {
     setIsDrawerOpen: (
@@ -29,6 +31,17 @@ export interface AppStore {
         | ((
             prevUser: AppStore["isChatDetailsDrawerOpen"]
           ) => AppStore["isChatDetailsDrawerOpen"])
+    ) => void;
+    setIncomingCalls: (
+      newValue:
+        | []
+        | User[]
+        | ((prevCalls: AppStore["incomingCalls"]) => AppStore["incomingCalls"])
+    ) => void;
+    setAnsweredCall: (
+      newValue:
+        | boolean
+        | ((prevCalls: AppStore["answeredCall"]) => AppStore["answeredCall"])
     ) => void;
   };
 }

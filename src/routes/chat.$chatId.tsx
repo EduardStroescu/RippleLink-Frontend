@@ -4,7 +4,7 @@ import {
   Outlet,
   useParams,
 } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSocketContext } from "@/providers/SocketProvider";
 import { useUserStore } from "@/stores/useUserStore";
 import { AvatarCoin } from "@/components/UI/AvatarCoin";
@@ -22,6 +22,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import chatApi from "@/api/modules/chat.api";
 import { useAppStore } from "@/stores/useAppStore";
 import { MessageComponent } from "@/components/MessageComponent";
+import { CallComponent } from "@/components/CallComponent";
 
 export const Route = createFileRoute("/chat/$chatId")({
   beforeLoad: async ({ params: { chatId } }) => {
@@ -50,20 +51,23 @@ function ChatId() {
   const queryClient = useQueryClient();
   const messagesQuery = Route.useLoaderData();
   const { data: messages } = useQuery(messagesQuery);
-  const chatData = queryClient.getQueryData<Chat[] | []>(["chats"]);
+  const { data: chatData } = useQuery<Chat[] | []>({
+    queryKey: ["chats"],
+    initialData: () => queryClient.getQueryData(["chats"]),
+  });
 
   const { socket } = useSocketContext();
   const scrollToBottomRef = useRef<HTMLDivElement>(null);
   const params = useParams({ from: "/chat/$chatId" });
 
   const currentChat = useMemo(
-    () => chatData?.filter((chat) => chat._id === params.chatId)?.[0],
+    () => chatData?.find((chat) => chat._id === params.chatId),
     [chatData, params.chatId]
   );
   const interlocutor = useMemo(
     () =>
       currentChat &&
-      currentChat?.users?.filter((person) => person._id !== user?._id)[0],
+      currentChat?.users?.find((person) => person._id !== user?._id),
     [currentChat, user?._id]
   );
 
@@ -106,6 +110,20 @@ function ChatId() {
     socket.emit("deleteMessage", { room: params.chatId, messageId });
   };
 
+  const handleStartCall = () => {
+    if (!socket) return;
+    queryClient.setQueryData(["chats"], (prev: Chat[] | [] | undefined) => {
+      if (!prev) return [];
+      const index = prev?.findIndex((item) => item._id === params.chatId);
+      if (index === -1) return [...prev];
+      const updatedChat = {
+        ...prev[index],
+        ongoingCall: { callParticipants: [user] },
+      };
+      return [...prev.slice(0, index), updatedChat, ...prev.slice(index + 1)];
+    });
+  };
+
   return (
     <div className="flex w-full h-full">
       <aside
@@ -138,7 +156,7 @@ function ChatId() {
           </div>
           {/* TODO: FINISH IMPLEMENTING THIS */}
           <div className="mr-4 flex gap-4">
-            <button className="group">
+            <button onClick={handleStartCall}>
               <CallIcon />
             </button>
             <button className="group">
@@ -153,6 +171,13 @@ function ChatId() {
             </Link>
           </div>
         </div>
+        {currentChat?.ongoingCall && (
+          <CallComponent
+            chatId={params.chatId}
+            chatParticipants={currentChat.users}
+            currentChat={currentChat}
+          />
+        )}
         <div className="w-full flex-1 h-full p-4 text-white overflow-y-auto flex flex-col gap-4">
           {!!messages?.length &&
             messages?.map((message, idx) => {

@@ -1,13 +1,16 @@
-import { PropsWithoutRef } from "react";
+import { forwardRef, Ref, HTMLProps } from "react";
 
-export function VideoComponent(
-  props: PropsWithoutRef<JSX.IntrinsicElements["video"]>
-) {
-  return (
-    <video
-      controls
-      className="w-full h-full object-cover rounded-md"
-      {...props}
-    />
-  );
-}
+type VideoProps = HTMLProps<HTMLVideoElement>;
+
+export const VideoComponent = forwardRef<HTMLVideoElement, VideoProps>(
+  (props, ref: Ref<HTMLVideoElement>) => {
+    return (
+      <video
+        ref={ref}
+        controls
+        className="w-full h-full object-cover rounded-md"
+        {...props}
+      />
+    );
+  }
+);

@@ -1,5 +1,5 @@
 import { Chat } from "@/types/chat";
-import { FilterOption } from "@/types/filterOption";
+import { FilterOption } from "@/types/filterOptions";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 

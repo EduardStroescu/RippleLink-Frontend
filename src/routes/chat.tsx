@@ -25,6 +25,8 @@ import { useChatEvents } from "@/lib/hooks/useChatEvents";
 import { useChatsFilters } from "@/lib/hooks/useChatsFilters";
 import { FilterOption } from "@/types/filterOptions";
 import { useAppStore } from "@/stores/useAppStore";
+import CallDialog from "@/components/CallDialog";
+import { CallEventOverlay } from "@/components/CallEventOverlay";
 
 export const Route = createFileRoute("/chat")({
   beforeLoad: async ({ location }) => {
@@ -189,6 +191,7 @@ function ChatWrapper() {
       >
         <Outlet />
       </section>
+      <CallDialog content={<CallEventOverlay />} />
     </div>
   );
 }

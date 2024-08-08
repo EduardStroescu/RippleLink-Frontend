@@ -4,6 +4,8 @@ import { create } from "zustand";
 export const useAppStore = create<AppStore>()((set) => ({
   isDrawerOpen: false,
   isChatDetailsDrawerOpen: false,
+  incomingCalls: [],
+  answeredCall: false,
 
   actions: {
     setIsDrawerOpen: (newValue) =>
@@ -18,6 +20,20 @@ export const useAppStore = create<AppStore>()((set) => ({
         isDrawerOpen:
           typeof newValue === "function"
             ? newValue(prevState.isChatDetailsDrawerOpen)
+            : newValue,
+      })),
+    setIncomingCalls: (newValue) =>
+      set((prevState) => ({
+        incomingCalls:
+          typeof newValue === "function"
+            ? newValue(prevState.incomingCalls)
+            : newValue,
+      })),
+    setAnsweredCall: (newValue) =>
+      set((prevState) => ({
+        answeredCall:
+          typeof newValue === "function"
+            ? newValue(prevState.answeredCall)
             : newValue,
       })),
   },
