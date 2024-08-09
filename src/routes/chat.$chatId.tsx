@@ -4,7 +4,7 @@ import {
   Outlet,
   useParams,
 } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useSocketContext } from "@/providers/SocketProvider";
 import { useUserStore } from "@/stores/useUserStore";
 import { AvatarCoin } from "@/components/UI/AvatarCoin";
@@ -23,6 +23,8 @@ import chatApi from "@/api/modules/chat.api";
 import { useAppStore } from "@/stores/useAppStore";
 import { MessageComponent } from "@/components/MessageComponent";
 import { CallComponent } from "@/components/CallComponent";
+import { useCallStore, useCallStoreActions } from "@/stores/useCallStore";
+import { useCallContext } from "@/providers/CallProvider";
 
 export const Route = createFileRoute("/chat/$chatId")({
   beforeLoad: async ({ params: { chatId } }) => {
@@ -45,6 +47,7 @@ export const Route = createFileRoute("/chat/$chatId")({
 
 function ChatId() {
   const user = useUserStore((state) => state.user);
+  const { setCurrentCall } = useCallStoreActions();
   const isChatDetailsDrawerOpen = useAppStore(
     (state) => state.isChatDetailsDrawerOpen
   );
@@ -55,6 +58,7 @@ function ChatId() {
     queryKey: ["chats"],
     initialData: () => queryClient.getQueryData(["chats"]),
   });
+  const { startCall } = useCallContext();
 
   const { socket } = useSocketContext();
   const scrollToBottomRef = useRef<HTMLDivElement>(null);
@@ -109,21 +113,17 @@ function ChatId() {
     if (!socket) return;
     socket.emit("deleteMessage", { room: params.chatId, messageId });
   };
-
+  const currentCall = useCallStore((state) => state.currentCall);
   const handleStartCall = () => {
-    if (!socket) return;
-    queryClient.setQueryData(["chats"], (prev: Chat[] | [] | undefined) => {
-      if (!prev) return [];
-      const index = prev?.findIndex((item) => item._id === params.chatId);
-      if (index === -1) return [...prev];
-      const updatedChat = {
-        ...prev[index],
-        ongoingCall: { callParticipants: [user] },
-      };
-      return [...prev.slice(0, index), updatedChat, ...prev.slice(index + 1)];
-    });
+    if (!currentChat) return;
+    console.log("starting call");
+    startCall(currentChat._id, currentChat.users);
   };
-
+  useEffect(() => {
+    if (currentChat?.ongoingCall) {
+      setCurrentCall(currentChat?.ongoingCall);
+    }
+  }, [currentChat]);
   return (
     <div className="flex w-full h-full">
       <aside
@@ -171,7 +171,7 @@ function ChatId() {
             </Link>
           </div>
         </div>
-        {currentChat?.ongoingCall && (
+        {currentChat && currentCall && (
           <CallComponent
             chatId={params.chatId}
             chatParticipants={currentChat.users}

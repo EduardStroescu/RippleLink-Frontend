@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import useNotificationSound from "./useNotificationSound";
 import { useThrottle } from "./useThrottle";
 import useWindowVisibility from "./useWindowVisibility";
+import { useCallStoreActions } from "@/stores/useCallStore";
 
 export function useChatEvents(
   setChats: (
@@ -18,6 +19,7 @@ export function useChatEvents(
   const playSound = useNotificationSound("/notification.mp3");
   const isWindowActive = useWindowVisibility();
   const [newMessageCount, setNewMessageCount] = useState(0);
+  const { setCurrentCall } = useCallStoreActions();
 
   useEffect(() => {
     if (!socket || !user?._id) return;

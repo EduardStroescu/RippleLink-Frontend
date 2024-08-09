@@ -25,8 +25,8 @@ import { useChatEvents } from "@/lib/hooks/useChatEvents";
 import { useChatsFilters } from "@/lib/hooks/useChatsFilters";
 import { FilterOption } from "@/types/filterOptions";
 import { useAppStore } from "@/stores/useAppStore";
-import CallDialog from "@/components/CallDialog";
-import { CallEventOverlay } from "@/components/CallEventOverlay";
+import MediaStreamManager from "@/components/MediaStreamManager";
+import { CallProvider } from "@/providers/CallProvider";
 
 export const Route = createFileRoute("/chat")({
   beforeLoad: async ({ location }) => {
@@ -186,12 +186,16 @@ function ChatWrapper() {
           </div>
         </div>
       </aside>
-      <section
-        className={`${isDrawerOpen ? "hidden" : "flex"} sm:flex flex-col flex-1 h-full border-l-[1px] border-slate-700`}
-      >
-        <Outlet />
-      </section>
-      <CallDialog content={<CallEventOverlay />} />
+      <CallProvider>
+        <MediaStreamManager>
+          <section
+            className={`${isDrawerOpen ? "hidden" : "flex"} sm:flex flex-col flex-1 h-full border-l-[1px] border-slate-700`}
+          >
+            <Outlet />
+          </section>
+          {/* <CallDialog content={<CallEventOverlay />} /> */}
+        </MediaStreamManager>
+      </CallProvider>
     </div>
   );
 }

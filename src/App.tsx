@@ -5,7 +5,13 @@ import { ErrorComponent } from "./components/ErrorComponent.tsx";
 import { routeTree } from "./routeTree.gen";
 // import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 const router = createRouter({
   routeTree,
   context: {
