@@ -1,3 +1,4 @@
+import { useToast } from "@/components/UI/use-toast";
 import { useSocketContext } from "@/providers/SocketProvider";
 import { Message } from "@/types/message";
 import { useState } from "react";
@@ -11,6 +12,7 @@ export function useCreateMessage(params: any) {
     content: string | null;
     name: string | null;
   } | null>(null);
+  const { toast } = useToast();
 
   const handleSubmitMessage = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -43,7 +45,7 @@ export function useCreateMessage(params: any) {
       try {
         socket?.emit("createMessage", payload);
       } catch (error) {
-        console.log(error);
+        toast({ variant: "destructive", title: "Error", description: error });
       }
       setContentPreview(null);
     } else {

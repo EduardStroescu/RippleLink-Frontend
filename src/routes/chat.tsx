@@ -25,8 +25,8 @@ import { useChatEvents } from "@/lib/hooks/useChatEvents";
 import { useChatsFilters } from "@/lib/hooks/useChatsFilters";
 import { FilterOption } from "@/types/filterOptions";
 import { useAppStore } from "@/stores/useAppStore";
-import CallDialog from "@/components/CallDialog";
-import { CallEventOverlay } from "@/components/CallEventOverlay";
+import { CallProvider } from "@/providers/CallProvider";
+import { useToast } from "@/components/UI/use-toast";
 
 export const Route = createFileRoute("/chat")({
   beforeLoad: async ({ location }) => {
@@ -40,17 +40,19 @@ export const Route = createFileRoute("/chat")({
     }
     useAppStore.setState({ isDrawerOpen: true });
 
-    const queryContent = {
+    const chatsQuery = {
       queryKey: ["chats"],
       queryFn: chatApi.getAllChats,
       placeholderData: [],
     };
-    return { queryContent };
+    return { chatsQuery };
   },
-  loader: async ({ context: { queryContent } }) => queryContent,
+  loader: async ({ context: { chatsQuery } }) => chatsQuery,
   component: () => (
     <SocketProvider>
-      <ChatWrapper />
+      <CallProvider>
+        <ChatWrapper />
+      </CallProvider>
     </SocketProvider>
   ),
 });
@@ -58,14 +60,15 @@ export const Route = createFileRoute("/chat")({
 function ChatWrapper() {
   const user = useUserStore((state) => state.user);
   const isDrawerOpen = useAppStore((state) => state.isDrawerOpen);
-  const queryContent = Route.useLoaderData();
-  useQuery(queryContent);
+  const chatsQuery = Route.useLoaderData();
+  useQuery(chatsQuery);
   const queryClient = useQueryClient();
   const chats = queryClient.getQueryData<Chat[] | []>(["chats"]);
   const { filteredChats, setChats, handleFilter, handleSearch } =
     useChatsFilters(chats);
   useChatEvents(setChats);
   const router = useRouter();
+  const { toast } = useToast();
 
   const filterOptions: FilterOption[] = ["All", "Unread", "Groups"];
   const deleteChatMutation = useMutation({
@@ -79,7 +82,11 @@ function ChatWrapper() {
         router.navigate({ to: "/chat", replace: true });
       },
       onError: (error) => {
-        console.log(error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message,
+        });
       },
     });
   };
@@ -191,7 +198,7 @@ function ChatWrapper() {
       >
         <Outlet />
       </section>
-      <CallDialog content={<CallEventOverlay />} />
+      {/* <CallDialog content={<CallEventOverlay />} /> */}
     </div>
   );
 }

@@ -16,6 +16,7 @@ import { Message } from "@/types/message";
 import { useUserStore } from "@/stores/useUserStore";
 import { BackIcon } from "@/components/Icons";
 import { useAppStore } from "@/stores/useAppStore";
+import { useToast } from "@/components/UI/use-toast";
 
 export const Route = createFileRoute("/chat/create-chat")({
   beforeLoad: async ({ search: { userId }, context: { queryClient } }) => {
@@ -63,6 +64,7 @@ function CreateNewChat() {
   const [chatType, setChatType] = useState<Chat["type"] | "">("");
   const [chatName, setChatName] = useState("");
   const [messageType, setMessageType] = useState<Message["type"]>("text");
+  const { toast } = useToast();
 
   const createChatMutation = useMutation({
     mutationFn: async (values: {
@@ -106,8 +108,12 @@ function CreateNewChat() {
         router.history.push(`/chat/${response._id}`);
         queryClient.removeQueries({ queryKey: ["chats"] });
       },
-      onError: () => {
-        console.log("error");
+      onError: (error) => {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message,
+        });
       },
     });
   };

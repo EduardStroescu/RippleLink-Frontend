@@ -1,212 +1,222 @@
-import { useSocketContext } from "@/providers/SocketProvider";
-import { useRef, useEffect, useState } from "react";
-import Peer from "simple-peer";
-import { User } from "@/types/user";
+import { forwardRef, useRef } from "react";
 import { AvatarCoin } from "./UI/AvatarCoin";
 import { placeholderAvatar } from "@/lib/const";
-import { CallIcon, CloseIcon } from "./Icons";
+import {
+  CallIcon,
+  MuteMicIcon,
+  RejectCallIcon,
+  ScreenShareIcon,
+  StopVideoIcon,
+} from "./Icons";
 import { useUserStore } from "@/stores/useUserStore";
 import { Chat } from "@/types/chat";
-import { useAppStore, useAppStoreActions } from "@/stores/useAppStore";
 import MediaPreviewDialog from "./MediaPreviewDialog";
+import { useCallStore, useCallStoreActions } from "@/stores/useCallStore";
+import { useCallContext } from "@/providers/CallProvider";
+import { useShallow } from "zustand/react/shallow";
 
 interface VideoCallProps {
   chatId: string;
-  chatParticipants: User[];
-  currentChat: Chat;
+  currentChat: Chat | undefined;
 }
 
-export const CallComponent = ({
-  chatId,
-  chatParticipants,
-  currentChat,
-}: VideoCallProps) => {
-  const { socket } = useSocketContext();
+export const CallComponent = ({ chatId, currentChat }: VideoCallProps) => {
   const user = useUserStore((state) => state.user);
-  const answeredCall = useAppStore((state) => state.answeredCall);
-  const { setAnsweredCall } = useAppStoreActions();
-  const currentCallDetails = currentChat.ongoingCall;
+  const currentCallDetails = currentChat?.ongoingCall;
+  const { streams, connections } = useCallStore(
+    useShallow((state) => ({
+      streams: state.streams,
+      connections: state.connections,
+    }))
+  );
+  const { addStream } = useCallStoreActions();
+  const { answerCall, endCall } = useCallContext();
 
-  const [stream, setStream] = useState<MediaStream | undefined>();
+  const handleAnswerCall = () => {
+    if (currentCallDetails) {
+      answerCall(currentCallDetails);
+    }
+  };
 
-  const videoRefs = useRef<{ [key: string]: HTMLVideoElement }>({});
-  const connectionRef = useRef<InstanceType<typeof Peer> | null>(null);
-  const [selectedVideo, setSelectedVideo] = useState<HTMLVideoElement | null>(
-    null
+  const handleEndCall = () => {
+    endCall(chatId);
+  };
+  const fullscreenVideoRef = useRef<HTMLVideoElement>(null);
+
+  const handleVideoClick = (stream: MediaStream | null) => {
+    setTimeout(() => {
+      if (fullscreenVideoRef.current) {
+        fullscreenVideoRef.current.srcObject = stream;
+        fullscreenVideoRef.current.play();
+      }
+    }, 0);
+  };
+
+  const isUserInOngoingCall = currentCallDetails?.participants?.some(
+    (participant) => participant.userId._id === user?._id
   );
 
-  // Start local stream
-  useEffect(() => {
-    const startLocalStream = async () => {
+  const handleVideoOff = () => {
+    if (!user?._id) return;
+    const videoTrack = streams[user?._id]
+      ?.getTracks()
+      .find((track) => track.kind === "video");
+
+    if (!videoTrack) return;
+    if (videoTrack.enabled) {
+      videoTrack.enabled = false;
+    } else {
+      videoTrack.enabled = true;
+    }
+  };
+
+  const handleAudioOff = () => {
+    if (!user?._id) return;
+    const audioTrack = streams[user?._id]
+      ?.getTracks()
+      .find((track) => track.kind === "audio");
+    console.log(audioTrack);
+
+    if (!audioTrack) return;
+    if (audioTrack.enabled) {
+      audioTrack.enabled = false;
+    } else {
+      audioTrack.enabled = true;
+    }
+  };
+
+  const handleScreenShare = async () => {
+    try {
       if (!user?._id) return;
-      try {
-        const stream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-          audio: {
-            autoGainControl: false,
-            channelCount: 2,
-            echoCancellation: false,
-            noiseSuppression: false,
-            sampleRate: 48000,
-            sampleSize: 16,
-          },
-        });
-
-        setStream(stream);
-        if (videoRefs.current) {
-          videoRefs.current[user?._id].srcObject = stream;
-        }
-      } catch (error) {
-        console.error("Error accessing media devices.", error);
-      }
-    };
-
-    startLocalStream();
-  }, [user?._id]);
-
-  // Initiate call if none is ongoing
-  useEffect(() => {
-    const otherCallParticipants =
-      currentChat?.ongoingCall?.callParticipants.filter(
-        (participant) => participant?._id !== user?._id
-      );
-    if (!otherCallParticipants?.length) return;
-
-    chatParticipants.forEach((participant) => {
-      const peer = new Peer({
-        initiator: true,
-        trickle: false,
-        stream: stream,
+      const newStream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: false,
       });
+      if (!newStream) return;
 
-      peer.on("signal", (data) => {
-        socket?.emit("initiateCall", { chatId, offer: data });
+      // Iterate over all peer connections
+      Object.values(connections).forEach((peer) => {
+        // Get the current video track from the existing stream
+        const oldStream = peer.streams[0];
+        if (!oldStream) return;
+        // console.log(newStream.getVideoTracks()[0]);
+        peer.addTrack(newStream.getVideoTracks()[0], oldStream);
+
+        // Replace the old video track(s) with the new one(s)
+        // const oldVideoTracks = oldStream.getVideoTracks();
+        // if (oldVideoTracks.length > 0) {
+        //   newStream.getVideoTracks().forEach((newTrack) => {
+        //     oldVideoTracks.forEach((oldTrack) => {
+        //       peer.replaceTrack(oldTrack, newTrack, oldStream);
+        //     });
+        //   });
+        // }
+
+        addStream(user._id, newStream);
+        // Replace the old audio track(s) with the new one(s)
+        // const oldAudioTracks = oldStream.getAudioTracks();
+        // if (oldAudioTracks.length > 0) {
+        //   newStream.getAudioTracks().forEach((newTrack) => {
+        //     oldAudioTracks.forEach((oldTrack) => {
+        //       peer.replaceTrack(oldTrack, newTrack, oldStream);
+        //     });
+        //   });
+        // }
       });
-      peer.on("stream", (stream) => {
-        if (videoRefs.current) {
-          videoRefs.current[participant?._id].srcObject = stream;
-        }
-      });
-      socket?.on("incomingCallAnswer", (data) => {
-        peer.signal(data.answer);
-      });
-      connectionRef.current = peer;
-    });
-
-    return () => {
-      socket?.off("incomingCallAnswer");
-    };
-  }, [
-    socket,
-    chatId,
-    stream,
-    chatParticipants,
-    user?._id,
-    currentChat?.ongoingCall?.callParticipants,
-  ]);
-
-  // Join call if already ongoing
-  const answerCall = () => {
-    if (!user?._id || !currentCallDetails) return;
-    setAnsweredCall(true);
-    const peer = new Peer({
-      initiator: false,
-      trickle: false,
-      stream: stream,
-    });
-    peer.on("signal", (data) => {
-      socket?.emit("sendCallAnswer", { chatId, answer: data });
-    });
-    peer.on("stream", (stream) => {
-      if (videoRefs.current) {
-        videoRefs.current[user?._id].srcObject = stream;
-      }
-    });
-    peer.signal(currentCallDetails.callerSignal);
-    connectionRef.current = peer;
-  };
-
-  const leaveCall = () => {
-    setAnsweredCall(false);
-    connectionRef?.current?.destroy();
-  };
-
-  const handleVideoClick = (participantId: string) => {
-    const selectedVideoElement = videoRefs.current[participantId];
-    if (selectedVideoElement) {
-      setSelectedVideo(selectedVideoElement);
+    } catch (error) {
+      console.error("Error accessing screen share.", error);
     }
   };
 
-  const fullScreenVideoRefCallback = (videoElement) => {
-    if (videoElement && selectedVideo) {
-      videoElement.srcObject = selectedVideo.srcObject;
-      videoElement.play();
+  const isParticipantSharingVideo = (userId: string) => {
+    const stream = streams[userId];
+
+    if (stream) {
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack && videoTrack.readyState === "live") {
+        return true;
+      }
     }
+
+    return false;
   };
 
   return (
-    <div className="flex flex-col w-full gap-4 bg-gray-950/70 0 py-6 border-b-[1px] border-cyan-600">
-      <div className="grid grid-flow-col p-4 gap-2]">
-        {currentCallDetails?.callParticipants?.length &&
-          currentCallDetails?.callParticipants.map((participant) => {
+    <div className="flex flex-col w-full gap-4 bg-gray-950/70 0 py-6 border-b-[1px] border-cyan-600 ">
+      <div className="grid grid-flow-auto md:grid-flow-col p-4 gap-2">
+        {currentCallDetails?.participants?.length &&
+          currentCallDetails?.participants.map((participant) => {
             return (
               <div
-                key={participant?._id}
-                className="bg-blue-950 hover:bg-blue-900 border-slate-600 border-[1px] flex rounded flex-col items-center justify-center gap-2 py-10 px-4"
+                key={participant.userId._id}
+                className="bg-blue-950 hover:bg-blue-900 border-slate-600 border-[1px] flex rounded flex-col items-center justify-center gap-2 py-10 px-4 w-full overflow-hidden"
               >
                 <AvatarCoin
-                  //TODO: REVERSE THIS
-                  className={`${participant?.isSharingVideo ? "block" : "hidden"}`}
-                  source={participant?.avatarUrl || placeholderAvatar}
-                  width={200}
-                  alt={`${participant?.displayName}'s Avatar`}
+                  className={`${isParticipantSharingVideo(participant?.userId._id) ? "hidden" : "block"}`}
+                  source={participant?.userId?.avatarUrl || placeholderAvatar}
+                  width={100}
+                  alt={`${participant?.userId?.displayName}'s Avatar`}
                 />
                 <MediaPreviewDialog
-                  content={
-                    <video
-                      ref={fullScreenVideoRefCallback}
-                      muted={participant?._id === user?._id}
-                      //TODO: REVERSE THIS
-                      className={`${!participant?.isSharingVideo ? "block" : "hidden"} w-full h-full object-cover rounded-md`}
-                    />
-                  }
+                  content={<FullScreenVideo ref={fullscreenVideoRef} />}
                 >
                   <video
                     autoPlay
-                    onClick={() => handleVideoClick(participant._id)}
-                    muted={participant?._id === user?._id}
-                    //TODO: REVERSE THIS
-                    className={`${!participant?.isSharingVideo ? "block" : "hidden"} max-w-[500px] aspect-video object-fit rounded-md`}
+                    onClick={() =>
+                      handleVideoClick(streams[participant?.userId._id])
+                    }
+                    muted={participant?.userId._id === user?._id}
+                    className={`${isParticipantSharingVideo(participant?.userId._id) ? "block" : "hidden"} max-w-full object-fit rounded-md`}
                     ref={(el) => {
-                      if (el) {
-                        videoRefs.current[participant?._id] = el;
-                      }
+                      if (el) el.srcObject = streams[participant?.userId._id];
                     }}
                   />
                 </MediaPreviewDialog>
-                <p>{participant?.displayName || "User"}</p>
+                <p>{participant?.userId?.displayName || "User"}</p>
               </div>
             );
           })}
       </div>
 
       <div className="flex justify-center items-center gap-2">
-        {!answeredCall && (
+        {!isUserInOngoingCall && (
           <button
-            onClick={answerCall}
+            onClick={handleAnswerCall}
             className="group p-2 max-w-1/2 h-fit bg-green-950 rounded-full hover:bg-green-900"
           >
             <CallIcon />
           </button>
         )}
+
         <button
-          onClick={leaveCall}
+          onClick={handleEndCall}
           className="group p-2 max-w-fit h-fit bg-red-950 rounded-full hover:bg-red-900"
         >
-          <CloseIcon />
+          <RejectCallIcon />
+        </button>
+        <button
+          className="group p-2 max-w-fit h-fit bg-red-950 rounded-full hover:bg-red-900"
+          onClick={handleAudioOff}
+        >
+          <MuteMicIcon />
+        </button>
+        <button
+          className="group p-2 max-w-fit h-fit bg-red-950 rounded-full hover:bg-red-900"
+          onClick={handleVideoOff}
+        >
+          <StopVideoIcon />
+        </button>
+        <button
+          className="group p-2 max-w-fit h-fit bg-blue-950 rounded-full hover:bg-blue-900"
+          onClick={handleScreenShare}
+        >
+          <ScreenShareIcon />
         </button>
       </div>
     </div>
   );
 };
+
+const FullScreenVideo = forwardRef<HTMLVideoElement>((_, ref) => {
+  return <video ref={ref} muted={true} className="object-cover rounded-md" />;
+});

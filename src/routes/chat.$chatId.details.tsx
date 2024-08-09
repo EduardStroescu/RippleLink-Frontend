@@ -89,7 +89,9 @@ function ChatDetails() {
         </h2>
         <div className="flex flex-wrap w-4/5 h-full items-start justify-center overflow-y-auto">
           {sharedFilesData?.length ? (
-            sharedFilesData?.map((message) => displayMessageByType(message))
+            sharedFilesData?.map((message) => (
+              <div key={message._id}>{displayMessageByType(message)}</div>
+            ))
           ) : (
             <p className="self-center text-xl">No files shared</p>
           )}

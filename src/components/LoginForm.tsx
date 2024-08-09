@@ -7,6 +7,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { LoginSchema } from "@/lib/formSchemas/auth.schemas";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useToast } from "./UI/use-toast";
 
 export function LoginForm() {
   const { setUser } = useUserStoreActions();
@@ -15,6 +16,7 @@ export function LoginForm() {
   const redirectUrl = useRouterState({
     select: (state) => state.location.search.redirect,
   });
+  const { toast } = useToast();
 
   const loginMutation = useMutation({
     mutationFn: (formData: { email: string; password: string }) =>
@@ -43,7 +45,11 @@ export function LoginForm() {
         router.history.push(redirectUrl ? redirectUrl : "/chat");
       },
       onError: (error) => {
-        console.log(error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message,
+        });
       },
     });
   };

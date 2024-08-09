@@ -10,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { placeholderAvatar } from "@/lib/const";
 import { ChangeEvent, useState } from "react";
 import { AvatarCoin } from "@/components/UI/AvatarCoin";
+import { useToast } from "./UI/use-toast";
 
 export function RegisterForm() {
   const { setUser } = useUserStoreActions();
@@ -19,6 +20,7 @@ export function RegisterForm() {
   const redirectUrl = useRouterState({
     select: (state) => state.location.search.redirect,
   });
+  const { toast } = useToast();
 
   const registerMutation = useMutation({
     mutationFn: (formData: {
@@ -61,7 +63,11 @@ export function RegisterForm() {
         router.history.push(redirectUrl ? redirectUrl : "/chat");
       },
       onError: (error) => {
-        console.log(error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message,
+        });
       },
     });
   };

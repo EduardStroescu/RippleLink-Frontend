@@ -4,7 +4,7 @@ import {
   Outlet,
   useParams,
 } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useSocketContext } from "@/providers/SocketProvider";
 import { useUserStore } from "@/stores/useUserStore";
 import { AvatarCoin } from "@/components/UI/AvatarCoin";
@@ -23,12 +23,13 @@ import chatApi from "@/api/modules/chat.api";
 import { useAppStore } from "@/stores/useAppStore";
 import { MessageComponent } from "@/components/MessageComponent";
 import { CallComponent } from "@/components/CallComponent";
+import { useCallContext } from "@/providers/CallProvider";
 
 export const Route = createFileRoute("/chat/$chatId")({
   beforeLoad: async ({ params: { chatId } }) => {
     useAppStore.setState({
-      isChatDetailsDrawerOpen: false,
       isDrawerOpen: false,
+      isChatDetailsDrawerOpen: false,
     });
 
     const messagesQuery = {
@@ -39,7 +40,10 @@ export const Route = createFileRoute("/chat/$chatId")({
     };
     return { messagesQuery };
   },
-  loader: async ({ context: { messagesQuery } }) => messagesQuery,
+  loader: async ({ context: { messagesQuery, chatsQuery } }) => ({
+    messagesQuery,
+    chatsQuery,
+  }),
   component: ChatId,
 });
 
@@ -49,21 +53,19 @@ function ChatId() {
     (state) => state.isChatDetailsDrawerOpen
   );
   const queryClient = useQueryClient();
-  const messagesQuery = Route.useLoaderData();
+
+  const { messagesQuery, chatsQuery } = Route.useLoaderData();
   const { data: messages } = useQuery(messagesQuery);
-  const { data: chatData } = useQuery<Chat[] | []>({
-    queryKey: ["chats"],
-    initialData: () => queryClient.getQueryData(["chats"]),
-  });
+  useQuery(chatsQuery);
+  const chatData = queryClient.getQueryData<Chat[] | []>(["chats"]);
 
   const { socket } = useSocketContext();
   const scrollToBottomRef = useRef<HTMLDivElement>(null);
   const params = useParams({ from: "/chat/$chatId" });
+  const { startCall } = useCallContext();
 
-  const currentChat = useMemo(
-    () => chatData?.find((chat) => chat._id === params.chatId),
-    [chatData, params.chatId]
-  );
+  const currentChat = chatData?.find((chat) => chat._id === params.chatId);
+
   const interlocutor = useMemo(
     () =>
       currentChat &&
@@ -111,17 +113,8 @@ function ChatId() {
   };
 
   const handleStartCall = () => {
-    if (!socket) return;
-    queryClient.setQueryData(["chats"], (prev: Chat[] | [] | undefined) => {
-      if (!prev) return [];
-      const index = prev?.findIndex((item) => item._id === params.chatId);
-      if (index === -1) return [...prev];
-      const updatedChat = {
-        ...prev[index],
-        ongoingCall: { callParticipants: [user] },
-      };
-      return [...prev.slice(0, index), updatedChat, ...prev.slice(index + 1)];
-    });
+    if (!currentChat) return;
+    startCall(currentChat._id, currentChat.users);
   };
 
   return (
@@ -154,11 +147,11 @@ function ChatId() {
               )}
             </div>
           </div>
-          {/* TODO: FINISH IMPLEMENTING THIS */}
           <div className="mr-4 flex gap-4">
-            <button onClick={handleStartCall}>
+            <button onClick={handleStartCall} className="group">
               <CallIcon />
             </button>
+            {/* TODO: FINISH IMPLEMENTING THIS */}
             <button className="group">
               <AddUsersIcon />
             </button>
@@ -166,17 +159,14 @@ function ChatId() {
               to="/chat/$chatId/details"
               preload={false}
               params={{ chatId: params.chatId }}
+              className="group"
             >
               <InfoIcon />
             </Link>
           </div>
         </div>
         {currentChat?.ongoingCall && (
-          <CallComponent
-            chatId={params.chatId}
-            chatParticipants={currentChat.users}
-            currentChat={currentChat}
-          />
+          <CallComponent chatId={params.chatId} currentChat={currentChat} />
         )}
         <div className="w-full flex-1 h-full p-4 text-white overflow-y-auto flex flex-col gap-4">
           {!!messages?.length &&

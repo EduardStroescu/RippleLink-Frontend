@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Dialog, DialogContent } from "@/components/UI/Dialog";
-import { useAppStore } from "@/stores/useAppStore";
+import { useCallStore } from "@/stores/useCallStore";
 
 interface CallDialogProps {
   header?: string;
@@ -12,8 +12,8 @@ interface CallDialogProps {
 }
 
 const CallDialog: React.FC<CallDialogProps> = ({ content }) => {
-  const incomingCalls = useAppStore((state) => state.incomingCalls);
-  const [open, setOpen] = useState(!!incomingCalls.length);
+  const currentCall = useCallStore((state) => state.currentCall);
+  const [open, setOpen] = useState(!!currentCall);
 
   const contentWithProps = content
     ? React.cloneElement(content, { setOpen })

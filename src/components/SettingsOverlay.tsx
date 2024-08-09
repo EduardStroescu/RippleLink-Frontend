@@ -6,6 +6,7 @@ import userApi from "@/api/modules/user.api";
 import { useRouter } from "@tanstack/react-router";
 import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
 import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "./UI/use-toast";
 
 interface SettingsOverlayProps {
   children: React.ReactNode;
@@ -18,17 +19,21 @@ export const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
   const { setUser } = useUserStoreActions();
   const { setItem } = useLocalStorage("user");
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleLogout = async () => {
     try {
       await userApi.logout();
     } catch (err) {
-      console.log(err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: err.message,
+      });
     } finally {
       setItem(null);
       setUser(null);
       queryClient.removeQueries();
-      console.log("logout");
       router.navigate({ to: "/" });
     }
   };

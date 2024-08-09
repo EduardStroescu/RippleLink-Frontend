@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { useUserStore } from "../stores/useUserStore";
+import { useToast } from "@/components/UI/use-toast";
 
 interface SocketProviderProps {
   children: React.ReactNode;
@@ -17,6 +18,7 @@ export const useSocketContext = () => useContext(SocketContext);
 export function SocketProvider({ children }: SocketProviderProps) {
   const user = useUserStore((state) => state.user);
   const [socket, setSocket] = useState<Socket | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!user) return;
@@ -26,7 +28,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
         displayName: user?.displayName,
       },
       extraHeaders: {
-        Authorization: user?.access_token,
+        Authorization: user?.access_token as string,
       },
     });
 
@@ -41,7 +43,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
     });
 
     socketInstance.on("error", ({ message }) => {
-      console.log(message);
+      toast({ variant: "destructive", title: "Error", description: message });
     });
 
     return () => {

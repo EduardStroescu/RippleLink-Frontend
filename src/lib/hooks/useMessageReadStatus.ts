@@ -37,5 +37,5 @@ export function useMessageReadStatus(
       );
       socket.emit("readMessages", { room: params.chatId });
     }
-  }, [socket, messages, user?._id]);
+  }, [socket, messages, user?._id, params.chatId, setMessages]);
 }

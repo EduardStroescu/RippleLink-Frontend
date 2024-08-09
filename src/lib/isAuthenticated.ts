@@ -1,4 +1,4 @@
-import { User } from "@/types/interfaces";
+import { User } from "@/types/user";
 
 export function isAuthenticated(): boolean {
   try {

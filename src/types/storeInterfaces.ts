@@ -1,4 +1,6 @@
+import { Chat } from "./chat";
 import { User } from "./user";
+import Peer from "simple-peer";
 
 export interface UserStore {
   user: User | null;
@@ -16,8 +18,6 @@ export interface UserStore {
 export interface AppStore {
   isDrawerOpen: boolean;
   isChatDetailsDrawerOpen: boolean;
-  incomingCalls: User[];
-  answeredCall: boolean;
 
   actions: {
     setIsDrawerOpen: (
@@ -32,16 +32,30 @@ export interface AppStore {
             prevUser: AppStore["isChatDetailsDrawerOpen"]
           ) => AppStore["isChatDetailsDrawerOpen"])
     ) => void;
-    setIncomingCalls: (
-      newValue:
-        | []
-        | User[]
-        | ((prevCalls: AppStore["incomingCalls"]) => AppStore["incomingCalls"])
-    ) => void;
-    setAnsweredCall: (
-      newValue:
-        | boolean
-        | ((prevCalls: AppStore["answeredCall"]) => AppStore["answeredCall"])
-    ) => void;
+  };
+}
+
+export interface CallStore {
+  streams: { [key: string]: MediaStream };
+  connections: { [key: string]: Peer.Instance };
+  currentCall: Chat["ongoingCall"] | null;
+  answeredCall: boolean;
+  // incomingCalls: Chat["ongoingCall"][] | [];
+
+  actions: {
+    addStream: (participantId: string, stream: MediaStream) => void;
+    removeStream: (participantId: string) => void;
+    addConnection: (participantId: string, peer: Peer.Instance) => void;
+    removeConnection: (participantId: string) => void;
+    resetConnections: () => void;
+    setCurrentCall: (call: Chat["ongoingCall"] | null) => void;
+    setAnsweredCall: (newState: boolean) => void;
+    // setIncomingCalls: (
+    //   newValue:
+    //     | []
+    //     | ((
+    //         prevCalls: CallStore["incomingCalls"]
+    //       ) => CallStore["incomingCalls"])
+    // ) => void;
   };
 }

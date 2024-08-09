@@ -1,12 +1,9 @@
-import { SignalData } from "simple-peer";
 import { Message } from "./message";
 import { User } from "./user";
 
-type UserWithVideoSharing = User & { isSharingVideo: boolean };
-
 type OngoingCall = {
-  callParticipants: UserWithVideoSharing[] | [];
-  callerSignal: string | SignalData;
+  chatId: string;
+  participants: { userId: User; signal: string }[];
 } | null;
 
 export type Chat = {
