@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/UI/Dialog";
+} from "@/components/ui/Dialog";
 import clsx from "clsx";
 
 interface MediaPreviewDialogProps {

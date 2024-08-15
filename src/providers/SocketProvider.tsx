@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { useUserStore } from "../stores/useUserStore";
-import { useToast } from "@/components/UI/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 interface SocketProviderProps {
   children: React.ReactNode;
@@ -34,16 +34,18 @@ export function SocketProvider({ children }: SocketProviderProps) {
 
     setSocket(socketInstance);
 
-    socketInstance.on("connect", () => {
-      console.log("connected");
-    });
+    // socketInstance.on("connect", () => {
+    //   console.log("connected");
+    // });
 
-    socketInstance.on("disconnect", () => {
-      console.log("disconnected");
-    });
+    // socketInstance.on("disconnect", () => {
+    //   console.log("disconnected");
+    // });
 
     socketInstance.on("error", ({ message }) => {
-      toast({ variant: "destructive", title: "Error", description: message });
+      if (message !== "Failed to connect user") {
+        toast({ variant: "destructive", title: "Error", description: message });
+      }
     });
 
     return () => {

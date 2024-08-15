@@ -1,9 +1,11 @@
 import { forwardRef, Ref, HTMLProps } from "react";
 
-type VideoProps = HTMLProps<HTMLVideoElement>;
+type VideoProps = {
+  setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+} & HTMLProps<HTMLVideoElement>;
 
 export const VideoComponent = forwardRef<HTMLVideoElement, VideoProps>(
-  (props, ref: Ref<HTMLVideoElement>) => {
+  ({ setOpen, ...props }, ref: Ref<HTMLVideoElement>) => {
     return (
       <video
         ref={ref}

@@ -4,10 +4,10 @@ import { GifPicker } from "./GifPicker";
 import { FileUploadOverlay } from "./FileUploadOverlay";
 import { Message } from "@/types/message";
 import { FileUploadOverlayContent } from "./FileUploadOverlayContent";
-import { FullscreenImage } from "./UI/FullscreenImage";
-import { VideoComponent } from "./UI/Video";
-import { AudioComponent } from "./UI/Audio";
-import { CustomChatInput } from "./UI/CustomChatInput";
+import { FullscreenImage } from "./ui/FullscreenImage";
+import { VideoComponent } from "./ui/Video";
+import { AudioComponent } from "./ui/Audio";
+import { CustomChatInput } from "./ui/CustomChatInput";
 
 type CreateMessageFormProps = {
   handleSubmitMessage: (e: FormEvent<HTMLFormElement>) => void;
@@ -75,6 +75,25 @@ export const CreateMessageForm = ({
     }
   };
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const clipboardItem = e.clipboardData.items[0];
+    if (clipboardItem.type.startsWith("image")) {
+      e.preventDefault();
+      const file = clipboardItem.getAsFile();
+      if (!file) return;
+      const fileReader = new FileReader();
+      fileReader.readAsDataURL(file);
+
+      fileReader.onloadend = () => {
+        const content = fileReader.result;
+        if (content && typeof content === "string") {
+          setMessageType("image");
+          setContentPreview({ content, name: file.name });
+        }
+      };
+    }
+  };
+
   useEffect(() => {
     if (contentPreview) {
       setAnimationState("fade-in-up");
@@ -134,6 +153,7 @@ export const CreateMessageForm = ({
             message={message}
             setMessage={setMessage}
             handleKeyDown={handleKeyDown}
+            handlePaste={handlePaste}
           />
           <GifPicker getValue={handleGifSelect}>
             <GifIcon />

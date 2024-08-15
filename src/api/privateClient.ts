@@ -1,7 +1,8 @@
+import { useUserStore } from "@/stores/useUserStore";
 import axios, { InternalAxiosRequestConfig, AxiosRequestHeaders } from "axios";
 import queryString from "query-string";
 
-const baseURL = import.meta.env.VITE_BACKEND_URL + "api/";
+const baseURL = import.meta.env.VITE_BACKEND_URL + "/api/";
 
 const privateClient = axios.create({
   baseURL,
@@ -13,8 +14,8 @@ const privateClient = axios.create({
 let isRefreshing = false;
 let failedQueue: Array<(token: string) => void> = [];
 
-const processQueue = (error: any, token?: string) => {
-  failedQueue.forEach((callback) => callback(token));
+const processQueue = (error: any, token: string | null) => {
+  failedQueue.forEach((callback) => token && callback(token));
   failedQueue = [];
 };
 
@@ -72,6 +73,7 @@ privateClient.interceptors.response.use(
             refresh_token: refreshToken,
           });
 
+          useUserStore.setState({ user: response.data });
           window.localStorage.setItem("user", JSON.stringify(response.data));
           isRefreshing = false;
           processQueue(null, response.data.access_token);

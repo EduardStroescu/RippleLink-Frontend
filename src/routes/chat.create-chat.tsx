@@ -1,5 +1,5 @@
-import { AvatarCoin } from "@/components/UI/AvatarCoin";
-import { placeholderAvatar } from "@/lib/const";
+import { AvatarCoin } from "@/components/ui/AvatarCoin";
+import { groupAvatar, placeholderAvatar } from "@/lib/const";
 import {
   createFileRoute,
   Link,
@@ -7,52 +7,52 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 import { FormEvent, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import chatApi from "@/api/modules/chat.api";
 import userApi from "@/api/modules/user.api";
 import { CreateMessageForm } from "@/components/CreateMessageForm";
 import { Chat } from "@/types/chat";
 import { Message } from "@/types/message";
-import { useUserStore } from "@/stores/useUserStore";
 import { BackIcon } from "@/components/Icons";
-import { useAppStore } from "@/stores/useAppStore";
-import { useToast } from "@/components/UI/use-toast";
+import { useToast } from "@/components/ui/use-toast";
+import { User } from "@/types/user";
+import { checkIfChatExists } from "@/lib/utils";
 
 export const Route = createFileRoute("/chat/create-chat")({
-  beforeLoad: async ({ search: { userId }, context: { queryClient } }) => {
-    useAppStore.setState({
-      isDrawerOpen: false,
-      isChatDetailsDrawerOpen: false,
-    });
+  beforeLoad: async ({ search: { userIds }, context: { queryClient } }) => {
     const chatsData: Chat[] | [] = queryClient.getQueryData(["chats"]);
-    const currentUser = useUserStore.getState().user;
+    const userIdsArr = userIds.split(",");
 
-    const existingChat = chatsData?.find((chat) =>
-      chat.users.some(
-        (user) => user?._id === userId && user?._id !== currentUser?._id
-      )
-    );
-
+    const existingChat = checkIfChatExists(chatsData, userIdsArr);
     if (existingChat) {
       throw redirect({
         to: `/chat/${existingChat._id}`,
       });
     }
+
     const usersQuery = {
-      queryKey: ["users", userId],
-      queryFn: () => userApi.getUsersById(userId),
-      enabled: !!userId,
+      queries: userIdsArr.map((userId: User["_id"]) => ({
+        queryKey: ["users", userId],
+        queryFn: () => userApi.getUsersById(userId),
+        enabled: !!userId,
+      })),
+      combine: (results) => {
+        return {
+          data: results.map((result) => result.data),
+        };
+      },
     };
     return { usersQuery };
   },
-  loader: async ({ context: { queryClient, usersQuery } }) => {
-    return await queryClient.ensureQueryData(usersQuery);
+  loader: async ({ context: { usersQuery } }) => {
+    return usersQuery;
   },
   component: CreateNewChat,
 });
 
 function CreateNewChat() {
-  const data = Route.useLoaderData();
+  const usersQuery = Route.useLoaderData();
+  const { data: newChatUsers } = useQueries(usersQuery);
   const queryClient = useQueryClient();
 
   const [message, setMessage] = useState<Message["content"]>("");
@@ -61,14 +61,13 @@ function CreateNewChat() {
     content: string | null;
     name: string | null;
   } | null>(null);
-  const [chatType, setChatType] = useState<Chat["type"] | "">("");
   const [chatName, setChatName] = useState("");
   const [messageType, setMessageType] = useState<Message["type"]>("text");
   const { toast } = useToast();
 
   const createChatMutation = useMutation({
     mutationFn: async (values: {
-      userId: string;
+      userIds: string[];
       lastMessage: string;
       type?: string;
       name?: string;
@@ -80,20 +79,19 @@ function CreateNewChat() {
   const handleSubmitMessage = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const values: {
-      userId: string;
+      userIds: string[];
       lastMessage: string;
       type?: string;
       name?: string;
       messageType?: string;
     } = {
-      userId: data?._id,
+      userIds: newChatUsers.map((user: User) => user._id),
       lastMessage: message,
-      type: chatType,
+      type: newChatUsers.length > 1 ? "group" : "dm",
       name: chatName,
       messageType: messageType,
     };
 
-    !chatType && delete values.type;
     !chatName && delete values.name;
 
     if (gif) {
@@ -118,28 +116,25 @@ function CreateNewChat() {
     });
   };
 
+  const newChatUsersDisplayNames = newChatUsers
+    ?.map((user: User) => user?.displayName)
+    .slice(0, 3);
+  const defaultChatHeaderTitle = `Group Chat: ${newChatUsersDisplayNames.join(", ")} ${newChatUsers.length > 3 ? `(+ ${newChatUsers.length - 3})` : ""}`;
+
   return (
     <div className="w-full h-full flex flex-col overflow-hidden">
-      <div className="flex flex-row gap-2 text-white min-h-[56px] p-2 items-center">
-        <Link
-          to="/chat"
-          preload={false}
-          className="flex sm:hidden gap-1 items-center"
-        >
-          <BackIcon /> <span className="text-xs">Back</span>
-        </Link>
-        <AvatarCoin
-          source={data?.avatarUrl || placeholderAvatar}
-          width={50}
-          alt={`${data?.displayName}'s avatar`}
+      {newChatUsers?.length > 1 ? (
+        <CreateNewChatHeader
+          avatar={groupAvatar}
+          displayName={defaultChatHeaderTitle}
         />
-        <div>
-          <p>{data?.displayName}</p>
-          <p className="text-xs">
-            {data?.status?.online ? "online" : "offline"}
-          </p>
-        </div>
-      </div>
+      ) : (
+        <CreateNewChatHeader
+          avatar={newChatUsers[0]?.avatarUrl}
+          displayName={newChatUsers[0]?.displayName}
+          onlineStatus={newChatUsers[0]?.status?.online}
+        />
+      )}
       <div className="w-full flex-1 h-full p-4 text-white overflow-y-auto flex flex-col gap-4" />
 
       <CreateMessageForm
@@ -152,6 +147,41 @@ function CreateNewChat() {
         setMessageType={setMessageType}
         setContentPreview={setContentPreview}
       />
+    </div>
+  );
+}
+
+interface CreateNewChatHeaderProps {
+  avatar?: string;
+  displayName: string;
+  onlineStatus?: string;
+}
+
+function CreateNewChatHeader({
+  avatar,
+  displayName,
+  onlineStatus,
+}: CreateNewChatHeaderProps) {
+  return (
+    <div className="flex flex-row gap-2 text-white min-h-[56px] p-2 items-center">
+      <Link
+        to="/chat"
+        preload={false}
+        className="group flex sm:hidden gap-1 items-center"
+      >
+        <BackIcon /> <span className="text-xs">Back</span>
+      </Link>
+      <AvatarCoin
+        source={avatar || placeholderAvatar}
+        width={50}
+        alt={`${displayName}'s avatar`}
+      />
+      <div className="overflow-hidden">
+        <p className="w-full truncate">{displayName}</p>
+        {onlineStatus && (
+          <p className="text-xs">{onlineStatus ? "online" : "offline"}</p>
+        )}
+      </div>
     </div>
   );
 }

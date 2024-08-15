@@ -1,5 +1,11 @@
-import React, { useState } from "react";
-import { Dialog, DialogContent } from "@/components/UI/Dialog";
+import React, { useEffect, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/Dialog";
 import { useCallStore } from "@/stores/useCallStore";
 
 interface CallDialogProps {
@@ -11,9 +17,17 @@ interface CallDialogProps {
   className?: string;
 }
 
-const CallDialog: React.FC<CallDialogProps> = ({ content }) => {
-  const currentCall = useCallStore((state) => state.currentCall);
-  const [open, setOpen] = useState(!!currentCall);
+const CallDialog: React.FC<CallDialogProps> = ({
+  content,
+  header,
+  description,
+}) => {
+  const incomingCalls = useCallStore((state) => state.incomingCalls);
+  const [open, setOpen] = useState(!!incomingCalls.length);
+
+  useEffect(() => {
+    setOpen(!!incomingCalls.length);
+  }, [incomingCalls.length]);
 
   const contentWithProps = content
     ? React.cloneElement(content, { setOpen })
@@ -23,10 +37,14 @@ const CallDialog: React.FC<CallDialogProps> = ({ content }) => {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
         closeButtonEnabled={false}
-        className="block max-w-xs
+        className="block max-w-sm
         border-none bg-transparent shadow-none outline-none
       "
       >
+        <DialogHeader>
+          <DialogTitle>{header}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
         {contentWithProps}
       </DialogContent>
     </Dialog>

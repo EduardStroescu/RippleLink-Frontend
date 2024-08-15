@@ -3,7 +3,7 @@ import { LoginForm } from "@/components/LoginForm";
 
 export const Route = createFileRoute("/login")({
   component: () => (
-    <div className=" w-full h-full flex flex-col justify-center items-center gap-20 text-white">
+    <div className=" w-full h-full flex flex-col justify-center items-center gap-20 text-white overflow-y-auto overflow-x-hidden">
       <h1 className="text-7xl">Log In</h1>
       <LoginForm />
     </div>

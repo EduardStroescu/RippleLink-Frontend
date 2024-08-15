@@ -1,26 +1,20 @@
-import { AvatarCoin } from "@/components/UI/AvatarCoin";
+import { AvatarCoin } from "@/components/ui/AvatarCoin";
 import { BackIcon } from "@/components/Icons";
-import { Input } from "@/components/UI/Input";
-import { FullscreenImage } from "@/components/UI/FullscreenImage";
+import { FullscreenImage } from "@/components/ui/FullscreenImage";
 import { placeholderAvatar } from "@/lib/const";
-import { useAppStore } from "@/stores/useAppStore";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { Chat } from "@/types/chat";
 import { useMemo } from "react";
 import { useUserStore } from "@/stores/useUserStore";
 import chatApi from "@/api/modules/chat.api";
-import { VideoComponent } from "@/components/UI/Video";
-import { AudioComponent } from "@/components/UI/Audio";
-import { FileComponent } from "@/components/UI/File";
+import { VideoComponent } from "@/components/ui/Video";
+import { AudioComponent } from "@/components/ui/Audio";
+import { FileComponent } from "@/components/ui/File";
 import { Message } from "@/types/message";
 
 export const Route = createFileRoute("/chat/$chatId/details")({
   beforeLoad: async ({ params: { chatId } }) => {
-    useAppStore.setState({
-      isChatDetailsDrawerOpen: true,
-      isDrawerOpen: false,
-    });
     const sharedFilesQuery = {
       queryKey: ["sharedFiles", chatId],
       queryFn: () => chatApi.getSharedFilesByChatId(chatId),
@@ -37,7 +31,6 @@ export const Route = createFileRoute("/chat/$chatId/details")({
 });
 
 //TODO: FINISH IMPLEMENTING THIS
-
 function ChatDetails() {
   const params = useParams({ chatId: "chatId" });
   const user = useUserStore((state) => state.user);
@@ -57,13 +50,13 @@ function ChatDetails() {
   );
 
   return (
-    <div className="relative w-full sm:min-w-[500px] sm:max-w-[500px] flex gap-6 flex-col overflow-hidden py-4 border-l-slate-700 border-l-[1px]">
+    <aside className="relative w-full lg:min-w-[400px] lg:max-w-[400px] 2xl:min-w-[500px] 2xl:max-w-[500px] flex gap-6 flex-col overflow-hidden py-4 border-l-slate-700 border-l-[1px] overflow-y-auto">
       <div className="flex w-full py-2 px-4 items-center">
         <Link
           to={"/chat/$chatId"}
           preload={false}
           params={{ chatId: params.chatId }}
-          className="flex items-center gap-2"
+          className="group flex items-center gap-2"
         >
           <BackIcon /> <span className="text-xs">Back</span>
         </Link>
@@ -75,13 +68,6 @@ function ChatDetails() {
           alt={`User's avatar`}
         />
         <p className="text-3xl">{interlocutor?.displayName}</p>
-      </div>
-      <div className="flex flex-col gap-2 justify-center items-center">
-        <Input
-          type="search"
-          placeholder="Search By Message"
-          className="w-4/5"
-        />
       </div>
       <div className="flex flex-col gap-2 items-center h-[40%]">
         <h2 className="w-4/5 text-center bg-cyan-400/60 text-white rounded-t py-2">
@@ -102,7 +88,7 @@ function ChatDetails() {
           Block User
         </button>
       </div>
-    </div>
+    </aside>
   );
 }
 

@@ -1,4 +1,4 @@
-import { useToast } from "@/components/UI/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { useSocketContext } from "@/providers/SocketProvider";
 import { Message } from "@/types/message";
 import { useState } from "react";
@@ -45,7 +45,11 @@ export function useCreateMessage(params: any) {
       try {
         socket?.emit("createMessage", payload);
       } catch (error) {
-        toast({ variant: "destructive", title: "Error", description: error });
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message,
+        });
       }
       setContentPreview(null);
     } else {

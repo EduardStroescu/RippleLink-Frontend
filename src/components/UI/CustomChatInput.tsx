@@ -6,6 +6,7 @@ interface CustomChatInputProps {
   message: string;
   setMessage: (message: string) => void;
   handleKeyDown: () => void;
+  handlePaste?: (e: React.ClipboardEvent<HTMLTextAreaElement>) => void;
 }
 
 export function CustomChatInput({
@@ -13,6 +14,7 @@ export function CustomChatInput({
   message,
   setMessage,
   handleKeyDown,
+  handlePaste,
 }: CustomChatInputProps) {
   const chatInputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -83,6 +85,7 @@ export function CustomChatInput({
         spellCheck={true}
         onChange={handleChange}
         onKeyDown={onKeyDown}
+        onPaste={handlePaste}
         placeholder="Type a message"
         className="w-full p-2 bg-black/40 rounded-xl resize-none max-h-[25vh] break-all"
       />

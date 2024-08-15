@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import useNotificationSound from "./useNotificationSound";
 import { useThrottle } from "./useThrottle";
 import useWindowVisibility from "./useWindowVisibility";
-import { useCallStoreActions } from "@/stores/useCallStore";
 
 export function useChatEvents(
   setChats: (
@@ -20,8 +19,6 @@ export function useChatEvents(
   const isWindowActive = useWindowVisibility();
   const [newMessageCount, setNewMessageCount] = useState(0);
 
-  const { setCurrentCall } = useCallStoreActions();
-
   useEffect(() => {
     if (!socket || !user?._id) return;
     socket.emit("joinRoom", { room: user._id });
@@ -31,7 +28,6 @@ export function useChatEvents(
   }, [socket, user?._id]);
 
   const throttledNotification = useThrottle(() => {
-    console.log("playSound");
     setNewMessageCount((prev) => prev + 1);
     playSound();
   }, 1000);
@@ -52,9 +48,6 @@ export function useChatEvents(
         prev[index] = content;
         return [...prev];
       });
-      if (content.ongoingCall) {
-        setCurrentCall(content.ongoingCall);
-      }
       if (content.lastMessage.senderId._id !== user?._id && !isWindowActive) {
         throttledNotification();
       }

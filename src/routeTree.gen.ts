@@ -16,6 +16,7 @@ import { Route as LoginImport } from './routes/login'
 import { Route as ChatImport } from './routes/chat'
 import { Route as SplatImport } from './routes/$'
 import { Route as IndexImport } from './routes/index'
+import { Route as ChatSettingsImport } from './routes/chat.settings'
 import { Route as ChatCreateChatImport } from './routes/chat.create-chat'
 import { Route as ChatChatIdImport } from './routes/chat.$chatId'
 import { Route as ChatChatIdDetailsImport } from './routes/chat.$chatId.details'
@@ -45,6 +46,11 @@ const SplatRoute = SplatImport.update({
 const IndexRoute = IndexImport.update({
   path: '/',
   getParentRoute: () => rootRoute,
+} as any)
+
+const ChatSettingsRoute = ChatSettingsImport.update({
+  path: '/settings',
+  getParentRoute: () => ChatRoute,
 } as any)
 
 const ChatCreateChatRoute = ChatCreateChatImport.update({
@@ -115,6 +121,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatCreateChatImport
       parentRoute: typeof ChatImport
     }
+    '/chat/settings': {
+      id: '/chat/settings'
+      path: '/settings'
+      fullPath: '/chat/settings'
+      preLoaderRoute: typeof ChatSettingsImport
+      parentRoute: typeof ChatImport
+    }
     '/chat/$chatId/details': {
       id: '/chat/$chatId/details'
       path: '/details'
@@ -133,6 +146,7 @@ export const routeTree = rootRoute.addChildren({
   ChatRoute: ChatRoute.addChildren({
     ChatChatIdRoute: ChatChatIdRoute.addChildren({ ChatChatIdDetailsRoute }),
     ChatCreateChatRoute,
+    ChatSettingsRoute,
   }),
   LoginRoute,
   RegisterRoute,
@@ -163,7 +177,8 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "chat.tsx",
       "children": [
         "/chat/$chatId",
-        "/chat/create-chat"
+        "/chat/create-chat",
+        "/chat/settings"
       ]
     },
     "/login": {
@@ -181,6 +196,10 @@ export const routeTree = rootRoute.addChildren({
     },
     "/chat/create-chat": {
       "filePath": "chat.create-chat.tsx",
+      "parent": "/chat"
+    },
+    "/chat/settings": {
+      "filePath": "chat.settings.tsx",
       "parent": "/chat"
     },
     "/chat/$chatId/details": {

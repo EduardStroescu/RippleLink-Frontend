@@ -34,6 +34,27 @@ export function SendIcon() {
   );
 }
 
+export function ArrowSvg() {
+  return (
+    <svg
+      width="25px"
+      height="25px"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      stroke="#b5b5b5"
+      className="group-hover:scale-110 transition-all ease-in-out group-hover:stroke-[#e6e7e8]"
+    >
+      <path
+        d="M7 10L12 15L17 10"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function SettingsIcon() {
   return (
     <svg
@@ -109,11 +130,17 @@ export function ImageIcon() {
   );
 }
 
-export function CloseIcon() {
+export function CloseIcon({
+  width = "25px",
+  height = "25px",
+}: {
+  width?: string;
+  height?: string;
+}) {
   return (
     <svg
-      width="25px"
-      height="25px"
+      width={width}
+      height={height}
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -179,12 +206,20 @@ export function TrashIcon() {
   );
 }
 
-export function CheckIcon() {
+export function CheckIcon({
+  width = "12px",
+  height = "12px",
+  fill = "#ffffff",
+}: {
+  width?: string;
+  height?: string;
+  fill?: string;
+}) {
   return (
     <svg
-      fill="#ffffff"
-      height="12px"
-      width="12px"
+      fill={fill}
+      height={width}
+      width={height}
       version="1.1"
       id="Capa_1"
       xmlns="http://www.w3.org/2000/svg"
@@ -388,11 +423,17 @@ export function VideoIcon() {
   );
 }
 
-export function CallIcon() {
+export function CallIcon({
+  width = "25px",
+  height = "25px",
+}: {
+  width?: string;
+  height?: string;
+}) {
   return (
     <svg
-      height="25px"
-      width="25px"
+      height={width}
+      width={height}
       version="1.1"
       id="Capa_1"
       xmlns="http://www.w3.org/2000/svg"
@@ -517,7 +558,6 @@ export function EditIcon() {
   );
 }
 
-//TODO: CHANGE STYLES
 export function MuteAudioIcon() {
   return (
     <svg
@@ -526,20 +566,22 @@ export function MuteAudioIcon() {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      className="group-hover:scale-110 transition-all ease-in-out"
     >
       <path
         d="M15 5.25C15 4.98265 14.8577 4.73551 14.6264 4.60132C14.3952 4.46713 14.11 4.46617 13.8779 4.59882L8.80083 7.5H5.25C4.83579 7.5 4.5 7.83579 4.5 8.25V15.75C4.5 16.1642 4.83579 16.5 5.25 16.5H8.80083L13.8779 19.4012C14.11 19.5338 14.3952 19.5329 14.6264 19.3987C14.8577 19.2645 15 19.0174 15 18.75V5.25Z"
-        fill="#ffffff"
+        fill="#D9D9D9"
+        className="group-hover:fill-[#e6e7e8]"
       />
       <path
         d="M17.7803 9.96967C17.4874 9.67678 17.0126 9.67678 16.7197 9.96967C16.4268 10.2626 16.4268 10.7374 16.7197 11.0303L17.6893 12L16.7197 12.9697C16.4268 13.2626 16.4268 13.7374 16.7197 14.0303C17.0126 14.3232 17.4874 14.3232 17.7803 14.0303L18.75 13.0607L19.7197 14.0303C20.0126 14.3232 20.4874 14.3232 20.7803 14.0303C21.0732 13.7374 21.0732 13.2626 20.7803 12.9697L19.8107 12L20.7803 11.0303C21.0732 10.7374 21.0732 10.2626 20.7803 9.96967C20.4874 9.67678 20.0126 9.67678 19.7197 9.96967L18.75 10.9393L17.7803 9.96967Z"
-        fill="#ffffff"
+        fill="#D9D9D9"
+        className="group-hover:fill-[#e6e7e8]"
       />
     </svg>
   );
 }
 
-//TODO: CHANGE STYLES
 export function MuteMicIcon() {
   return (
     <svg
@@ -547,9 +589,10 @@ export function MuteMicIcon() {
       height="25px"
       viewBox="0 0 64 64"
       xmlns="http://www.w3.org/2000/svg"
-      strokeWidth="3"
-      stroke="#ffffff"
+      strokeWidth="5"
       fill="none"
+      stroke="#b5b5b5"
+      className="group-hover:scale-110 transition-all ease-in-out group-hover:stroke-[#e6e7e8]"
     >
       <path
         d="M47.67,28.43v3.38a15.67,15.67,0,0,1-31.34,0V28.43"
@@ -570,8 +613,41 @@ export function MuteMicIcon() {
   );
 }
 
-//TODO: CHANGE STYLES
-export function ScreenShareIcon() {
+export function UnmuteMicIcon() {
+  return (
+    <svg
+      width="25px"
+      height="25px"
+      viewBox="0 0 64 64"
+      xmlns="http://www.w3.org/2000/svg"
+      strokeWidth="5"
+      fill="none"
+      stroke="#b5b5b5"
+      className="group-hover:scale-110 transition-all ease-in-out group-hover:stroke-[#e6e7e8]"
+    >
+      <path
+        d="M47.67,28.43v3.38a15.67,15.67,0,0,1-31.34,0V28.43"
+        strokeLinecap="round"
+      />
+      <rect
+        x="22.51"
+        y="6.45"
+        width="18.44"
+        height="34.22"
+        rx="8.89"
+        strokeLinecap="round"
+      />
+      <line x1="31.73" y1="57.34" x2="31.73" y2="47.71" strokeLinecap="round" />
+      <line x1="37.14" y1="57.55" x2="26.43" y2="57.55" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function ScreenShareIcon({
+  screenShare = false,
+}: {
+  screenShare?: boolean;
+}) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -582,18 +658,27 @@ export function ScreenShareIcon() {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      stroke="#ffffff"
+      stroke="#b5b5b5"
+      className="group-hover:scale-110 transition-all ease-in-out group-hover:stroke-[#e6e7e8]"
     >
       <path d="M13 3H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2v-3" />
       <path d="M8 21h8" />
       <path d="M12 17v4" />
-      <path d="M17 8l5-5" />
-      <path d="M17 3h5v5" />
+      {screenShare ? (
+        <>
+          <path d="M22 3l-5 5" />
+          <path d="M17 3l5 5" />
+        </>
+      ) : (
+        <>
+          <path d="M17 8l5-5" />
+          <path d="M17 3h5v5" />
+        </>
+      )}
     </svg>
   );
 }
 
-//TODO: CHANGE STYLES
 export function VideoCallIcon() {
   return (
     <svg
@@ -602,19 +687,20 @@ export function VideoCallIcon() {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      className="group-hover:scale-110 transition-all ease-in-out"
     >
       <path
         d="M16 10L18.5768 8.45392C19.3699 7.97803 19.7665 7.74009 20.0928 7.77051C20.3773 7.79703 20.6369 7.944 20.806 8.17433C21 8.43848 21 8.90095 21 9.8259V14.1741C21 15.099 21 15.5615 20.806 15.8257C20.6369 16.056 20.3773 16.203 20.0928 16.2295C19.7665 16.2599 19.3699 16.022 18.5768 15.5461L16 14M6.2 18H12.8C13.9201 18 14.4802 18 14.908 17.782C15.2843 17.5903 15.5903 17.2843 15.782 16.908C16 16.4802 16 15.9201 16 14.8V9.2C16 8.0799 16 7.51984 15.782 7.09202C15.5903 6.71569 15.2843 6.40973 14.908 6.21799C14.4802 6 13.9201 6 12.8 6H6.2C5.0799 6 4.51984 6 4.09202 6.21799C3.71569 6.40973 3.40973 6.71569 3.21799 7.09202C3 7.51984 3 8.07989 3 9.2V14.8C3 15.9201 3 16.4802 3.21799 16.908C3.40973 17.2843 3.71569 17.5903 4.09202 17.782C4.51984 18 5.07989 18 6.2 18Z"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        stroke="#ffffff"
+        stroke="#b5b5b5"
+        className="group-hover:stroke-[#e6e7e8]"
       />
     </svg>
   );
 }
 
-//TODO: CHANGE STYLES
 export function StopVideoIcon() {
   return (
     <svg
@@ -623,27 +709,35 @@ export function StopVideoIcon() {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      className="group-hover:scale-110 transition-all ease-in-out"
     >
       <path
         d="M11.65 6H12.8C13.9201 6 14.4802 6 14.908 6.21799C15.2843 6.40973 15.5903 6.71569 15.782 7.09202C16 7.51984 16 8.0799 16 9.2V10L18.5768 8.45392C19.3699 7.97803 19.7665 7.74009 20.0928 7.77051C20.3773 7.79703 20.6369 7.944 20.806 8.17433C21 8.43848 21 8.90095 21 9.8259V14.1741C21 14.679 21 15.0462 20.9684 15.3184M3 3L6.00005 6.00005M21 21L15.9819 15.9819M6.00005 6.00005C5.01167 6.00082 4.49359 6.01337 4.09202 6.21799C3.71569 6.40973 3.40973 6.71569 3.21799 7.09202C3 7.51984 3 8.07989 3 9.2V14.8C3 15.9201 3 16.4802 3.21799 16.908C3.40973 17.2843 3.71569 17.5903 4.09202 17.782C4.51984 18 5.07989 18 6.2 18H12.8C13.9201 18 14.4802 18 14.908 17.782C15.2843 17.5903 15.5903 17.2843 15.782 16.908C15.9049 16.6668 15.9585 16.3837 15.9819 15.9819M6.00005 6.00005L15.9819 15.9819"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        stroke="#ffffff"
+        stroke="#b5b5b5"
+        className="group-hover:stroke-[#e6e7e8]"
       />
     </svg>
   );
 }
 
-//TODO: CHANGE STYLES
-export function RejectCallIcon() {
+export function RejectCallIcon({
+  width = "25px",
+  height = "25px",
+}: {
+  width?: string;
+  height?: string;
+}) {
   return (
     <svg
-      fill="#ffffff"
-      width="25px"
-      height="25px"
+      width={width}
+      height={height}
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
+      fill="#b5b5b5"
+      className="group-hover:scale-110 transition-all ease-in-out group-hover:fill-[#e6e7e8]"
     >
       <path
         fillRule="evenodd"

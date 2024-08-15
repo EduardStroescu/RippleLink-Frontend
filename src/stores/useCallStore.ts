@@ -6,7 +6,10 @@ export const useCallStore = create<CallStore>((set) => ({
   connections: {},
   currentCall: null,
   answeredCall: false,
-  // incomingCalls: [],
+  incomingCalls: [],
+  recentlyEndedCalls: [],
+  isUserSharingVideo: false,
+  isUserMicrophoneMuted: false,
 
   actions: {
     addStream: (participantId, stream) =>
@@ -32,13 +35,55 @@ export const useCallStore = create<CallStore>((set) => ({
     resetConnections: () => set({ connections: {} }),
     setCurrentCall: (call) => set({ currentCall: call }),
     setAnsweredCall: (newState) => set(() => ({ answeredCall: newState })),
-    // setIncomingCalls: (newValue) =>
-    //   set((prevState) => ({
-    //     incomingCalls:
-    //       typeof newValue === "function"
-    //         ? newValue(prevState.incomingCalls)
-    //         : newValue,
-    //   })),
+    addIncomingCall: (newCall) =>
+      set((state) => {
+        if (!newCall || !newCall.chatId._id) return state;
+
+        const existingCallIndex = state.incomingCalls.findIndex(
+          (call) => call && call.chatId._id === newCall.chatId._id
+        );
+        if (existingCallIndex !== -1) {
+          const updatedCalls = [...state.incomingCalls];
+          updatedCalls[existingCallIndex] = newCall;
+          return { incomingCalls: updatedCalls };
+        } else {
+          return { incomingCalls: [...state.incomingCalls, newCall] };
+        }
+      }),
+    removeIncomingCall: (chatId) =>
+      set((state) => ({
+        incomingCalls: state.incomingCalls.filter(
+          (call) => call && call.chatId._id !== chatId
+        ),
+      })),
+    addRecentlyEndedCall: (newEndedCall) =>
+      set((state) => {
+        if (!newEndedCall || !newEndedCall.chatId._id) return state;
+
+        const existingCallIndex = state.recentlyEndedCalls.findIndex(
+          (call) => call && call.chatId._id === newEndedCall.chatId._id
+        );
+        if (existingCallIndex !== -1) {
+          const updatedCalls = [...state.incomingCalls];
+          updatedCalls[existingCallIndex] = newEndedCall;
+          return { recentlyEndedCalls: updatedCalls };
+        } else {
+          return {
+            recentlyEndedCalls: [...state.recentlyEndedCalls, newEndedCall],
+          };
+        }
+      }),
+    removeRecentlyEndedCall: (chatId) =>
+      set((state) => ({
+        recentlyEndedCalls: state.recentlyEndedCalls.filter(
+          (call) => call && call.chatId._id !== chatId
+        ),
+      })),
+    resetIncomingCalls: () => set({ incomingCalls: [] }),
+    setIsUserSharingVideo: (newState) =>
+      set(() => ({ isUserSharingVideo: newState })),
+    setIsUserMicrophoneMuted: (newState) =>
+      set(() => ({ isUserMicrophoneMuted: newState })),
   },
 }));
 

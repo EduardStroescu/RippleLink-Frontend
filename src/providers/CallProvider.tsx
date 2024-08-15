@@ -1,17 +1,28 @@
-import { createContext, useContext, useCallback, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useCallback,
+  useEffect,
+  useMemo,
+} from "react";
 import { useCallStore, useCallStoreActions } from "@/stores/useCallStore";
-import Peer from "simple-peer";
+import Peer, { SignalData } from "simple-peer";
 import { useSocketContext } from "@/providers/SocketProvider";
 import { useShallow } from "zustand/react/shallow";
 import { User } from "@/types/user";
 import { Chat } from "@/types/chat";
 import { useUserStore } from "@/stores/useUserStore";
-import { useToast } from "@/components/UI/use-toast";
+import { useToast } from "@/components/ui/use-toast";
+import { Call } from "@/types/call";
 
 interface CallContextType {
-  startCall: (chatId: Chat["_id"], participants: User[]) => Promise<void>;
-  answerCall: (callDetails: Chat["ongoingCall"]) => Promise<void>;
-  endCall: (chatId: Chat["_id"]) => void;
+  startCall: (chat: Chat, videoEnabled?: boolean) => Promise<void>;
+  answerCall: (callDetails: Call, videoEnabled?: boolean) => Promise<void>;
+  endCall: (call: Call) => void;
+  attachStreamToCall: (
+    includeVideo?: boolean
+  ) => Promise<MediaStream | undefined>;
+  handleScreenShare: () => Promise<void>;
 }
 
 interface CallProviderProps {
@@ -28,9 +39,13 @@ export const useCallContext = () => {
   return context;
 };
 
+//
+// Never touch what is below!!!
+//
+
 export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
-  const { socket } = useSocketContext();
   const { toast } = useToast();
+  const { socket } = useSocketContext();
   const user = useUserStore((state) => state.user);
   const { answeredCall, streams, connections, currentCall } = useCallStore(
     useShallow((state) => ({
@@ -43,153 +58,18 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
   const {
     addConnection,
     setCurrentCall,
+    addRecentlyEndedCall,
     addStream,
     removeConnection,
     resetConnections,
     setAnsweredCall,
+    setIsUserSharingVideo,
+    setIsUserMicrophoneMuted,
   } = useCallStoreActions();
-
-  // Send requests to all users in current call who you are not connected to
-  useEffect(() => {
-    if (!currentCall || !user?._id || !answeredCall) return;
-    const usersInCurrentCallWithouthAConnection =
-      currentCall.participants.filter(
-        (participant) =>
-          participant.userId._id !== user?._id &&
-          !connections[participant.userId._id] &&
-          JSON.parse(participant.signal).type !== "offer"
-      );
-
-    usersInCurrentCallWithouthAConnection.forEach((participant) => {
-      const peer = new Peer({
-        initiator: true,
-        trickle: false,
-        stream: streams[user?._id],
-        offerOptions: {
-          offerToReceiveAudio: true,
-          offerToReceiveVideo: true,
-        },
-      });
-
-      peer.on("signal", (data) => {
-        if (data.type === "offer") {
-          socket?.emit("initiateCall", {
-            chatId: currentCall.chatId,
-            offer: JSON.stringify(data),
-            saveToDb: true,
-          });
-          console.log("OFFER FOR:", participant.userId._id);
-        } else {
-          socket?.emit("initiateCall", {
-            chatId: currentCall.chatId,
-            offer: JSON.stringify(data),
-          });
-        }
-      });
-
-      peer.on("stream", (stream) => {
-        addStream(participant.userId._id, stream);
-      });
-
-      peer.on("track", (track, stream) => {
-        addStream(participant.userId._id, stream);
-      });
-
-      socket?.on("callAnswered", (data: { answer: string }) => {
-        const parsedSignal = JSON.parse(data.answer);
-        peer.signal(parsedSignal);
-      });
-
-      peer.on("close", () => {
-        peer.destroy();
-        socket?.off("callAnswered");
-        removeConnection(participant.userId._id);
-      });
-
-      peer.on("error", (err) => {
-        peer.destroy();
-        socket?.off("callAnswered");
-        removeConnection(participant.userId._id);
-      });
-
-      addConnection(participant.userId._id, peer);
-    });
-  }, [currentCall, connections, user?._id, answeredCall, streams, socket]);
-
-  // Send answers to all users in current call who you are not connected to
-  useEffect(() => {
-    if (!currentCall || !user?._id || !answeredCall) return;
-    const usersInCurrentCallWithoutAConnectionAndNotAnsweredYet =
-      currentCall.participants.filter(
-        (participant) =>
-          participant.userId._id !== user?._id &&
-          !connections[participant.userId._id] &&
-          JSON.parse(participant.signal).type === "offer"
-      );
-
-    usersInCurrentCallWithoutAConnectionAndNotAnsweredYet.forEach(
-      (participant) => {
-        const peer = new Peer({
-          initiator: false,
-          trickle: false,
-          stream: streams[user?._id],
-          offerOptions: {
-            offerToReceiveAudio: true,
-            offerToReceiveVideo: true,
-          },
-        });
-
-        peer.on("signal", (data) => {
-          if (data.type === "answer") {
-            socket?.emit("sendCallAnswer", {
-              chatId: currentCall.chatId,
-              answer: JSON.stringify(data),
-              saveToDb: true,
-            });
-          } else {
-            socket?.emit("sendCallAnswer", {
-              chatId: currentCall.chatId,
-              answer: JSON.stringify(data),
-            });
-          }
-        });
-
-        peer.on("stream", (stream) => {
-          addStream(participant.userId._id, stream);
-        });
-        peer.on("track", (track, stream) => {
-          addStream(participant.userId._id, stream);
-        });
-
-        socket?.on("callCreated", (data: { offer: string }) => {
-          const parsedSignal = JSON.parse(data.offer);
-          peer.signal(parsedSignal);
-        });
-
-        peer.on("close", () => {
-          peer.destroy();
-          socket?.off("callCreated");
-          removeConnection(participant.userId._id);
-        });
-
-        peer.on("error", (err) => {
-          peer.destroy();
-          socket?.off("callCreated");
-          removeConnection(participant.userId._id);
-        });
-
-        const participantSignal = JSON.parse(participant.signal);
-        peer.signal(participantSignal);
-
-        addConnection(participant.userId._id, peer);
-      }
-    );
-  }, [currentCall, answeredCall, connections, user?._id]);
 
   const attachStreamToCall = useCallback(
     async (includeVideo: boolean = false): Promise<MediaStream | undefined> => {
       try {
-        if (!user?._id) return;
         const includeVideoContraints = {
           width: { min: 640, ideal: 1920, max: 3840 },
           height: { min: 480, ideal: 1080, max: 2160 },
@@ -205,7 +85,7 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
             sampleSize: { exact: 16, ideal: 16 },
           },
         });
-        addStream(user._id, stream);
+        if (includeVideo) setIsUserSharingVideo("video");
 
         return stream;
       } catch (error) {
@@ -215,72 +95,418 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
         });
       }
     },
-    [addStream, user?._id, toast]
+    [toast, setIsUserSharingVideo]
   );
 
-  const startCall = useCallback(
-    async (chatId: Chat["_id"], participants: User[]) => {
-      if (!participants) return;
-      const currUserStream = await attachStreamToCall();
-      if (!currUserStream) return;
+  const sendCallOffers = useCallback(
+    (participant: Call["participants"][number], currentCall: Call) => {
+      if (!user?._id || !participant || !currentCall) return;
 
-      const adaptedParticipants = participants.map((participant) => ({
-        userId: { _id: participant._id } as User,
-        signal: JSON.stringify({ type: "fakeSignal" }),
-      }));
-      setCurrentCall({ chatId, participants: adaptedParticipants });
-      setAnsweredCall(true);
+      const peer = new Peer({
+        initiator: true,
+        trickle: true,
+        stream: streams[user?._id],
+        offerOptions: {
+          offerToReceiveAudio: true,
+          offerToReceiveVideo: true,
+        },
+      });
+
+      peer.on("signal", (data) => {
+        if (data.type === "offer") {
+          socket?.emit("initiateCall", {
+            chatId: currentCall.chatId._id,
+            offer: JSON.stringify(data),
+            participantId: participant.userId._id,
+            saveToDb: true,
+          });
+        } else {
+          if (data.type === "candidate") {
+            socket?.emit("saveIceCandidates", {
+              iceCandidates: JSON.stringify(data),
+              chatId: currentCall.chatId._id,
+              candidatesType: "offer",
+              to: participant.userId._id,
+            });
+          }
+          socket?.emit("initiateCall", {
+            chatId: currentCall.chatId._id,
+            offer: JSON.stringify(data),
+            participantId: participant.userId._id,
+          });
+        }
+      });
+
+      peer.on("stream", (stream) => {
+        addStream(participant.userId._id, stream);
+      });
+
+      socket?.on(
+        "callAnswered",
+        (data: { answer: string; participantId: string }) => {
+          if (participant.userId._id === data.participantId) {
+            const parsedSignal = JSON.parse(data.answer);
+            peer.signal(parsedSignal);
+          }
+        }
+      );
+
+      peer.on("close", () => {
+        removeConnection(participant.userId._id);
+        socket?.off("callAnswered");
+        peer.destroy();
+      });
+
+      peer.on("error", (err) => {
+        removeConnection(participant.userId._id);
+        socket?.off("callAnswered");
+        peer.destroy();
+      });
+
+      addConnection(participant.userId._id, peer);
     },
-    [setAnsweredCall, attachStreamToCall, setCurrentCall]
+    [addConnection, addStream, removeConnection, socket, streams, user?._id]
+  );
+
+  const sendCallAnswers = useCallback(
+    (participant: Call["participants"][number], currentCall: Call) => {
+      if (!user?._id || !participant || !currentCall || !participant.offers)
+        return;
+
+      const peer = new Peer({
+        initiator: false,
+        trickle: true,
+        stream: streams[user?._id],
+        offerOptions: {
+          offerToReceiveAudio: true,
+          offerToReceiveVideo: true,
+        },
+      });
+
+      peer.on("signal", (data) => {
+        if (data.type === "answer") {
+          socket?.emit("sendCallAnswer", {
+            chatId: currentCall.chatId._id,
+            answer: JSON.stringify(data),
+            participantId: participant.userId._id,
+            saveToDb: true,
+          });
+        } else {
+          if (data.type === "candidate") {
+            socket?.emit("saveIceCandidates", {
+              iceCandidates: JSON.stringify(data),
+              chatId: currentCall.chatId._id,
+              candidatesType: "answer",
+              to: participant.userId._id,
+            });
+          }
+          socket?.emit("sendCallAnswer", {
+            chatId: currentCall.chatId._id,
+            answer: JSON.stringify(data),
+            participantId: participant.userId._id,
+          });
+        }
+      });
+
+      peer.on("stream", (stream) => {
+        addStream(participant.userId._id, stream);
+      });
+
+      socket?.on(
+        "callCreated",
+        (data: { offer: string; participantId: string }) => {
+          if (participant.userId._id === data.participantId) {
+            const parsedSignal = JSON.parse(data.offer);
+            peer.signal(parsedSignal);
+          }
+        }
+      );
+
+      peer.on("close", () => {
+        removeConnection(participant.userId._id);
+        socket?.off("callCreated");
+        peer.destroy();
+      });
+
+      peer.on("error", (err) => {
+        removeConnection(participant.userId._id);
+        socket?.off("callCreated");
+        peer.destroy();
+      });
+
+      const participantOffer = participant.offers.find(
+        (offer) => offer.to === user?._id
+      );
+      if (participantOffer?.sdp) {
+        const parsedSignal: SignalData = JSON.parse(participantOffer.sdp);
+        peer.signal(parsedSignal);
+      }
+      if (participantOffer?.iceCandidates) {
+        participantOffer.iceCandidates.forEach((iceCandidate) => {
+          const parsedCandidate: SignalData = JSON.parse(iceCandidate);
+          peer.signal(parsedCandidate);
+        });
+      }
+
+      addConnection(participant.userId._id, peer);
+    },
+    [addConnection, addStream, removeConnection, socket, streams, user?._id]
+  );
+
+  // Send answers to all users in current call who you are not connected to
+  useEffect(() => {
+    if (!currentCall || !user?._id || !answeredCall) return;
+
+    const usersInCurrentCallWithoutAConnectionAndNotAnsweredTo =
+      currentCall.participants.filter(
+        (participant) =>
+          participant.userId._id !== user?._id &&
+          !connections[participant.userId._id] &&
+          participant?.offers?.some((offer) => offer.to === user?._id)
+      );
+
+    usersInCurrentCallWithoutAConnectionAndNotAnsweredTo.forEach(
+      (participant) => {
+        sendCallAnswers(participant, currentCall);
+      }
+    );
+  }, [answeredCall, connections, currentCall, sendCallAnswers, user?._id]);
+
+  // Send requests to all users in current call who you are not connected to
+  useEffect(() => {
+    if (!currentCall || !user?._id || !answeredCall) return;
+
+    // Extract user IDs from the current call participants
+    const currentCallParticipantIds = currentCall.participants.map(
+      (participant) => participant.userId._id
+    );
+
+    // Filter users in the chat who are not the current user, have no connection, and are not in the current call participants
+    const usersInCurrentCallWithoutAConnection = currentCall.chatId.users
+      .filter(
+        (participant) =>
+          participant._id !== user?._id && // Exclude current user
+          !connections[participant._id] && // Exclude users with existing connections
+          !currentCallParticipantIds.includes(participant._id) // Include only those who are in the current call
+      )
+      .map((user) => ({
+        userId: user, // Map to an object with the user ID
+      }));
+
+    usersInCurrentCallWithoutAConnection.forEach((participant) => {
+      sendCallOffers(participant, currentCall);
+    });
+  }, [answeredCall, connections, currentCall, sendCallOffers, user?._id]);
+
+  const startCall = useCallback(
+    async (chat: Chat, videoEnabled?: boolean) => {
+      if (!chat || !user?._id) return;
+
+      const currUserStream = await attachStreamToCall(videoEnabled);
+      if (!currUserStream) return;
+      addStream(user?._id, currUserStream);
+
+      socket?.emit("joinCall", {
+        chatId: chat._id,
+      });
+      socket?.on("callJoined", (data: { call: Call }) => {
+        if (data.call) {
+          setCurrentCall(data.call);
+          setAnsweredCall(true);
+          socket?.off("callJoined");
+        }
+      });
+    },
+    [
+      addStream,
+      attachStreamToCall,
+      setAnsweredCall,
+      setCurrentCall,
+      socket,
+      user?._id,
+    ]
   );
 
   const answerCall = useCallback(
-    async (callDetails: Chat["ongoingCall"]) => {
-      if (!callDetails) return;
-      const currUserStream = await attachStreamToCall();
-      if (!currUserStream) return;
+    async (callDetails: Call, videoEnabled?: boolean) => {
+      if (!callDetails || !user?._id) return;
 
-      setCurrentCall(callDetails);
-      setAnsweredCall(true);
+      const currUserStream = await attachStreamToCall(videoEnabled);
+      if (!currUserStream) return;
+      addStream(user._id, currUserStream);
+
+      socket?.emit("joinCall", {
+        chatId: callDetails.chatId._id,
+      });
+
+      socket?.on("callJoined", (data: { call: Call }) => {
+        if (data.call) {
+          setCurrentCall(callDetails);
+          setAnsweredCall(true);
+          socket?.off("callJoined");
+        }
+      });
     },
-    [setCurrentCall, attachStreamToCall, setAnsweredCall]
+    [
+      addStream,
+      attachStreamToCall,
+      setAnsweredCall,
+      setCurrentCall,
+      user?._id,
+      socket,
+    ]
   );
 
-  // TODO REMOVE STREAM TRACKS
-  const endCall = useCallback(() => {
-    if (currentCall?.chatId) {
-      socket?.emit("endCall", { chatId: currentCall.chatId });
+  const endCall = useCallback(
+    (call: Call) => {
+      if (
+        call.participants.some(
+          (participant) => participant.userId._id === user?._id
+        )
+      ) {
+        addRecentlyEndedCall(call);
+        socket?.emit("endCall", { callId: call._id });
+      }
+      streams[user?._id as User["_id"]]
+        ?.getTracks()
+        .forEach((track) => track.stop());
+      Object.values(connections).forEach((peer) => {
+        peer.destroy();
+      });
+      setAnsweredCall(false);
+      resetConnections();
+      setCurrentCall(null);
+      setIsUserSharingVideo(false);
+      setIsUserMicrophoneMuted(false);
+    },
+    [
+      socket,
+      connections,
+      resetConnections,
+      setAnsweredCall,
+      setCurrentCall,
+      setIsUserSharingVideo,
+      setIsUserMicrophoneMuted,
+      user?._id,
+      streams,
+      addRecentlyEndedCall,
+    ]
+  );
+
+  const handleScreenShare = useCallback(async () => {
+    try {
+      if (!user?._id) return;
+
+      const userStream = streams[user._id];
+
+      if (userStream.getVideoTracks().length === 0) {
+        // Start screen sharing
+        const newStream = await navigator.mediaDevices.getDisplayMedia({
+          video: {
+            frameRate: { ideal: 60, max: 60 },
+            height: { ideal: 1080, max: 2160 },
+            width: { ideal: 1920, max: 3840 },
+          },
+          audio: false,
+        });
+        const newAudioStream = await attachStreamToCall();
+        if (!newStream) return;
+        userStream.getTracks().forEach((track) => {
+          track.stop();
+          userStream.removeTrack(track);
+        });
+
+        if (newAudioStream) {
+          newStream.addTrack(newAudioStream.getAudioTracks()[0]);
+        }
+
+        // Remove existing streams and tracks
+        Object.values(connections).forEach((peer) => {
+          const oldStream = peer.streams[0];
+          if (oldStream) {
+            // Remove old video tracks from the peer
+            oldStream.getTracks().forEach((track) => {
+              peer.removeTrack(track, oldStream);
+              track.stop();
+            });
+            peer.removeStream(oldStream);
+          }
+        });
+
+        // Add the new screen share stream to all peer connections
+        Object.values(connections).forEach((peer) => {
+          peer.addStream(newStream);
+        });
+
+        // Update local stream and state
+        addStream(user._id, newStream);
+        setIsUserSharingVideo("screen");
+      } else {
+        // Stop current video stream and create a new one
+        const newStream = await attachStreamToCall();
+        if (!newStream) return;
+
+        // Remove existing streams and tracks
+        Object.values(connections).forEach((peer) => {
+          const oldStream = peer.streams[0];
+          if (oldStream) {
+            // Remove old video tracks from the peer
+            oldStream.getTracks().forEach((track) => {
+              peer.removeTrack(track, oldStream);
+            });
+            peer.removeStream(oldStream);
+          }
+          // Add new stream
+          peer.addStream(newStream);
+        });
+
+        // Stop video tracks from the current stream
+        userStream.getTracks().forEach((track) => {
+          track.stop();
+          userStream.removeTrack(track);
+        });
+
+        // Update local stream and state
+        addStream(user._id, newStream);
+        setIsUserSharingVideo(false);
+      }
+    } catch (error) {
+      toast({ variant: "destructive", title: error.message });
     }
-    Object.values(connections).forEach((peer) => {
-      peer.destroy();
-    });
-    setAnsweredCall(false);
-    resetConnections();
-    setCurrentCall(null);
   }, [
-    socket,
+    addStream,
+    attachStreamToCall,
     connections,
-    currentCall?.chatId,
-    resetConnections,
-    setAnsweredCall,
-    setCurrentCall,
+    streams,
+    toast,
+    user?._id,
+    setIsUserSharingVideo,
   ]);
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !currentCall) return;
 
-    const handleBeforeUnload = () => endCall();
+    const handleBeforeUnload = () => endCall(currentCall);
 
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
+      // socket?.off("callCreated");
+      // socket?.off("callAnswered");
     };
-  }, [socket, endCall]);
+  }, [socket, endCall, currentCall]);
 
-  return (
-    <CallContext.Provider value={{ startCall, answerCall, endCall }}>
-      {children}
-    </CallContext.Provider>
+  const value = useMemo(
+    () => ({
+      startCall,
+      answerCall,
+      endCall,
+      attachStreamToCall,
+      handleScreenShare,
+    }),
+    [answerCall, attachStreamToCall, endCall, handleScreenShare, startCall]
   );
+
+  return <CallContext.Provider value={value}>{children}</CallContext.Provider>;
 };

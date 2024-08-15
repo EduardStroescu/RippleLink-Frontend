@@ -1,9 +1,11 @@
 import { Chat } from "@/types/chat";
 import privateClient from "../privateClient";
 import { Message } from "@/types/message";
+import { Call } from "@/types/call";
 
 const chatEndpoints = {
   getAllChats: "chats/all",
+  getAllCalls: "calls/all",
   getChatById: "chats/:chatId",
   getSharedFilesByChatId: "chats/sharedFiles/:chatId",
   getMessagesByChatId: "messages/:chatId",
@@ -14,6 +16,10 @@ const chatEndpoints = {
 const chatApi = {
   getAllChats: async (): Promise<Chat[] | []> => {
     return await privateClient.get(chatEndpoints.getAllChats);
+  },
+
+  getAllCalls: async (): Promise<Call[] | []> => {
+    return await privateClient.get(chatEndpoints.getAllCalls);
   },
 
   getChatById: async (chatId: string): Promise<Chat[] | []> => {
@@ -29,7 +35,7 @@ const chatApi = {
   },
 
   createChat: async (chatData: {
-    userId: string;
+    userIds: string[];
     lastMessage: string;
     type?: string;
     name?: string;

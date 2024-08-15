@@ -3,13 +3,13 @@ import {
   Link,
   Outlet,
   redirect,
+  useLocation,
 } from "@tanstack/react-router";
 import { SocketProvider } from "../providers/SocketProvider";
 import { SearchForm } from "@/components/SearchForm";
 import { isAuthenticated } from "@/lib/isAuthenticated";
-import { SettingsOverlay } from "@/components/SettingsOverlay";
 import { AddIcon, SettingsIcon } from "@/components/Icons";
-import { AvatarCoin } from "@/components/UI/AvatarCoin";
+import { AvatarCoin } from "@/components/ui/AvatarCoin";
 import { UserSettingsOverlay } from "@/components/UserSettingsOverlay";
 import chatApi from "@/api/modules/chat.api";
 import CustomDialogTrigger from "@/components/CustomDialogTrigger";
@@ -17,16 +17,21 @@ import { SearchUsersForm } from "@/components/SearchUsersForm";
 import { useUserStore } from "@/stores/useUserStore";
 import { placeholderAvatar } from "@/lib/const";
 import { Chat } from "@/types/chat";
-import { DeleteButton } from "@/components/UI/DeleteButton";
+import { DeleteButton } from "@/components/ui/DeleteButton";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { adaptTimezone } from "@/lib/hepers";
 import { useChatEvents } from "@/lib/hooks/useChatEvents";
 import { useChatsFilters } from "@/lib/hooks/useChatsFilters";
 import { FilterOption } from "@/types/filterOptions";
-import { useAppStore } from "@/stores/useAppStore";
 import { CallProvider } from "@/providers/CallProvider";
-import { useToast } from "@/components/UI/use-toast";
+import { useToast } from "@/components/ui/use-toast";
+import { getParsedPath } from "@/lib/utils";
+import { CallEventOverlay } from "@/components/CallEventOverlay";
+import CallDialog from "@/components/CallDialog";
+import { DraggableVideos } from "@/components/DraggableVideos";
+import { Call } from "@/types/call";
+import { useCallEvents } from "@/lib/hooks/useCallEvents";
 
 export const Route = createFileRoute("/chat")({
   beforeLoad: async ({ location }) => {
@@ -38,16 +43,23 @@ export const Route = createFileRoute("/chat")({
         },
       });
     }
-    useAppStore.setState({ isDrawerOpen: true });
 
     const chatsQuery = {
       queryKey: ["chats"],
       queryFn: chatApi.getAllChats,
       placeholderData: [],
     };
-    return { chatsQuery };
+    const callsQuery = {
+      queryKey: ["calls"],
+      queryFn: chatApi.getAllCalls,
+      placeholderData: [],
+    };
+    return { chatsQuery, callsQuery };
   },
-  loader: async ({ context: { chatsQuery } }) => chatsQuery,
+  loader: async ({ context: { chatsQuery, callsQuery } }) => ({
+    chatsQuery,
+    callsQuery,
+  }),
   component: () => (
     <SocketProvider>
       <CallProvider>
@@ -58,24 +70,31 @@ export const Route = createFileRoute("/chat")({
 });
 
 function ChatWrapper() {
+  const { toast } = useToast();
+  const location = useLocation();
+  const router = useRouter();
+  const parsedPath = getParsedPath(location.pathname);
+  const { chatsQuery, callsQuery } = Route.useLoaderData();
+
   const user = useUserStore((state) => state.user);
-  const isDrawerOpen = useAppStore((state) => state.isDrawerOpen);
-  const chatsQuery = Route.useLoaderData();
+
   useQuery(chatsQuery);
+  useQuery(callsQuery);
   const queryClient = useQueryClient();
   const chats = queryClient.getQueryData<Chat[] | []>(["chats"]);
+  const calls = queryClient.getQueryData<Call[] | []>(["calls"]);
+  const filterOptions: FilterOption[] = ["All", "Unread", "Groups"];
+
   const { filteredChats, setChats, handleFilter, handleSearch } =
     useChatsFilters(chats);
   useChatEvents(setChats);
-  const router = useRouter();
-  const { toast } = useToast();
+  useCallEvents(calls);
 
-  const filterOptions: FilterOption[] = ["All", "Unread", "Groups"];
   const deleteChatMutation = useMutation({
-    mutationFn: async (chatId: string) => chatApi.deleteChat(chatId),
+    mutationFn: async (chatId: Chat["_id"]) => chatApi.deleteChat(chatId),
   });
 
-  const handleDeleteChat = async (chatId: string) => {
+  const handleDeleteChat = async (chatId: Chat["_id"]) => {
     await deleteChatMutation.mutateAsync(chatId, {
       onSuccess: () => {
         setChats((prev) => prev?.filter((item) => item._id !== chatId) || []);
@@ -92,9 +111,9 @@ function ChatWrapper() {
   };
 
   return (
-    <div className="flex flex-row w-full h-full">
+    <div className="relative flex flex-row w-full h-full">
       <aside
-        className={`${isDrawerOpen ? "flex" : "hidden"} sm:flex flex-col flex-1 sm:max-w-[20%]`}
+        className={`${parsedPath === "/chat" ? "flex" : "hidden"} sm:flex flex-col flex-1 min-w-[30%] sm:max-w-[20%]`}
       >
         <div className="flex flex-row justify-between text-white min-h-[66px] py-2 px-4 items-center">
           <div className="flex items-center gap-2">
@@ -108,9 +127,9 @@ function ChatWrapper() {
             <p>{user?.displayName}</p>
           </div>
           <div className="flex flex-row gap-2">
-            <SettingsOverlay>
+            <Link to="/chat/settings" className="group flex items-center gap-2">
               <SettingsIcon />
-            </SettingsOverlay>
+            </Link>
           </div>
         </div>
         <div className="flex flex-col overflow-hidden">
@@ -193,12 +212,14 @@ function ChatWrapper() {
           </div>
         </div>
       </aside>
-      <section
-        className={`${isDrawerOpen ? "hidden" : "flex"} sm:flex flex-col flex-1 h-full border-l-[1px] border-slate-700`}
+      <aside
+        className={`${parsedPath === "/chat" ? "hidden" : "flex"} sm:flex flex-col flex-1 h-full border-l-[1px] border-slate-700`}
       >
         <Outlet />
-      </section>
-      {/* <CallDialog content={<CallEventOverlay />} /> */}
+      </aside>
+      {/* TODO: FINISH IMPLEMENTING THIS */}
+      <CallDialog content={<CallEventOverlay chats={chats} />} />
+      {parsedPath !== "/chat/$chatId" && <DraggableVideos />}
     </div>
   );
 }

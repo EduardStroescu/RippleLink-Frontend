@@ -1,15 +1,17 @@
 import { Message } from "@/types/message";
 import { CheckIcon, EditIcon } from "./Icons";
-import { DeleteButton } from "./UI/DeleteButton";
+import { DeleteButton } from "./ui/DeleteButton";
 import { adaptTimezone } from "@/lib/hepers";
-import { FullscreenImage } from "./UI/FullscreenImage";
-import { VideoComponent } from "./UI/Video";
-import { AudioComponent } from "./UI/Audio";
-import { FileComponent } from "./UI/File";
+import { FullscreenImage } from "./ui/FullscreenImage";
+import { VideoComponent } from "./ui/Video";
+import { AudioComponent } from "./ui/Audio";
+import { FileComponent } from "./ui/File";
 import { useRef, useState } from "react";
-import { CustomChatInput } from "./UI/CustomChatInput";
+import { CustomChatInput } from "./ui/CustomChatInput";
 import { useSocketContext } from "@/providers/SocketProvider";
 import { useParams } from "@tanstack/react-router";
+import { isImageUrl, isVidUrlPattern } from "@/lib/utils";
+import ReactPlayer from "react-player";
 
 export function MessageComponent({
   isOwnMessage,
@@ -101,17 +103,15 @@ export function MessageComponent({
 }
 
 const displayMessageByType = (message: Message) => {
-  const isImageUrl = (url: string) => {
-    const imgUrlPattern =
-      /^https?:\/\/.*\.(?:png|jpg|jpeg|gif|bmp|webp|tiff|svg)(?:\?.*)?$/i;
-    return imgUrlPattern.test(url);
-  };
-
   switch (message.type) {
     case "text": {
-      return isImageUrl(message.content)
-        ? renderImage(message)
-        : renderText(message.content);
+      if (isImageUrl(message.content)) {
+        return renderImage(message);
+      } else if (isVidUrlPattern(message.content)) {
+        return renderEmbedVideo(message.content);
+      } else {
+        return renderText(message.content);
+      }
     }
     case "image":
       return renderImage(message);
@@ -139,6 +139,22 @@ const renderImage = (message: Message) => (
 );
 
 const renderVideo = (content: string) => <VideoComponent src={content} />;
+
+const renderEmbedVideo = (content: string) => (
+  <div className="w-full h-full rounded overflow-hidden mr-2 my-2">
+    <ReactPlayer
+      url={content + `&origin=${import.meta.env.VITE_FRONTEND_URL}`}
+      controls
+      light
+      pip
+      credentialless="true"
+      style={{
+        maxWidth: "100%",
+        maxHeight: "100%",
+      }}
+    />
+  </div>
+);
 
 const renderAudio = (content: string) => <AudioComponent src={content} />;
 

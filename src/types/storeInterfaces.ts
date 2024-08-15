@@ -1,4 +1,4 @@
-import { Chat } from "./chat";
+import { Call } from "./call";
 import { User } from "./user";
 import Peer from "simple-peer";
 
@@ -16,31 +16,26 @@ export interface UserStore {
 }
 
 export interface AppStore {
-  isDrawerOpen: boolean;
-  isChatDetailsDrawerOpen: boolean;
+  appBackground: string | undefined;
+  appTint: string | undefined;
+  appGlow: string | undefined;
 
   actions: {
-    setIsDrawerOpen: (
-      newValue:
-        | boolean
-        | ((prevUser: AppStore["isDrawerOpen"]) => AppStore["isDrawerOpen"])
-    ) => void;
-    setIsChatDetailsDrawerOpen: (
-      newValue:
-        | boolean
-        | ((
-            prevUser: AppStore["isChatDetailsDrawerOpen"]
-          ) => AppStore["isChatDetailsDrawerOpen"])
-    ) => void;
+    setAppBackground: (newBackground: AppStore["appBackground"]) => void;
+    setAppTint: (newTint: AppStore["appTint"]) => void;
+    setAppGlow: (newGlow: AppStore["appGlow"]) => void;
   };
 }
 
 export interface CallStore {
   streams: { [key: string]: MediaStream };
   connections: { [key: string]: Peer.Instance };
-  currentCall: Chat["ongoingCall"] | null;
+  currentCall: Call | null;
   answeredCall: boolean;
-  // incomingCalls: Chat["ongoingCall"][] | [];
+  incomingCalls: Call[] | [];
+  recentlyEndedCalls: Call[] | [];
+  isUserSharingVideo: false | "video" | "screen";
+  isUserMicrophoneMuted: boolean;
 
   actions: {
     addStream: (participantId: string, stream: MediaStream) => void;
@@ -48,14 +43,16 @@ export interface CallStore {
     addConnection: (participantId: string, peer: Peer.Instance) => void;
     removeConnection: (participantId: string) => void;
     resetConnections: () => void;
-    setCurrentCall: (call: Chat["ongoingCall"] | null) => void;
+    setCurrentCall: (call: Call | null) => void;
     setAnsweredCall: (newState: boolean) => void;
-    // setIncomingCalls: (
-    //   newValue:
-    //     | []
-    //     | ((
-    //         prevCalls: CallStore["incomingCalls"]
-    //       ) => CallStore["incomingCalls"])
-    // ) => void;
+    addIncomingCall: (call: Call) => void;
+    removeIncomingCall: (chatId: Call["chatId"]["_id"]) => void;
+    addRecentlyEndedCall: (call: Call) => void;
+    removeRecentlyEndedCall: (chatId: Call["chatId"]["_id"]) => void;
+    resetIncomingCalls: () => void;
+    setIsUserSharingVideo: (newState: CallStore["isUserSharingVideo"]) => void;
+    setIsUserMicrophoneMuted: (
+      newState: CallStore["isUserMicrophoneMuted"]
+    ) => void;
   };
 }

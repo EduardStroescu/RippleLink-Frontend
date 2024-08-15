@@ -1,6 +1,13 @@
 import React from "react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/Popover";
+import { useQueryClient } from "@tanstack/react-query";
+import { useUserStoreActions } from "@/stores/useUserStore";
+import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
+import { useRouter } from "@tanstack/react-router";
+import { useToast } from "./ui/use-toast";
+import userApi from "@/api/modules/user.api";
+import { User } from "@/types/user";
 
 interface UserSettingsOverlayProps {
   children: React.ReactNode;
@@ -9,9 +16,36 @@ interface UserSettingsOverlayProps {
 export const UserSettingsOverlay: React.FC<UserSettingsOverlayProps> = ({
   children,
 }) => {
+  const queryClient = useQueryClient();
+  const { setUser } = useUserStoreActions();
+  const { setItem } = useLocalStorage<User | null>("user");
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      await userApi.logout();
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: err.message,
+      });
+    } finally {
+      setItem(null);
+      setUser(null);
+      queryClient.removeQueries();
+      router.navigate({ to: "/" });
+    }
+  };
+
   const avatarFunctions = [
     { name: "Change Avatar", fn: () => console.log("change avatar") },
     { name: "Change Status", fn: () => console.log("change status") },
+    {
+      name: "Log Out",
+      fn: handleLogout,
+    },
   ];
   return (
     <div className="flex items-center">

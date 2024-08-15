@@ -1,10 +1,9 @@
-import { PropsWithoutRef } from "react";
 import MediaPreviewDialog from "../MediaPreviewDialog";
 import { cn } from "@/lib/utils";
 
-interface FullscreenImageProps {
+interface FullscreenImageProps
+  extends React.ImgHTMLAttributes<HTMLImageElement> {
   className?: string;
-  props: PropsWithoutRef<JSX.IntrinsicElements["img"]>;
 }
 
 export function FullscreenImage({ className, ...props }: FullscreenImageProps) {

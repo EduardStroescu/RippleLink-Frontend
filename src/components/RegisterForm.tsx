@@ -9,12 +9,13 @@ import { RegisterSchema } from "@/lib/formSchemas/auth.schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { placeholderAvatar } from "@/lib/const";
 import { ChangeEvent, useState } from "react";
-import { AvatarCoin } from "@/components/UI/AvatarCoin";
-import { useToast } from "./UI/use-toast";
+import { AvatarCoin } from "@/components/ui/AvatarCoin";
+import { useToast } from "./ui/use-toast";
+import { User } from "@/types/user";
 
 export function RegisterForm() {
   const { setUser } = useUserStoreActions();
-  const { setItem } = useLocalStorage("user");
+  const { setItem } = useLocalStorage<User>("user");
   const [avatarImage, setAvatarImage] = useState<string | null>(null);
   const router = useRouter();
   const redirectUrl = useRouterState({
@@ -40,7 +41,7 @@ export function RegisterForm() {
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<z.infer<typeof RegisterSchema>>({
-    mode: "onChange",
+    mode: "onSubmit",
     resolver: zodResolver(RegisterSchema),
     defaultValues: {
       email: "",
@@ -90,11 +91,11 @@ export function RegisterForm() {
   return (
     <form
       onSubmit={handleSubmit(handleRegister)}
-      className="flex flex-col gap-10 min-w-[500px] max-w-1/2"
+      className="flex flex-col gap-8 min-w-[320px] sm:min-w-[500px]"
     >
       <label
         htmlFor="avatar"
-        className="self-center max-w-[300px] cursor-pointer"
+        className="self-center max-w-[200px] sm:max-w-[300px] cursor-pointer"
         aria-label="Upload Avatar"
       >
         <AvatarCoin
@@ -106,65 +107,94 @@ export function RegisterForm() {
       </label>
       <input
         type="file"
+        accept="image/*"
         id="avatar"
         onChange={handleAvatarChange}
         className="hidden"
       />
-      <input
-        {...register("email")}
-        autoFocus
-        type="text"
-        placeholder="Email"
-        className="rounded p-1.5 bg-black shadow-custom-multi"
-      />
-      {errors?.email && <p>{errors.email.message}</p>}
-      <input
-        {...register("firstName")}
-        type="text"
-        placeholder="First Name"
-        className="rounded p-1.5 bg-black shadow-custom-multi"
-      />
-      {errors?.firstName && <p>{errors.firstName.message}</p>}
-      <input
-        {...register("lastName")}
-        type="text"
-        placeholder="Last Name"
-        className="rounded p-1.5 bg-black shadow-custom-multi"
-      />
-      {errors?.lastName && <p>{errors.lastName.message}</p>}
-      <input
-        {...register("displayName", { required: false })}
-        placeholder="Display Name"
-        type="text"
-        className="rounded p-1.5 bg-black shadow-custom-multi"
-      />
-      {errors?.displayName && <p>{errors.displayName.message}</p>}
-      <input
-        {...register("password")}
-        type="password"
-        placeholder="Password"
-        className="rounded p-1.5 bg-black shadow-custom-multi"
-      />
-      {errors?.password && <p>{errors.password.message}</p>}
-      <input
-        {...register("confirmPassword")}
-        type="password"
-        placeholder="Confirm Password"
-        className="rounded p-1.5 bg-black shadow-custom-multi"
-      />
-      {errors?.confirmPassword && <p>{errors.confirmPassword.message}</p>}
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="px-2 py-1 rounded border-4 border-double border-blue-800 bg-black w-full max-w-[50%] place-self-center"
-      >
-        {isSubmitting ? "Registering..." : "Register"}
-      </button>
-      <div className="w-full flex gap-2">
-        <p>Already have an account?</p>{" "}
-        <Link to="/login" className="text-blue-500 hover:text-blue-400">
-          Log In
-        </Link>
+      <div className="flex flex-col gap-1">
+        {errors?.email && (
+          <p className="text-xs text-red-600">{errors.email.message}</p>
+        )}
+        <input
+          {...register("email")}
+          autoFocus
+          type="text"
+          placeholder="Email"
+          className="w-full rounded p-1.5 bg-black shadow-custom-multi"
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        {errors?.firstName && (
+          <p className="text-xs text-red-600">{errors.firstName.message}</p>
+        )}
+        <input
+          {...register("firstName")}
+          type="text"
+          placeholder="First Name"
+          className="rounded p-1.5 bg-black shadow-custom-multi"
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        {errors?.lastName && (
+          <p className="text-xs text-red-600">{errors.lastName.message}</p>
+        )}
+        <input
+          {...register("lastName")}
+          type="text"
+          placeholder="Last Name"
+          className="rounded p-1.5 bg-black shadow-custom-multi"
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        {errors?.displayName && (
+          <p className="text-xs text-red-600">{errors.displayName.message}</p>
+        )}
+        <input
+          {...register("displayName", { required: false })}
+          placeholder="Display Name"
+          type="text"
+          className="rounded p-1.5 bg-black shadow-custom-multi"
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        {errors?.password && (
+          <p className="text-xs text-red-600">{errors.password.message}</p>
+        )}
+        <input
+          {...register("password")}
+          type="password"
+          placeholder="Password"
+          className="rounded p-1.5 bg-black shadow-custom-multi"
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        {errors?.confirmPassword && (
+          <p className="text-xs text-red-600">
+            {errors.confirmPassword.message}
+          </p>
+        )}
+        <input
+          {...register("confirmPassword")}
+          type="password"
+          placeholder="Confirm Password"
+          className="rounded p-1.5 bg-black shadow-custom-multi"
+        />
+      </div>
+      <div className="my-4 flex flex-col gap-2">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="px-2 py-1 rounded border-4 border-double border-blue-800 bg-black w-full max-w-[50%] place-self-center"
+        >
+          {isSubmitting ? "Registering..." : "Register"}
+        </button>
+        <div className="w-full flex gap-2">
+          <p>Already have an account?</p>{" "}
+          <Link to="/login" className="text-blue-500 hover:text-blue-400">
+            Log In
+          </Link>
+        </div>
       </div>
     </form>
   );
