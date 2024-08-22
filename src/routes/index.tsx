@@ -15,18 +15,18 @@ function HomePage() {
     if (user) {
       router.history.push("/chat");
     }
-  });
+  }, []);
 
   return (
     <div
       id="index"
-      className="flex flex-col justify-center items-center gap-10 h-full text-white p-4 overflow-hidden"
+      className="flex flex-col justify-center items-center gap-6 sm:gap-10 h-full text-white p-4 overflow-hidden overflow-y-auto"
     >
-      <div className="flex flex-col gap-10 -translate-y-8">
+      <div className="w-full flex flex-col gap-4 sm:gap-10">
         <img
           src="/rippleLink.png"
           alt="RippleLink logo"
-          className="min-w-[300px] max-w-[400px] object-cover bg-center"
+          className="max-w-[300px] sm:max-w-[400px] self-center object-cover bg-center"
         />
         <div className="flex flex-row gap-10 justify-center items-center">
           <Link

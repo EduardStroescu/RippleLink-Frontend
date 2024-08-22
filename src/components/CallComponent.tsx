@@ -17,6 +17,7 @@ import { useCallContext } from "@/providers/CallProvider";
 import { useShallow } from "zustand/react/shallow";
 import { VideoComponent } from "./ui/Video";
 import { Call } from "@/types/call";
+import { ResizableContainer } from "./ui/ResizableContainer";
 
 interface VideoCallProps {
   currentCallDetails: Call | undefined;
@@ -24,15 +25,18 @@ interface VideoCallProps {
 
 export const CallComponent = memo(({ currentCallDetails }: VideoCallProps) => {
   const user = useUserStore((state) => state.user);
-  const { setIsUserSharingVideo, setIsUserMicrophoneMuted } =
-    useCallStoreActions();
-  const { answerCall, endCall, handleScreenShare } = useCallContext();
-  const { currentCall, streams } = useCallStore(
-    useShallow((state) => ({
-      currentCall: state.currentCall,
-      streams: state.streams,
-    }))
-  );
+  const { setIsUserMicrophoneMuted } = useCallStoreActions();
+  const { answerCall, endCall, handleScreenShare, handleVideoShare } =
+    useCallContext();
+  const { currentCall, streams, isUserMicrophoneMuted, joiningCall } =
+    useCallStore(
+      useShallow((state) => ({
+        currentCall: state.currentCall,
+        streams: state.streams,
+        isUserMicrophoneMuted: state.isUserMicrophoneMuted,
+        joiningCall: state.joiningCall,
+      }))
+    );
 
   const handleAnswerCall = (videoEnabled?: boolean) => {
     if (currentCallDetails) {
@@ -59,39 +63,25 @@ export const CallComponent = memo(({ currentCallDetails }: VideoCallProps) => {
   };
 
   const isUserInOngoingCall = currentCallDetails?.participants?.some(
-    (participant) => participant.userId._id === user?._id
+    (participant) => participant?.userId?._id === user?._id
   );
-
-  const handleVideoOff = () => {
-    if (!user?._id) return;
-    const videoTrack = streams[user?._id]
-      ?.getTracks()
-      .find((track) => track.kind === "video");
-
-    if (!videoTrack) return;
-    if (videoTrack.enabled) {
-      videoTrack.enabled = false;
-      setIsUserSharingVideo(false);
-    } else {
-      videoTrack.enabled = true;
-      setIsUserSharingVideo("video");
-    }
-  };
 
   const handleAudioOff = () => {
     if (!user?._id) return;
     const audioTracks = streams[user?._id]?.getAudioTracks();
     if (!audioTracks) return;
 
-    audioTracks.forEach((audioTrack) => {
-      if (audioTrack.enabled) {
-        audioTrack.enabled = false;
-        setIsUserMicrophoneMuted(true);
-      } else {
+    if (isUserMicrophoneMuted) {
+      audioTracks.forEach((audioTrack) => {
         audioTrack.enabled = true;
-        setIsUserMicrophoneMuted(false);
-      }
-    });
+      });
+      setIsUserMicrophoneMuted(false);
+    } else {
+      audioTracks.forEach((audioTrack) => {
+        audioTrack.enabled = false;
+      });
+      setIsUserMicrophoneMuted(true);
+    }
   };
 
   const isParticipantSharingVideo = useCallback(
@@ -112,17 +102,17 @@ export const CallComponent = memo(({ currentCallDetails }: VideoCallProps) => {
   );
 
   return (
-    <div className="flex flex-col w-full gap-4 bg-gray-950/70 0 py-6 border-b-[1px] border-cyan-600 ">
-      <div className="grid grid-flow-auto md:grid-flow-col p-4 gap-2">
+    <ResizableContainer className="flex flex-col w-full bg-gray-950/70 py-2 pb-6 gap-4 border-b-[1px] border-cyan-600">
+      <div className="grid grid-flow-col px-2 gap-1 md:gap-2 h-full overflow-hidden">
         {!!currentCallDetails?.participants?.length &&
-          currentCallDetails?.participants.map((participant, idx) => {
+          currentCallDetails?.participants?.map((participant) => {
             return (
               <UserBox
-                key={idx}
+                key={participant.userId._id}
                 displayName={participant?.userId?.displayName}
                 userId={participant?.userId?._id}
                 avatar={participant?.userId?.avatarUrl || placeholderAvatar}
-                muted={participant?.userId?._id === user?._id}
+                muted={true}
                 isSharingVideo={isParticipantSharingVideo(
                   participant?.userId?._id
                 )}
@@ -136,7 +126,7 @@ export const CallComponent = memo(({ currentCallDetails }: VideoCallProps) => {
             displayName={user.displayName}
             userId={user._id}
             avatar={user.avatarUrl || placeholderAvatar}
-            muted={user._id === user?._id}
+            muted={true}
             isSharingVideo={isParticipantSharingVideo(user?._id)}
             userStream={streams[user._id]}
             handleVideoClick={handleVideoClick}
@@ -145,7 +135,7 @@ export const CallComponent = memo(({ currentCallDetails }: VideoCallProps) => {
       </div>
 
       <div className="flex justify-center items-center gap-2">
-        {!currentCall && !isUserInOngoingCall && (
+        {!currentCall && !isUserInOngoingCall && !joiningCall && (
           <>
             <button
               onClick={() => handleAnswerCall()}
@@ -161,7 +151,7 @@ export const CallComponent = memo(({ currentCallDetails }: VideoCallProps) => {
             </button>
           </>
         )}
-        {currentCall && !isUserInOngoingCall && (
+        {((currentCall && !isUserInOngoingCall) || joiningCall) && (
           <div className="p-1 animate-spin bg-gradient-to-bl from-pink-400 via-purple-400 to-indigo-600 w-14 h-14 aspect-square rounded-full">
             <div className="rounded-full h-full w-full bg-gray-950/95" />
           </div>
@@ -176,12 +166,12 @@ export const CallComponent = memo(({ currentCallDetails }: VideoCallProps) => {
               <RejectCallIcon />
             </button>
             <AudioButton handleAudio={handleAudioOff} />
-            <ShareVideoButton handleShareVideo={handleVideoOff} />
+            <ShareVideoButton handleShareVideo={handleVideoShare} />
             <ScreenShareButton handleScreenShare={handleScreenShare} />
           </>
         )}
       </div>
-    </div>
+    </ResizableContainer>
   );
 });
 
@@ -211,36 +201,37 @@ const UserBox = memo(
     const fullscreenVideoRef = useRef<HTMLVideoElement>(null);
 
     return (
-      <div className="bg-blue-950 hover:bg-blue-900 border-slate-600 border-[1px] flex rounded flex-col items-center justify-center gap-2 py-10 px-4 w-full overflow-hidden">
+      <div className="bg-blue-950 hover:bg-blue-900 border-slate-600 border-[1px] flex rounded flex-col items-center justify-center gap-1 py-6 px-4 w-full overflow-hidden">
         <AvatarCoin
-          className={`${isSharingVideo ? "hidden" : "block"}`}
+          className={`${isSharingVideo ? "hidden" : "block"} min-w-[80px]`}
           source={avatar}
-          width={100}
           alt={`${displayName}'s Avatar`}
         />
-        <MediaPreviewDialog
-          content={
+        {isSharingVideo && (
+          <MediaPreviewDialog
+            className="w-full h-full"
+            content={
+              <VideoComponent
+                ref={fullscreenVideoRef}
+                muted={true}
+                controls={false}
+              />
+            }
+          >
             <VideoComponent
-              ref={fullscreenVideoRef}
-              muted={true}
+              onClick={() => handleVideoClick(userId, fullscreenVideoRef)}
+              muted={muted}
               controls={false}
+              className="w-full min-w-[70px] min-h-[70px] h-full object-fit rounded-md"
+              ref={(el) => {
+                if (el && el.srcObject !== userStream) {
+                  el.srcObject = userStream;
+                  el.play();
+                }
+              }}
             />
-          }
-        >
-          <VideoComponent
-            autoPlay
-            onClick={() => handleVideoClick(userId, fullscreenVideoRef)}
-            muted={muted}
-            controls={false}
-            className={`${isSharingVideo ? "block" : "hidden"} w-full h-[200px] max-w-full md:max-w-[500px] object-fit rounded-md`}
-            ref={(el) => {
-              if (el && el.srcObject !== userStream) {
-                el.srcObject = userStream;
-                el.volume = 1;
-              }
-            }}
-          />
-        </MediaPreviewDialog>
+          </MediaPreviewDialog>
+        )}
         <p>{displayName || "User"}</p>
       </div>
     );

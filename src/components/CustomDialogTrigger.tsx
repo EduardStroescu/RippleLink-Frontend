@@ -17,6 +17,7 @@ interface CustomDialogTriggerProps {
   children: React.ReactNode;
   description?: string;
   className?: string;
+  contentClassName?: string;
 }
 
 const CustomDialogTrigger: React.FC<CustomDialogTriggerProps> = ({
@@ -25,6 +26,7 @@ const CustomDialogTrigger: React.FC<CustomDialogTriggerProps> = ({
   children,
   description,
   className,
+  contentClassName,
 }) => {
   const [open, setOpen] = useState(false);
 
@@ -36,14 +38,10 @@ const CustomDialogTrigger: React.FC<CustomDialogTriggerProps> = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger className={clsx("", className)}>{children}</DialogTrigger>
       <DialogContent
-        className="h-[80%]
-        block
-        sm:h-[440px]
-        overflow-hidden
-        w-[90%]
-        border-[#282637]
-        border-[1px]
-      "
+        className={clsx(
+          "w-[90%] border-[#282637] border-[1px]",
+          contentClassName
+        )}
       >
         <DialogHeader>
           <DialogTitle>{header}</DialogTitle>

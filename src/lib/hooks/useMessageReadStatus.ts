@@ -28,7 +28,7 @@ export function useMessageReadStatus(
     ) {
       setMessages(() =>
         messages
-          ? messages?.map((message) =>
+          ? messages?.map((message: Message) =>
               message.senderId?._id !== user._id
                 ? { ...message, read: true }
                 : message

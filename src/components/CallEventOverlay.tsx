@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { CallIcon, CloseIcon, RejectCallIcon } from "./Icons";
+import { CallIcon, CloseIcon } from "./Icons";
 import { AvatarCoin } from "./ui/AvatarCoin";
 import { placeholderAvatar } from "@/lib/const";
 import { useCallContext } from "@/providers/CallProvider";
@@ -13,10 +13,12 @@ import useCallSound from "@/lib/hooks/useCallSound";
 
 interface CallEventOverlayProps {
   chats: Chat[] | [] | undefined;
+  open?: boolean;
 }
 
 export const CallEventOverlay: React.FC<CallEventOverlayProps> = ({
   chats,
+  open,
 }) => {
   const user = useUserStore((state) => state.user);
   const incomingCalls = useCallStore((state) => state.incomingCalls);
@@ -45,6 +47,7 @@ export const CallEventOverlay: React.FC<CallEventOverlayProps> = ({
       });
     }
   };
+
   const handleRejectCall = (call: Call) => {
     if (!call || !call.chatId._id) return;
     removeIncomingCall(call.chatId._id);
@@ -57,12 +60,12 @@ export const CallEventOverlay: React.FC<CallEventOverlayProps> = ({
   }, 1000);
 
   useEffect(() => {
-    if (incomingCalls.length) {
+    if (incomingCalls.length && open) {
       throttledCallNotification();
     } else {
       stopSound();
     }
-  }, [incomingCalls, throttledCallNotification]);
+  }, [incomingCalls, stopSound, throttledCallNotification, open]);
 
   return (
     <>

@@ -8,7 +8,7 @@ interface GifPickerProps {
 }
 
 export const GifPicker: React.FC<GifPickerProps> = ({ children, getValue }) => {
-  const onGifClick = (selectedGif: any) => {
+  const onGifClick = (selectedGif) => {
     if (getValue) getValue(selectedGif.url);
   };
   return (
@@ -18,11 +18,14 @@ export const GifPicker: React.FC<GifPickerProps> = ({ children, getValue }) => {
           {children}
         </PopoverTrigger>
         <PopoverContent
-          className="p-0 absolute bottom-14 -right-6
-          border-none
+          align="end"
+          sideOffset={25}
+          className="p-0
+          border-none w-full mx-2
         "
         >
           <Picker
+            width="min(max(100%, 20vw), 95vw)"
             theme={Theme.DARK}
             tenorApiKey={import.meta.env.VITE_TENOR_KEY!}
             onGifClick={onGifClick}

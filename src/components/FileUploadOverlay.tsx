@@ -27,7 +27,6 @@ export const FileUploadOverlay: React.FC<FileUploadOverlayProps> = ({
         </PopoverTrigger>
         <PopoverContent
           align="start"
-          alignOffset={-15}
           side="top"
           sideOffset={25}
           className="p-0

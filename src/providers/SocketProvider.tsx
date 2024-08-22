@@ -21,7 +21,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || socket !== null) return;
     const socketInstance = io(import.meta.env.VITE_BACKEND_URL, {
       query: {
         _id: user?._id,
@@ -34,25 +34,28 @@ export function SocketProvider({ children }: SocketProviderProps) {
 
     setSocket(socketInstance);
 
-    // socketInstance.on("connect", () => {
-    //   console.log("connected");
-    // });
-
-    // socketInstance.on("disconnect", () => {
-    //   console.log("disconnected");
-    // });
+    socketInstance.on("disconnect", () => {
+      socketInstance.off("connect");
+      socketInstance.off("disconnect");
+      socketInstance.off("error");
+      setSocket(null);
+    });
 
     socketInstance.on("error", ({ message }) => {
       if (message !== "Failed to connect user") {
         toast({ variant: "destructive", title: "Error", description: message });
+        setSocket(null);
       }
     });
+  }, [user, socket, toast]);
 
+  useEffect(() => {
     return () => {
-      socketInstance.off("error");
-      socketInstance.disconnect();
+      if (socket) {
+        socket.disconnect();
+      }
     };
-  }, [user]);
+  }, [socket]);
 
   return (
     <SocketContext.Provider value={{ socket }}>

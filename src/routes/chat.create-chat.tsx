@@ -1,33 +1,38 @@
-import { AvatarCoin } from "@/components/ui/AvatarCoin";
-import { groupAvatar, placeholderAvatar } from "@/lib/const";
-import {
-  createFileRoute,
-  Link,
-  redirect,
-  useRouter,
-} from "@tanstack/react-router";
+import { groupAvatar } from "@/lib/const";
+import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { FormEvent, useState } from "react";
-import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
+import {
+  QueryClient,
+  useMutation,
+  useQueries,
+  useQueryClient,
+} from "@tanstack/react-query";
 import chatApi from "@/api/modules/chat.api";
 import userApi from "@/api/modules/user.api";
 import { CreateMessageForm } from "@/components/CreateMessageForm";
 import { Chat } from "@/types/chat";
 import { Message } from "@/types/message";
-import { BackIcon } from "@/components/Icons";
 import { useToast } from "@/components/ui/use-toast";
 import { User } from "@/types/user";
 import { checkIfChatExists } from "@/lib/utils";
+import { ChatHeaderDetails } from "@/components/ChatHeaderDetails";
 
 export const Route = createFileRoute("/chat/create-chat")({
-  beforeLoad: async ({ search: { userIds }, context: { queryClient } }) => {
-    const chatsData: Chat[] | [] = queryClient.getQueryData(["chats"]);
+  beforeLoad: async ({ search, context }) => {
+    const { userIds } = search as typeof search & { userIds: string };
+    const { queryClient } = context as typeof context & {
+      queryClient: QueryClient;
+    };
+    const chatsData = queryClient.getQueryData<Chat[] | []>(["chats"]);
     const userIdsArr = userIds.split(",");
 
-    const existingChat = checkIfChatExists(chatsData, userIdsArr);
-    if (existingChat) {
-      throw redirect({
-        to: `/chat/${existingChat._id}`,
-      });
+    if (chatsData) {
+      const existingChat = checkIfChatExists(chatsData, userIdsArr);
+      if (existingChat) {
+        throw redirect({
+          to: `/chat/${existingChat._id}`,
+        });
+      }
     }
 
     const usersQuery = {
@@ -124,15 +129,16 @@ function CreateNewChat() {
   return (
     <div className="w-full h-full flex flex-col overflow-hidden">
       {newChatUsers?.length > 1 ? (
-        <CreateNewChatHeader
-          avatar={groupAvatar}
-          displayName={defaultChatHeaderTitle}
+        <ChatHeaderDetails
+          avatarUrl={groupAvatar}
+          name={defaultChatHeaderTitle}
         />
       ) : (
-        <CreateNewChatHeader
-          avatar={newChatUsers[0]?.avatarUrl}
-          displayName={newChatUsers[0]?.displayName}
-          onlineStatus={newChatUsers[0]?.status?.online}
+        <ChatHeaderDetails
+          avatarUrl={newChatUsers[0]?.avatarUrl}
+          name={newChatUsers[0]?.displayName}
+          lastSeen={newChatUsers[0]?.status?.lastSeen}
+          isInterlocutorOnline={newChatUsers[0]?.status?.online}
         />
       )}
       <div className="w-full flex-1 h-full p-4 text-white overflow-y-auto flex flex-col gap-4" />
@@ -147,41 +153,6 @@ function CreateNewChat() {
         setMessageType={setMessageType}
         setContentPreview={setContentPreview}
       />
-    </div>
-  );
-}
-
-interface CreateNewChatHeaderProps {
-  avatar?: string;
-  displayName: string;
-  onlineStatus?: string;
-}
-
-function CreateNewChatHeader({
-  avatar,
-  displayName,
-  onlineStatus,
-}: CreateNewChatHeaderProps) {
-  return (
-    <div className="flex flex-row gap-2 text-white min-h-[56px] p-2 items-center">
-      <Link
-        to="/chat"
-        preload={false}
-        className="group flex sm:hidden gap-1 items-center"
-      >
-        <BackIcon /> <span className="text-xs">Back</span>
-      </Link>
-      <AvatarCoin
-        source={avatar || placeholderAvatar}
-        width={50}
-        alt={`${displayName}'s avatar`}
-      />
-      <div className="overflow-hidden">
-        <p className="w-full truncate">{displayName}</p>
-        {onlineStatus && (
-          <p className="text-xs">{onlineStatus ? "online" : "offline"}</p>
-        )}
-      </div>
     </div>
   );
 }

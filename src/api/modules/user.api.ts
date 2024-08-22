@@ -1,6 +1,8 @@
 import { User } from "@/types/user";
 import privateClient from "../privateClient";
 import publicClient from "../publicClient";
+import { Settings } from "@/types/settings";
+import { Status } from "@/types/status";
 
 const userEndpoints = {
   login: "auth/login",
@@ -8,12 +10,13 @@ const userEndpoints = {
   getUserInfo: "users/current-user",
   getUserByDisplayName: "users/search/:displayName",
   getUserById: "users/:id",
-  passwordUpdate: "users/update-password",
+  changePassword: "users/update-password",
   avatarUpdate: "users/change-avatar",
   accountUpdate: "users/update-details",
+  settingsUpdate: "settings",
+  deleteAccount: "users",
+  statusUpdate: "status",
   logout: "auth/logout",
-  //   googleLogin: "auth/login/google",
-  //   facebookLogin: "auth/login/facebook",
 };
 
 const userApi = {
@@ -74,17 +77,17 @@ const userApi = {
     );
   },
 
-  passwordUpdate: async ({
-    password,
+  changePassword: async ({
+    currentPassword,
     newPassword,
     confirmNewPassword,
   }: {
-    password: string;
+    currentPassword: string;
     newPassword: string;
     confirmNewPassword: string;
   }) => {
-    return await privateClient.put(userEndpoints.passwordUpdate, {
-      password,
+    return await privateClient.patch(userEndpoints.changePassword, {
+      currentPassword,
       newPassword,
       confirmNewPassword,
     });
@@ -100,14 +103,73 @@ const userApi = {
     });
   },
 
-  accountUpdate: async ({ email }: { email: string }): Promise<User> => {
+  accountUpdate: async ({
+    email,
+    displayName,
+    firstName,
+    lastName,
+  }: {
+    email?: string;
+    displayName?: string;
+    firstName?: string;
+    lastName?: string;
+  }): Promise<User> => {
     return await privateClient.patch(userEndpoints.accountUpdate, {
       email,
+      displayName,
+      firstName,
+      lastName,
     });
   },
 
   logout: async (): Promise<{ success: string }> => {
     return await privateClient.get(userEndpoints.logout);
+  },
+
+  deleteAccount: async ({
+    currentPassword,
+    confirmCurrentPassword,
+  }: {
+    currentPassword: string;
+    confirmCurrentPassword: string;
+  }): Promise<{ success: string }> => {
+    return await privateClient.request({
+      method: "DELETE",
+      url: userEndpoints.deleteAccount,
+      data: {
+        currentPassword,
+        confirmCurrentPassword,
+      },
+    });
+  },
+
+  updateSettings: async ({
+    backgroundImage,
+    glowColor,
+    tintColor,
+    receiveNotifications,
+  }: {
+    backgroundImage?: string;
+    glowColor?: string;
+    tintColor?: string;
+    receiveNotifications?: boolean;
+  }): Promise<Settings> => {
+    return await privateClient.patch(userEndpoints.settingsUpdate, {
+      backgroundImage,
+      glowColor,
+      tintColor,
+      receiveNotifications,
+    });
+  },
+
+  statusUpdate: async ({
+    statusMessage,
+  }: {
+    statusMessage: string;
+  }): Promise<Status> => {
+    return await privateClient.patch(userEndpoints.statusUpdate, {
+      statusMessage,
+    });
   },
 };
 

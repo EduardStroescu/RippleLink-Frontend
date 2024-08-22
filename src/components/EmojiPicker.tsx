@@ -12,21 +12,28 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
   children,
   getValue,
 }) => {
-  const onClick = (selectedEmoji: any) => {
+  const onClick = (selectedEmoji) => {
     if (getValue) getValue(selectedEmoji.emoji);
   };
   return (
     <div className="flex items-center">
       <Popover>
-        <PopoverTrigger className="text-[25px] origin-center hover:animate-spin-slow cursor-pointer">
+        <PopoverTrigger className="group text-[25px] origin-center hover:animate-spin-slow cursor-pointer">
           {children}
         </PopoverTrigger>
         <PopoverContent
-          className="p-0 absolute bottom-16 -left-[4.5rem]
-          border-none
+          align="start"
+          sideOffset={25}
+          className="p-0
+          border-none mx-2
         "
         >
-          <Picker onEmojiClick={onClick} theme={Theme.DARK} />
+          <Picker
+            onEmojiClick={onClick}
+            theme={Theme.DARK}
+            width="min(max(100%, 25vw), 95vw)"
+            height="min(max(450px, 30vh), 80vh)"
+          />
         </PopoverContent>
       </Popover>
     </div>

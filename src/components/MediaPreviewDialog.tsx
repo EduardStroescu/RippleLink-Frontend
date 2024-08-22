@@ -37,7 +37,7 @@ const MediaPreviewDialog: React.FC<MediaPreviewDialogProps> = ({
       <DialogTrigger className={clsx("", className)}>{children}</DialogTrigger>
       <DialogContent
         closeButtonEnabled={false}
-        className="block  max-w-fit
+        className="block max-w-fit
         border-none bg-transparent shadow-none outline-none
       "
       >

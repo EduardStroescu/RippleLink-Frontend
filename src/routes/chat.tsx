@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { SocketProvider } from "../providers/SocketProvider";
 import { SearchForm } from "@/components/SearchForm";
-import { isAuthenticated } from "@/lib/isAuthenticated";
+import { isAuthenticated } from "@/lib/utils";
 import { AddIcon, SettingsIcon } from "@/components/Icons";
 import { AvatarCoin } from "@/components/ui/AvatarCoin";
 import { UserSettingsOverlay } from "@/components/UserSettingsOverlay";
@@ -15,12 +15,12 @@ import chatApi from "@/api/modules/chat.api";
 import CustomDialogTrigger from "@/components/CustomDialogTrigger";
 import { SearchUsersForm } from "@/components/SearchUsersForm";
 import { useUserStore } from "@/stores/useUserStore";
-import { placeholderAvatar } from "@/lib/const";
+import { groupAvatar, placeholderAvatar } from "@/lib/const";
 import { Chat } from "@/types/chat";
 import { DeleteButton } from "@/components/ui/DeleteButton";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
-import { adaptTimezone } from "@/lib/hepers";
+import { adaptTimezone } from "@/lib/utils";
 import { useChatEvents } from "@/lib/hooks/useChatEvents";
 import { useChatsFilters } from "@/lib/hooks/useChatsFilters";
 import { FilterOption } from "@/types/filterOptions";
@@ -30,8 +30,9 @@ import { getParsedPath } from "@/lib/utils";
 import { CallEventOverlay } from "@/components/CallEventOverlay";
 import CallDialog from "@/components/CallDialog";
 import { DraggableVideos } from "@/components/DraggableVideos";
-import { Call } from "@/types/call";
 import { useCallEvents } from "@/lib/hooks/useCallEvents";
+import { Message } from "@/types/message";
+import { Fragment } from "react/jsx-runtime";
 
 export const Route = createFileRoute("/chat")({
   beforeLoad: async ({ location }) => {
@@ -78,11 +79,8 @@ function ChatWrapper() {
 
   const user = useUserStore((state) => state.user);
 
-  useQuery(chatsQuery);
-  useQuery(callsQuery);
-  const queryClient = useQueryClient();
-  const chats = queryClient.getQueryData<Chat[] | []>(["chats"]);
-  const calls = queryClient.getQueryData<Call[] | []>(["calls"]);
+  const { data: chats } = useQuery(chatsQuery);
+  const { data: calls } = useQuery(callsQuery);
   const filterOptions: FilterOption[] = ["All", "Unread", "Groups"];
 
   const { filteredChats, setChats, handleFilter, handleSearch } =
@@ -111,11 +109,11 @@ function ChatWrapper() {
   };
 
   return (
-    <div className="relative flex flex-row w-full h-full">
+    <div className="relative grid grid-flow-col grid-cols-1 md:grid-cols-7 xl:grid-cols-8 w-full h-full">
       <aside
-        className={`${parsedPath === "/chat" ? "flex" : "hidden"} sm:flex flex-col flex-1 min-w-[30%] sm:max-w-[20%]`}
+        className={`${parsedPath === "/chat" ? "flex" : "hidden"} md:flex flex-col flex-1 max-w-full col-span-3 lg:col-span-3 xl:col-span-2 overflow-hidden`}
       >
-        <div className="flex flex-row justify-between text-white min-h-[66px] py-2 px-4 items-center">
+        <div className="flex flex-row justify-between text-white py-1 sm:py-2 px-4 items-center">
           <div className="flex items-center gap-2">
             <UserSettingsOverlay>
               <AvatarCoin
@@ -124,16 +122,23 @@ function ChatWrapper() {
                 alt=""
               />
             </UserSettingsOverlay>
-            <p>{user?.displayName}</p>
+            <p className="font-bold">{user?.displayName}</p>
           </div>
           <div className="flex flex-row gap-2">
-            <Link to="/chat/settings" className="group flex items-center gap-2">
+            <Link
+              to={
+                !/\/chat\/settings/.test(location.pathname)
+                  ? "/chat/settings"
+                  : "/chat"
+              }
+              className="group flex items-center gap-2"
+            >
               <SettingsIcon />
             </Link>
           </div>
         </div>
         <div className="flex flex-col overflow-hidden">
-          <div className="flex flex-row m-4 items-center justify-center gap-2">
+          <div className="flex flex-row mx-3.5 items-center justify-center gap-2">
             <SearchForm onChange={handleSearch} />
             <CustomDialogTrigger
               header="Start new chat"
@@ -156,70 +161,117 @@ function ChatWrapper() {
           </div>
           <div className="flex flex-col h-full overflow-y-auto overflow-x-hidden">
             {filteredChats?.map((chat: Chat) => {
-              const interlocutor = chat?.users?.filter(
+              const interlocutors = chat?.users?.filter(
                 (participant) => participant._id !== user?._id
-              )[0];
+              );
+              const interlocutorsDisplayNames = interlocutors
+                ?.map((user) => user?.displayName)
+                .slice(0, 3)
+                .join(", ");
               return (
-                <Link
-                  key={chat._id}
-                  to={`/chat/${chat._id}`}
-                  activeOptions={{ exact: true }}
-                  preload={false}
-                  activeProps={{ className: `font-bold` }}
-                  className="flex items-center text-white hover:bg-black/80 group"
-                >
-                  <AvatarCoin
-                    source={interlocutor?.avatarUrl || placeholderAvatar}
-                    width={50}
-                    alt={interlocutor?.displayName || "User"}
-                    className="m-3 p-0"
-                  />
-                  <div className="flex flex-col py-5 px-3 border-b-[1px] border-slate-700 flex-1 w-full overflow-hidden">
-                    <p>
-                      {interlocutor?.displayName || "User"}{" "}
-                      <span
-                        className={`${
-                          chat?.lastMessage?.senderId?._id !== interlocutor?._id
-                            ? "hidden"
-                            : ""
-                        } text-xs font-normal text-gray-300
-                        `}
-                      >
-                        {!chat?.lastMessage?.read && "(New)"}
-                      </span>
-                    </p>
-                    <p className="font-normal text-gray-400 truncate">
-                      {chat?.lastMessage?.type === "text"
-                        ? chat.lastMessage?.content
-                        : chat.lastMessage?.type}
-                    </p>
-                  </div>
-                  <div className="flex gap-2 items-center border-b-[1px] border-slate-700 h-full">
-                    <p className="text-xs font-normal pr-2 group-hover:pr-0">
-                      {adaptTimezone(
-                        chat.lastMessage?.updatedAt,
-                        "ro-RO"
-                      ).slice(0, 6)}
-                    </p>
-                    <DeleteButton
-                      className="group pr-2 hidden group-hover:block"
-                      onClick={() => handleDeleteChat(chat._id)}
+                <Fragment key={chat?._id}>
+                  {chat.type === "dm" ? (
+                    <ChatListItem
+                      linkTo={chat?._id}
+                      avatarUrl={
+                        interlocutors?.[0]?.avatarUrl || placeholderAvatar
+                      }
+                      name={interlocutors?.[0]?.displayName || "User"}
+                      lastMessage={chat?.lastMessage}
+                      displayLastMessageReceipt={
+                        chat?.lastMessage?.senderId?._id === user?._id
+                      }
+                      handleDeleteChat={handleDeleteChat}
                     />
-                  </div>
-                </Link>
+                  ) : (
+                    <ChatListItem
+                      linkTo={chat?._id}
+                      avatarUrl={chat?.avatarUrl || groupAvatar}
+                      name={
+                        `Group Chat: ${interlocutorsDisplayNames}` ||
+                        "Group Chat"
+                      }
+                      lastMessage={chat.lastMessage}
+                      displayLastMessageReceipt={
+                        chat?.lastMessage?.senderId?._id === user?._id
+                      }
+                      handleDeleteChat={handleDeleteChat}
+                    />
+                  )}
+                </Fragment>
               );
             })}
           </div>
         </div>
       </aside>
       <aside
-        className={`${parsedPath === "/chat" ? "hidden" : "flex"} sm:flex flex-col flex-1 h-full border-l-[1px] border-slate-700`}
+        className={`${parsedPath === "/chat" ? "hidden" : "flex"} md:flex flex-col border-l-[1px] border-slate-700 col-span-6 overflow-hidden`}
       >
         <Outlet />
       </aside>
-      {/* TODO: FINISH IMPLEMENTING THIS */}
       <CallDialog content={<CallEventOverlay chats={chats} />} />
       {parsedPath !== "/chat/$chatId" && <DraggableVideos />}
     </div>
+  );
+}
+
+function ChatListItem({
+  linkTo,
+  avatarUrl,
+  name,
+  lastMessage,
+  displayLastMessageReceipt,
+  handleDeleteChat,
+}: {
+  linkTo: string;
+  avatarUrl: string;
+  name: string;
+  lastMessage: Message;
+  displayLastMessageReceipt: boolean;
+  handleDeleteChat: (linkTo: string) => void;
+}) {
+  return (
+    <Link
+      to={`/chat/${linkTo}`}
+      activeOptions={{ exact: true }}
+      preload={false}
+      activeProps={{ className: `font-bold` }}
+      className="flex items-center text-white hover:bg-black/80 group"
+    >
+      <AvatarCoin
+        source={avatarUrl || placeholderAvatar}
+        shouldInvalidate
+        width={50}
+        alt={name}
+        className="m-3 p-0"
+      />
+      <div className="flex flex-col py-5 px-3 border-b-[1px] border-slate-700 flex-1 w-full overflow-hidden">
+        <p className="truncate">
+          {name || "User"}{" "}
+          <span
+            className={`${
+              displayLastMessageReceipt ? "hidden" : ""
+            } text-xs font-bold text-slate-400
+          `}
+          >
+            {!lastMessage?.read && "(New)"}
+          </span>
+        </p>
+        <p className="font-normal text-gray-400 truncate">
+          {lastMessage?.type === "text"
+            ? lastMessage?.content
+            : lastMessage?.type}
+        </p>
+      </div>
+      <div className="flex gap-2 items-center border-b-[1px] border-slate-700 h-full">
+        <p className="text-xs font-normal pr-2 group-hover:pr-0">
+          {adaptTimezone(lastMessage?.updatedAt, "ro-RO").slice(0, 6)}
+        </p>
+        <DeleteButton
+          className="group pr-2 hidden group-hover:block"
+          onClick={() => handleDeleteChat(linkTo)}
+        />
+      </div>
+    </Link>
   );
 }

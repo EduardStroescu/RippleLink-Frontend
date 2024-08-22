@@ -1,11 +1,30 @@
 import { useUserStore } from "@/stores/useUserStore";
 import { Chat } from "@/types/chat";
+import { User } from "@/types/user";
 import clsx, { ClassValue } from "clsx";
 import { RgbaColor } from "react-colorful";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+export function isAuthenticated(): boolean {
+  try {
+    const authData = window.localStorage.getItem("user");
+    if (authData) {
+      const parsedData: User = JSON.parse(authData);
+      // Check if the parsed data contains the access_token property
+      return (
+        parsedData &&
+        typeof parsedData.access_token === "string" &&
+        parsedData.access_token.trim() !== ""
+      );
+    }
+  } catch (error) {
+    console.error("Error parsing localStorage item:", error);
+  }
+  return false;
 }
 
 export function getParsedPath(path: string) {
@@ -19,6 +38,15 @@ export function getParsedPath(path: string) {
     return "unknown_path";
   }
 }
+
+export const adaptTimezone = (date?: string, timezone?: string) => {
+  if (!date) return "";
+  if (!timezone) throw new Error("Timezone is required");
+
+  const utcDate = new Date(date);
+  const localDate = utcDate.toLocaleString(timezone).split(",")[1];
+  return localDate;
+};
 
 export function rgbaStringToObject(rgbaString: string | undefined) {
   if (!rgbaString) return { r: 0, g: 0, b: 0, a: 1 };
@@ -49,7 +77,7 @@ export const isImageUrl = (url: string) => {
 };
 export const isVidUrlPattern = (url: string): boolean => {
   const vidUrlPattern =
-    /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|vimeo\.com\/|dailymotion\.com\/video\/|facebook\.com\/[^\/]+\/videos\/|twitch\.tv\/videos\/|twitch\.tv\/[^\/]+\/clip\/|video\.twitch\.tv\/|streamable\.com\/|wistia\.com\/medias\/|vidyard\.com\/watch\/)[\w\-\_]+$/;
+    /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|vimeo\.com\/|dailymotion\.com\/video\/|facebook\.com\/[^\/]+\/videos\/|twitch\.tv\/videos\/\d+|twitch\.tv\/[^\/]+\/clip\/[\w\-]+|twitch\.tv\/[^\/]+\/v\/\d+|twitch\.tv\/[^\/]+\/?|video\.twitch\.tv\/[^\/]+|streamable\.com\/|wistia\.com\/medias\/|vidyard\.com\/watch\/|soundcloud\.com\/[\w\-]+\/[\w\-]+)$/;
 
   return vidUrlPattern.test(url);
 };

@@ -10,6 +10,7 @@ export const useCallStore = create<CallStore>((set) => ({
   recentlyEndedCalls: [],
   isUserSharingVideo: false,
   isUserMicrophoneMuted: false,
+  joiningCall: null,
 
   actions: {
     addStream: (participantId, stream) =>
@@ -84,6 +85,7 @@ export const useCallStore = create<CallStore>((set) => ({
       set(() => ({ isUserSharingVideo: newState })),
     setIsUserMicrophoneMuted: (newState) =>
       set(() => ({ isUserMicrophoneMuted: newState })),
+    setJoiningCall: (chatId) => set(() => ({ joiningCall: chatId })),
   },
 }));
 

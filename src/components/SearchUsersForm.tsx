@@ -1,4 +1,4 @@
-import { Dispatch, useEffect, useState } from "react";
+import { Dispatch, useEffect, useMemo, useState } from "react";
 
 import userApi from "@/api/modules/user.api";
 import { useRouter } from "@tanstack/react-router";
@@ -25,8 +25,10 @@ export const SearchUsersForm = ({
     queryKey: ["users", displayName],
     queryFn: () => userApi.getUsersByDisplayName(displayName),
   });
-  const filteredUsers = users?.filter(
-    (user) => !existingChatUsersIds?.includes(user._id)
+
+  const filteredUsers = useMemo(
+    () => users?.filter((user) => !existingChatUsersIds?.includes(user._id)),
+    [users, existingChatUsersIds]
   );
 
   useEffect(() => {
@@ -60,7 +62,10 @@ export const SearchUsersForm = ({
         className="w-full bg-black/60 py-1 px-2"
         autoComplete="off"
       />
-      <div className="flex flex-col items-start gap-2">
+      <div
+        className="flex flex-col items-start gap-2 min-h-[180px] max-h-[200px]
+        sm:min-h-[240px] sm:max-h-[240px] overflow-y-auto"
+      >
         {filteredUsers?.map((user) => (
           <button
             key={user._id}
@@ -69,6 +74,7 @@ export const SearchUsersForm = ({
           >
             <AvatarCoin
               source={user.avatarUrl || placeholderAvatar}
+              shouldInvalidate
               width={50}
               alt=""
             />

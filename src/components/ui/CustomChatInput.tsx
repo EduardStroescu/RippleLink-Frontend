@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { EmojiPicker } from "../EmojiPicker";
+import { EmojiIcon } from "../Icons";
 
 interface CustomChatInputProps {
   disabled?: boolean;
@@ -76,7 +77,9 @@ export function CustomChatInput({
 
   return (
     <>
-      <EmojiPicker getValue={insertEmoji}>😏</EmojiPicker>
+      <EmojiPicker getValue={insertEmoji}>
+        <EmojiIcon />
+      </EmojiPicker>
       <textarea
         disabled={disabled}
         ref={chatInputRef}

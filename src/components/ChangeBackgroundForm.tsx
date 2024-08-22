@@ -4,8 +4,17 @@ import { ColorPicker } from "./ColorPicker";
 import { ObjectToRgbaString, rgbaStringToObject } from "@/lib/utils";
 import { useAppStore, useAppStoreActions } from "@/stores/useAppStore";
 import { useShallow } from "zustand/react/shallow";
+import { useMutation } from "@tanstack/react-query";
+import userApi from "@/api/modules/user.api";
+import { useToast } from "./ui/use-toast";
+import { useUserStore, useUserStoreActions } from "@/stores/useUserStore";
+import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
+import { User } from "@/types/user";
 
 export function ChangeBackgroundForm() {
+  const { toast } = useToast();
+  const user = useUserStore((state) => state.user);
+  const { setItem } = useLocalStorage<User>("user");
   const { appBackground, appTint, appGlow } = useAppStore(
     useShallow((state) => ({
       appBackground: state.appBackground,
@@ -13,6 +22,7 @@ export function ChangeBackgroundForm() {
       appGlow: state.appGlow,
     }))
   );
+  const { setUser } = useUserStoreActions();
   const { setAppBackground, setAppTint, setAppGlow } = useAppStoreActions();
 
   const handleBackgroundChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,13 +46,65 @@ export function ChangeBackgroundForm() {
     setAppGlow(ObjectToRgbaString(color));
   };
 
+  const updateSettingsMutation = useMutation({
+    mutationFn: (updatedSettings: {
+      backgroundImage?: string;
+      glowColor?: string;
+      tintColor?: string;
+    }) => userApi.updateSettings(updatedSettings),
+  });
+
+  const handleUpdateSettings = async () => {
+    const updatedSettings = {
+      backgroundImage: appBackground,
+      glowColor: appGlow,
+      tintColor: appTint,
+    };
+    if (!updatedSettings.backgroundImage?.startsWith("data:image")) {
+      delete updatedSettings.backgroundImage;
+    }
+    Object.keys(updatedSettings).forEach(
+      (key) =>
+        updatedSettings[key as keyof typeof updatedSettings] ===
+          user?.settings?.[key as keyof typeof updatedSettings] &&
+        delete updatedSettings[key as keyof typeof updatedSettings]
+    );
+    if (!Object.values(updatedSettings).length) return;
+
+    await updateSettingsMutation.mutateAsync(updatedSettings, {
+      onSuccess: (response) => {
+        setUser((prevUser) => {
+          const updatedUser = prevUser && {
+            ...prevUser,
+            settings: prevUser.settings && {
+              ...prevUser.settings,
+              ...response,
+            },
+          };
+          updatedUser && setItem(updatedUser);
+          return updatedUser;
+        });
+      },
+      onError: (error) => {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message,
+        });
+      },
+    });
+  };
+
   return (
     <div className="w-full h-fit flex flex-col gap-4 px-10 py-6 rounded-lg border-[1px] border-slate-600 bg-cyan-800/40">
       <label
-        htmlFor="avatar"
-        className="self-center max-w-[200px] cursor-pointer"
-        aria-label="Upload Avatar"
+        htmlFor="background"
+        aria-label="Select App Background"
+        className="relative group self-center max-w-[200px] cursor-pointer"
       >
+        <p className="group-hover:opacity-100 opacity-0 absolute inset-0 bg-black/80 flex flex-col items-center justify-center rounded-full pointer-events-none text-cyan-500 font-bold text-2xl text-center transition-all ease-in-out">
+          Select Background
+        </p>
         <AvatarCoin
           source={appBackground || "/background.png"}
           width={100}
@@ -53,7 +115,7 @@ export function ChangeBackgroundForm() {
       <input
         type="file"
         accept="image/*"
-        id="avatar"
+        id="background"
         onChange={handleBackgroundChange}
         className="hidden"
       />
@@ -83,8 +145,12 @@ export function ChangeBackgroundForm() {
           />
         </ColorPicker>
       </div>
-      <button className="border-[1px] border-slate-600 rounded self-center py-1 px-4">
-        Save
+      <button
+        onClick={handleUpdateSettings}
+        disabled={updateSettingsMutation.isPending}
+        className="border-[1px] hover:bg-cyan-700 border-slate-600 rounded self-center py-1 px-4 text-slate-300 hover:text-white"
+      >
+        {updateSettingsMutation.isPending ? "Saving..." : "Save"}
       </button>
     </div>
   );

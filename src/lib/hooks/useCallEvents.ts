@@ -1,22 +1,30 @@
-import { useSocketContext } from "@/providers/SocketProvider";
 import { useCallStore, useCallStoreActions } from "@/stores/useCallStore";
 import { Call } from "@/types/call";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { useUserStore } from "@/stores/useUserStore";
+import { useSocketSubscription } from "./useSocketSubscription";
+import { useThrottle } from "./useThrottle";
 
 export function useCallEvents(calls: Call[] | [] | undefined) {
-  const { socket } = useSocketContext();
+  const user = useUserStore((state) => state.user);
   const queryClient = useQueryClient();
-  const { incomingCalls, currentCall, answeredCall, recentlyEndedCalls } =
-    useCallStore(
-      useShallow((state) => ({
-        incomingCalls: state.incomingCalls,
-        currentCall: state.currentCall,
-        answeredCall: state.answeredCall,
-        recentlyEndedCalls: state.recentlyEndedCalls,
-      }))
-    );
+  const {
+    incomingCalls,
+    currentCall,
+    answeredCall,
+    recentlyEndedCalls,
+    joiningCall,
+  } = useCallStore(
+    useShallow((state) => ({
+      incomingCalls: state.incomingCalls,
+      currentCall: state.currentCall,
+      answeredCall: state.answeredCall,
+      recentlyEndedCalls: state.recentlyEndedCalls,
+      joiningCall: state.joiningCall,
+    }))
+  );
   const {
     setCurrentCall,
     addIncomingCall,
@@ -33,25 +41,63 @@ export function useCallEvents(calls: Call[] | [] | undefined) {
     [queryClient]
   );
 
-  useEffect(() => {
-    if (!socket) return;
+  const debouncedCallNotification = useThrottle((content: Call) => {
+    addIncomingCall(content);
+  }, 10000);
 
-    const callsUpdatedHandler = ({
-      content,
-    }: {
-      content: Call & { callEnded: boolean };
-    }) => {
+  const notifyUserOfIncomingCall = useCallback(
+    (content: Call) => {
+      if (
+        content._id === currentCall?._id &&
+        joiningCall === content.chatId._id
+      )
+        return;
+
+      const currentCallParticipantsOfferToCurrUser =
+        content.participants?.every((participant) =>
+          participant.offers?.some(
+            (offer) => offer.to === user?._id && offer.iceCandidates.length > 0
+          )
+        );
+      if (
+        content.chatId._id !== currentCall?.chatId._id &&
+        !recentlyEndedCalls.some((call) => call._id === content._id) &&
+        currentCallParticipantsOfferToCurrUser
+      ) {
+        debouncedCallNotification(content);
+      }
+    },
+    [
+      currentCall?._id,
+      currentCall?.chatId._id,
+      debouncedCallNotification,
+      joiningCall,
+      recentlyEndedCalls,
+      user?._id,
+    ]
+  );
+
+  const handleCallsUpdated = useCallback(
+    ({ content }: { content: Call & { callEnded: boolean } }) => {
       if (content.callEnded !== true) {
         setCalls((prev) => {
-          if (!prev) return [content];
-          const index = prev?.findIndex(
+          if (!prev) return [content]; // Initialize with new content if prev is null/undefined
+
+          // Find the index of the item to be updated or removed
+          const index = prev.findIndex(
             (item) => item.chatId._id === content.chatId._id
           );
-          if (index === -1) return [...prev, content];
-          prev[index] = content;
-          return [...prev];
+
+          if (index === -1) {
+            // Item not found, add it to the list
+            return [...prev, content];
+          }
+
+          // Replace the old call with the updated content
+          return prev.map((item) =>
+            item.chatId._id === content.chatId._id ? { ...content } : item
+          );
         });
-        removeRecentlyEndedCall(content.chatId._id);
 
         if (
           answeredCall &&
@@ -61,18 +107,13 @@ export function useCallEvents(calls: Call[] | [] | undefined) {
           setCurrentCall(content);
         }
 
-        if (
-          content.chatId._id !== currentCall?.chatId._id &&
-          !recentlyEndedCalls.some((call) => call._id === content._id)
-        ) {
-          addIncomingCall(content);
-        }
+        notifyUserOfIncomingCall(content);
       } else {
         setCalls((prev) => {
           if (!prev) return [];
-          const newCalls = prev.filter((call) => call._id !== content._id);
-          return [...newCalls];
+          return prev.filter((call) => call._id !== content._id);
         });
+        removeRecentlyEndedCall(content.chatId._id);
 
         if (
           incomingCalls.some(
@@ -82,12 +123,18 @@ export function useCallEvents(calls: Call[] | [] | undefined) {
           removeIncomingCall(content.chatId._id);
         }
       }
-    };
+    },
+    [
+      setCalls,
+      answeredCall,
+      currentCall,
+      setCurrentCall,
+      notifyUserOfIncomingCall,
+      removeRecentlyEndedCall,
+      incomingCalls,
+      removeIncomingCall,
+    ]
+  );
 
-    socket.on("callsUpdated", callsUpdatedHandler);
-
-    return () => {
-      socket.off("callsUpdated");
-    };
-  }, [answeredCall, currentCall, incomingCalls, socket]);
+  useSocketSubscription("callsUpdated", handleCallsUpdated);
 }

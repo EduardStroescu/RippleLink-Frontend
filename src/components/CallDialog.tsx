@@ -12,6 +12,7 @@ interface CallDialogProps {
   header?: string;
   content?: React.ReactElement<{
     setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+    open?: boolean;
   }>;
   description?: string;
   className?: string;
@@ -30,7 +31,7 @@ const CallDialog: React.FC<CallDialogProps> = ({
   }, [incomingCalls.length]);
 
   const contentWithProps = content
-    ? React.cloneElement(content, { setOpen })
+    ? React.cloneElement(content, { setOpen, open })
     : null;
 
   return (

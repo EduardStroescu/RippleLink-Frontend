@@ -130,7 +130,7 @@ export const CreateMessageForm = ({
               </button>
             )}
           </div>
-          <button type="submit" className="px-2 py-1 rounded-full group">
+          <button type="submit" className="rounded-full group">
             <SendIcon />
           </button>
         </div>
@@ -158,7 +158,7 @@ export const CreateMessageForm = ({
           <GifPicker getValue={handleGifSelect}>
             <GifIcon />
           </GifPicker>
-          <button type="submit" className="px-2 py-1 rounded-full group">
+          <button type="submit" className="rounded-full group">
             <SendIcon />
           </button>
         </div>

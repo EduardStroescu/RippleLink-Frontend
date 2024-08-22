@@ -50,7 +50,7 @@ export function DemoAccountLoginPanel() {
   };
 
   return (
-    <div className="shadow-xl shadow-cyan-500/50 border-[1px] border-slate-600 flex flex-col items-center justify-center gap-4 bg-cyan-900/60 px-10 py-6 rounded-lg">
+    <div className="shadow-xl shadow-cyan-500/50 border-[1px] border-slate-600 flex flex-col items-center justify-center gap-4 bg-cyan-900/60 px-6 py-4 rounded-lg">
       <h3>- Demo Accounts -</h3>
       <div className="flex gap-2">
         {users.map((userName) => (

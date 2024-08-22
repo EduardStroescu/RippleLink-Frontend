@@ -1,7 +1,7 @@
 import { useUserStoreActions } from "../stores/useUserStore";
 import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
 import { Link, useRouter, useRouterState } from "@tanstack/react-router";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import userApi from "@/api/modules/user.api";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { LoginSchema } from "@/lib/formSchemas/auth.schemas";
@@ -17,6 +17,7 @@ export function LoginForm() {
   const redirectUrl = useRouterState({
     select: (state) => state.location.search.redirect,
   });
+  const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const loginMutation = useMutation({
@@ -42,6 +43,7 @@ export function LoginForm() {
       onSuccess: (response) => {
         setItem(response);
         setUser(response);
+        queryClient.invalidateQueries();
         reset();
         router.history.push(redirectUrl ? redirectUrl : "/chat");
       },

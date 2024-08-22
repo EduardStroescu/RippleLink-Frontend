@@ -7,6 +7,7 @@ export type Chat = {
   type: "dm" | "group";
   users: User[] | [];
   lastMessage: Message;
+  avatarUrl: string;
   createdAt: string;
   updatedAt: string;
 };

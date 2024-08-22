@@ -8,7 +8,7 @@ import { z } from "zod";
 import { RegisterSchema } from "@/lib/formSchemas/auth.schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { placeholderAvatar } from "@/lib/const";
-import { ChangeEvent, useState } from "react";
+import { useState } from "react";
 import { AvatarCoin } from "@/components/ui/AvatarCoin";
 import { useToast } from "./ui/use-toast";
 import { User } from "@/types/user";
@@ -73,7 +73,7 @@ export function RegisterForm() {
     });
   };
 
-  const handleAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
     const fileReader = new FileReader();
     const file = e.target.files[0];
@@ -95,9 +95,12 @@ export function RegisterForm() {
     >
       <label
         htmlFor="avatar"
-        className="self-center max-w-[200px] sm:max-w-[300px] cursor-pointer"
-        aria-label="Upload Avatar"
+        aria-label="Select Avatar"
+        className="relative group self-center max-w-[200px] sm:max-w-[300px] cursor-pointer"
       >
+        <p className="group-hover:opacity-100 opacity-0 absolute inset-0 bg-black/80 flex flex-col items-center justify-center rounded-full pointer-events-none text-cyan-500 font-bold text-2xl transition-all ease-in-out">
+          Select Avatar
+        </p>
         <AvatarCoin
           source={avatarImage || placeholderAvatar}
           width={50}
@@ -184,6 +187,7 @@ export function RegisterForm() {
       <div className="my-4 flex flex-col gap-2">
         <button
           type="submit"
+          aria-label="Register"
           disabled={isSubmitting}
           className="px-2 py-1 rounded border-4 border-double border-blue-800 bg-black w-full max-w-[50%] place-self-center"
         >

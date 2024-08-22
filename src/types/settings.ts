@@ -1,6 +1,6 @@
 export interface Settings {
   _id: string;
-  backgroundUrl?: string;
+  backgroundImage?: string;
   receiveNotifications?: boolean;
   tintColor?: string;
   glowColor?: string;

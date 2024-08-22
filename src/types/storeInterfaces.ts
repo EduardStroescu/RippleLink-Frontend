@@ -24,6 +24,7 @@ export interface AppStore {
     setAppBackground: (newBackground: AppStore["appBackground"]) => void;
     setAppTint: (newTint: AppStore["appTint"]) => void;
     setAppGlow: (newGlow: AppStore["appGlow"]) => void;
+    resetAppStore: () => void;
   };
 }
 
@@ -36,6 +37,7 @@ export interface CallStore {
   recentlyEndedCalls: Call[] | [];
   isUserSharingVideo: false | "video" | "screen";
   isUserMicrophoneMuted: boolean;
+  joiningCall: Call["chatId"]["_id"] | null;
 
   actions: {
     addStream: (participantId: string, stream: MediaStream) => void;
@@ -54,5 +56,6 @@ export interface CallStore {
     setIsUserMicrophoneMuted: (
       newState: CallStore["isUserMicrophoneMuted"]
     ) => void;
+    setJoiningCall: (chatId: Call["chatId"]["_id"] | null) => void;
   };
 }

@@ -8,33 +8,29 @@ import {
 import { useEffect, useMemo, useRef } from "react";
 import { useSocketContext } from "@/providers/SocketProvider";
 import { useUserStore } from "@/stores/useUserStore";
-import { AvatarCoin } from "@/components/ui/AvatarCoin";
 import { TypingIndicator } from "@/components/ui/TypingIndicator";
-import { placeholderAvatar } from "@/lib/const";
-import { Chat } from "@/types/chat";
+import { groupAvatar, placeholderAvatar } from "@/lib/const";
 import { CreateMessageForm } from "@/components/CreateMessageForm";
 import {
   AddUsersIcon,
-  BackIcon,
   CallIcon,
   InfoIcon,
   VideoCallIcon,
 } from "@/components/Icons";
 import { useMessageEvents } from "@/lib/hooks/useMessageEvents";
 import { useUserTyping } from "@/lib/hooks/useUserTyping";
-import { useMessageFilters } from "@/lib/hooks/useMessageFilters";
 import { useCreateMessage } from "@/lib/hooks/useCreateMessage";
 import { useMessageReadStatus } from "@/lib/hooks/useMessageReadStatus";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import chatApi from "@/api/modules/chat.api";
 import { MessageComponent } from "@/components/MessageComponent";
 import { CallComponent } from "@/components/CallComponent";
 import { useCallContext } from "@/providers/CallProvider";
 import { getParsedPath } from "@/lib/utils";
-import { Call } from "@/types/call";
 import { useCallStore } from "@/stores/useCallStore";
 import CustomDialogTrigger from "@/components/CustomDialogTrigger";
 import { SearchUsersForm } from "@/components/SearchUsersForm";
+import { ChatHeaderDetails } from "@/components/ChatHeaderDetails";
 
 export const Route = createFileRoute("/chat/$chatId")({
   beforeLoad: async ({ params: { chatId } }) => {
@@ -57,16 +53,13 @@ export const Route = createFileRoute("/chat/$chatId")({
 function ChatId() {
   const location = useLocation();
   const parsedPath = getParsedPath(location.pathname);
-  const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
   const currentCall = useCallStore((state) => state.currentCall);
 
   const { messagesQuery, chatsQuery, callsQuery } = Route.useLoaderData();
   const { data: messages } = useQuery(messagesQuery);
-  useQuery(chatsQuery);
-  useQuery(callsQuery);
-  const chatData = queryClient.getQueryData<Chat[] | []>(["chats"]);
-  const callData = queryClient.getQueryData<Call[] | []>(["calls"]);
+  const { data: chatData } = useQuery(chatsQuery);
+  const { data: callData } = useQuery(callsQuery);
 
   const { socket } = useSocketContext();
   const scrollToBottomRef = useRef<HTMLDivElement>(null);
@@ -77,10 +70,12 @@ function ChatId() {
   const currentCallDetails = callData?.find(
     (call) => call.chatId._id === params.chatId
   );
-  const interlocutor = useMemo(
+
+  const isDmChat = currentChat?.type === "dm";
+  const interlocutors = useMemo(
     () =>
       currentChat &&
-      currentChat?.users?.find((person) => person._id !== user?._id),
+      currentChat?.users?.filter((person) => person._id !== user?._id),
     [currentChat, user?._id]
   );
 
@@ -100,7 +95,7 @@ function ChatId() {
     setMessages,
     setIsInterlocutorOnline,
   } = useMessageEvents(params, user, scrollToBottomRef);
-  useMessageFilters(interlocutor, setIsInterlocutorOnline);
+  // useMessageFilters(interlocutor, setIsInterlocutorOnline);
   useUserTyping(params, message);
   useMessageReadStatus(messages, setMessages, user, params);
 
@@ -128,37 +123,33 @@ function ChatId() {
     startCall(currentChat, videoEnabled);
   };
 
+  const interlocutorsDisplayNames = interlocutors
+    ?.map((user) => user?.displayName)
+    .slice(0, 3)
+    .join(", ");
+
   return (
-    <div className="flex w-full h-full">
+    <div className="grid grid-flow-col grid-cols-8 w-full h-full">
       <div
-        className={`${parsedPath === "/chat/$chatId/details" ? "hidden" : "flex"} xl:flex  relative flex-1 flex-col overflow-hidden`}
+        className={`${parsedPath === "/chat/$chatId/details" ? "hidden" : "flex col-span-8"} xl:flex relative w-full flex-col col-span-5 overflow-hidden`}
       >
         <div className="flex justify-between p-2 items-center">
-          <div className="flex flex-row gap-2 text-white min-h-[56px] items-center">
-            <Link
-              to="/chat"
-              preload={false}
-              className="group flex sm:hidden gap-1 items-center"
-            >
-              <BackIcon /> <span className="text-xs">Back</span>
-            </Link>
-            <AvatarCoin
-              source={interlocutor?.avatarUrl || placeholderAvatar}
-              width={50}
-              alt={`${interlocutor?.displayName || currentChat?.name || "User"}'s avatar`}
+          {isDmChat ? (
+            <ChatHeaderDetails
+              avatarUrl={interlocutors?.[0]?.avatarUrl || placeholderAvatar}
+              name={interlocutors?.[0]?.displayName || "User"}
+              lastSeen={interlocutors?.[0]?.status?.lastSeen}
+              isInterlocutorOnline={isInterlocutorOnline}
             />
-            <div>
-              <p>{interlocutor?.displayName || "User"}</p>
-              {interlocutor?.status?.lastSeen && (
-                <p className="text-xs">
-                  {isInterlocutorOnline
-                    ? "online"
-                    : `Last seen ${interlocutor.status.lastSeen.slice(0, 10)}`}
-                </p>
-              )}
-            </div>
-          </div>
-          <div className="mr-4 flex gap-4">
+          ) : (
+            <ChatHeaderDetails
+              avatarUrl={currentChat?.avatarUrl || groupAvatar}
+              name={
+                currentChat?.name || `Group Chat: ${interlocutorsDisplayNames}`
+              }
+            />
+          )}
+          <div className="mr-0.5 sm:mr-4 flex gap-2 sm:gap-4">
             {!currentCall && (
               <>
                 <button onClick={() => handleStartCall()} className="group">
@@ -173,7 +164,11 @@ function ChatId() {
               header="Create Group Chat"
               content={
                 <SearchUsersForm
-                  existingChatUsersIds={interlocutor && [interlocutor._id]}
+                  existingChatUsersIds={
+                    interlocutors && [
+                      ...interlocutors.map((person) => person._id),
+                    ]
+                  }
                 />
               }
               className="group"
@@ -193,7 +188,7 @@ function ChatId() {
         {(currentCall || currentCallDetails) && (
           <CallComponent currentCallDetails={currentCallDetails} />
         )}
-        <div className="w-full flex-1 h-full p-4 text-white overflow-y-auto flex flex-col gap-4">
+        <div className="w-full flex-1 h-full p-4 text-white overflow-y-auto overflow-x-hidden flex flex-col gap-4">
           {!!messages?.length &&
             messages?.map((message, idx) => {
               const isOwnMessage = message.senderId._id === user?._id;

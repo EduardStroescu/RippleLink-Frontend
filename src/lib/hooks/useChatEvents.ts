@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import useNotificationSound from "./useNotificationSound";
 import { useThrottle } from "./useThrottle";
 import useWindowVisibility from "./useWindowVisibility";
+import { useSocketSubscription } from "./useSocketSubscription";
 
 export function useChatEvents(
   setChats: (
@@ -32,36 +33,30 @@ export function useChatEvents(
     playSound();
   }, 1000);
 
-  useEffect(() => {
-    if (!socket) return;
-    const chatCreatedHandler = ({ content }: { content: Chat }) => {
-      setChats((prev) => (prev ? [...prev, content] : [content]));
-      if (content.lastMessage.senderId._id !== user?._id && !isWindowActive) {
-        throttledNotification();
-      }
-    };
-    const chatUpdatedHandler = ({ content }: { content: Chat }) => {
-      setChats((prev) => {
-        if (!prev) return [content];
-        const index = prev?.findIndex((item) => item._id === content._id);
-        if (index === -1) return [...prev, content];
-        prev[index] = content;
-        return [...prev];
-      });
-      if (content.lastMessage.senderId._id !== user?._id && !isWindowActive) {
-        throttledNotification();
-      }
-    };
+  // Handle chatCreated and chatUpdated events
+  useSocketSubscription("chatCreated", ({ content }: { content: Chat }) => {
+    setChats((prev) => (prev ? [...prev, content] : [content]));
+    if (content.lastMessage.senderId._id !== user?._id && !isWindowActive) {
+      throttledNotification();
+    }
+  });
 
-    socket.on("chatCreated", chatCreatedHandler);
-    socket.on("chatUpdated", chatUpdatedHandler);
+  useSocketSubscription("chatUpdated", ({ content }: { content: Chat }) => {
+    setChats((prev) => {
+      if (!prev) return [content];
+      const index = prev.findIndex((item) => item._id === content._id);
+      if (index === -1) return [...prev, content];
+      const updatedChats = [...prev];
+      updatedChats[index] = { ...updatedChats[index], ...content };
 
-    return () => {
-      socket.off("chatCreated");
-      socket.off("chatUpdated");
-    };
-  }, [socket, throttledNotification, isWindowActive, user?._id]);
+      return updatedChats;
+    });
+    if (content.lastMessage.senderId._id !== user?._id && !isWindowActive) {
+      throttledNotification();
+    }
+  });
 
+  // Update document title based on window visibility and new message count
   useEffect(() => {
     if (isWindowActive) {
       document.title = "RippleLink";

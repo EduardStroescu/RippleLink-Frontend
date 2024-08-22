@@ -3,9 +3,10 @@ import { Message } from "@/types/message";
 import { User } from "@/types/user";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
+import { useSocketSubscription } from "./useSocketSubscription";
 
 export function useMessageEvents(
-  params: any,
+  params,
   user: User | null,
   scrollToBottomRef: React.RefObject<HTMLDivElement>
 ) {
@@ -41,50 +42,59 @@ export function useMessageEvents(
     };
   }, [socket, params.chatId]);
 
-  useEffect(() => {
-    if (!socket || !user?._id) return;
-
-    const messageReadHandler = () => {
+  useSocketSubscription("messagesRead", () => {
+    if (user?._id) {
       setMessages((prev) =>
-        prev?.map((message) =>
+        prev?.map((message: Message) =>
           message.senderId._id === user?._id
             ? { ...message, read: true }
             : message
         )
       );
-    };
+    }
+  });
 
-    socket.on("messagesRead", messageReadHandler);
-    return () => {
-      socket.off("messagesRead");
-    };
-  }, [socket, user?._id, setMessages]);
-
-  useEffect(() => {
-    if (!socket) return;
-    const messageCreatedHandler = ({ content }: { content: Message }) => {
+  useSocketSubscription(
+    "messageCreated",
+    ({ content }: { content: Message }) => {
       setMessages((prev) => (prev ? [...prev, content] : [content]));
       setTimeout(() => {
         scrollToBottomRef?.current?.scrollIntoView({ behavior: "smooth" });
       }, 100);
-    };
-    const messageUpdatedHandler = ({ content }: { content: Message }) => {
+    }
+  );
+
+  useSocketSubscription(
+    "messageUpdated",
+    ({ content }: { content: Message }) => {
       setMessages((prev) => {
         if (!prev) return [content];
+
         const index = prev.findIndex((item) => item._id === content._id);
         if (index === -1) return prev;
-        const newMessages = [...prev];
-        newMessages[index] = content;
+
+        // Create a new array with an updated object
+        const newMessages = prev.map((message: Message, idx: number) =>
+          idx === index ? { ...message, ...content } : message
+        );
 
         return newMessages;
       });
-    };
-    const messageDeletedHandler = ({ content }: { content: Message }) => {
+    }
+  );
+
+  useSocketSubscription(
+    "messageDeleted",
+    ({ content }: { content: Message }) => {
       setMessages((prev) =>
         prev ? prev.filter((item) => item._id !== content._id) : [content]
       );
-    };
-    const interlocutorIsTypingHandler = ({
+    }
+  );
+
+  useSocketSubscription(
+    "interlocutorIsTyping",
+    ({
       content,
     }: {
       content: {
@@ -92,33 +102,16 @@ export function useMessageEvents(
         isTyping: boolean;
       };
     }) => {
-      if (content.isTyping === true) {
-        setInterlocutorIsTyping(true);
-      } else {
-        setInterlocutorIsTyping(false);
-      }
-    };
-    const broadcastUserStatusHandler = ({
-      content,
-    }: {
-      content: { _id: string; isOnline: boolean };
-    }) => {
+      setInterlocutorIsTyping(content.isTyping);
+    }
+  );
+
+  useSocketSubscription(
+    "broadcastUserStatus",
+    ({ content }: { content: { _id: string; isOnline: boolean } }) => {
       setIsInterlocutorOnline(content.isOnline);
-    };
-
-    socket.on("broadcastUserStatus", broadcastUserStatusHandler);
-    socket.on("messageCreated", messageCreatedHandler);
-    socket.on("messageUpdated", messageUpdatedHandler);
-    socket.on("messageDeleted", messageDeletedHandler);
-    socket.on("interlocutorIsTyping", interlocutorIsTypingHandler);
-
-    return () => {
-      socket.off("interlocutorIsTyping");
-      socket.off("messageCreated");
-      socket.off("messageUpdated");
-      socket.off("messageDeleted");
-    };
-  }, [socket, scrollToBottomRef, setMessages]);
+    }
+  );
 
   return {
     setMessages,

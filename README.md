@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://screensynced.vercel.app/" target="blank"><img src="https://raw.githubusercontent.com/EduardStroescu/PubImages/main/WebsiteImages/rippleLink.jpg" alt="RippleLink Preview" /></a>
+  <a href="https://ripple-link.vercel.app/" target="blank"><img src="https://raw.githubusercontent.com/EduardStroescu/PubImages/main/WebsiteImages/rippleLink.jpg" alt="RippleLink Preview" /></a>
 </p>
 
 # RippleLink FrontEnd
@@ -7,8 +7,8 @@
 ### Links to the Backend:
 
 https://github.com/EduardStroescu/RippleLink-Backend - Backend GIT Repository
-To be added - Backend Home Page
-To be added - New Backend API Documentation made with Swagger
+https://ripple-link.koyeb.app - Backend Home Page
+https://ripple-link.koyeb.app/api/docs - Backend API Documentation made with Swagger
 
 # Introduction
 

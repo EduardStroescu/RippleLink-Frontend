@@ -1,7 +1,7 @@
 import { Message } from "@/types/message";
 import { CheckIcon, EditIcon } from "./Icons";
 import { DeleteButton } from "./ui/DeleteButton";
-import { adaptTimezone } from "@/lib/hepers";
+import { adaptTimezone } from "@/lib/utils";
 import { FullscreenImage } from "./ui/FullscreenImage";
 import { VideoComponent } from "./ui/Video";
 import { AudioComponent } from "./ui/Audio";
@@ -51,7 +51,7 @@ export function MessageComponent({
     <div
       className={`${
         isOwnMessage ? "self-end" : "self-start"
-      } group flex flex-row gap-2 items-center`}
+      } group flex flex-row gap-2 items-center max-w-full`}
     >
       {isOwnMessage && message.type === "text" && (
         <button
@@ -64,7 +64,7 @@ export function MessageComponent({
       <div
         className={`${
           isOwnMessage ? "bg-green-600/60" : "bg-black/60"
-        } relative flex flex-row py-2 px-4 max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl rounded-xl overflow-hidden`}
+        } relative flex flex-row py-2 px-4 max-w-xs md:max-w-md lg:max-w-lg rounded-xl overflow-hidden`}
       >
         <div className="flex flex-col w-full">
           {!isEditing ? (
@@ -73,7 +73,7 @@ export function MessageComponent({
             <form
               ref={formRef}
               onSubmit={handleSubmit}
-              className="min-w-[31rem] py-1 flex gap-1 sm:gap-2 text-white"
+              className="md:min-w-[30rem] py-1 flex gap-1 sm:gap-2 text-white"
             >
               <CustomChatInput
                 message={updatedMessage}
@@ -83,6 +83,9 @@ export function MessageComponent({
             </form>
           )}
           <div className="flex gap-1 items-center self-end">
+            {!isOwnMessage && (
+              <p className="text-xs">{message.senderId.displayName}</p>
+            )}
             <p className="text-xs">
               {adaptTimezone(message.createdAt, "ro-RO")?.slice(0, 6)}
             </p>
@@ -143,11 +146,10 @@ const renderVideo = (content: string) => <VideoComponent src={content} />;
 const renderEmbedVideo = (content: string) => (
   <div className="w-full h-full rounded overflow-hidden mr-2 my-2">
     <ReactPlayer
-      url={content + `&origin=${import.meta.env.VITE_FRONTEND_URL}`}
+      url={content}
       controls
       light
       pip
-      credentialless="true"
       style={{
         maxWidth: "100%",
         maxHeight: "100%",
