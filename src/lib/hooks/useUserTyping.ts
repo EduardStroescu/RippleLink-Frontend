@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useThrottle } from "./useThrottle";
 import { useSocketContext } from "@/providers/SocketProvider";
 
-export function useUserTyping(params: any, message: string) {
+export function useUserTyping(params, message: string) {
   const { socket } = useSocketContext();
 
   const handleTyping = useThrottle(() => {
@@ -18,5 +18,5 @@ export function useUserTyping(params: any, message: string) {
     } else {
       handleTyping();
     }
-  }, [socket, message, handleTyping]);
+  }, [socket, message, handleTyping, params.chatId]);
 }

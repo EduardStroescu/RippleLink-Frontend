@@ -4,7 +4,7 @@ import { EmojiIcon } from "../Icons";
 
 interface CustomChatInputProps {
   disabled?: boolean;
-  message: string;
+  message: string | undefined;
   setMessage: (message: string) => void;
   handleKeyDown: () => void;
   handlePaste?: (e: React.ClipboardEvent<HTMLTextAreaElement>) => void;
@@ -67,6 +67,7 @@ export function CustomChatInput({
   }, [message]);
 
   useEffect(() => {
+    if (!message) return;
     const element = chatInputRef.current;
     if (element) {
       // Move cursor to end of the text

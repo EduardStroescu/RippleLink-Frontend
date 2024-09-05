@@ -6,19 +6,16 @@ import useNotificationSound from "./useNotificationSound";
 import { useThrottle } from "./useThrottle";
 import useWindowVisibility from "./useWindowVisibility";
 import { useSocketSubscription } from "./useSocketSubscription";
+import { useSetChatsCache } from "./useSetChatsCache";
+import { create } from "mutative";
 
-export function useChatEvents(
-  setChats: (
-    updateFunction: (
-      prevChats: Chat[] | [] | undefined
-    ) => Chat[] | [] | undefined
-  ) => void
-) {
+export function useChatEvents() {
   const user = useUserStore((state) => state.user);
   const { socket } = useSocketContext();
-  const playSound = useNotificationSound("/notification.mp3");
+  const playSound = useNotificationSound();
   const isWindowActive = useWindowVisibility();
   const [newMessageCount, setNewMessageCount] = useState(0);
+  const setChatsCache = useSetChatsCache();
 
   useEffect(() => {
     if (!socket || !user?._id) return;
@@ -35,21 +32,35 @@ export function useChatEvents(
 
   // Handle chatCreated and chatUpdated events
   useSocketSubscription("chatCreated", ({ content }: { content: Chat }) => {
-    setChats((prev) => (prev ? [...prev, content] : [content]));
+    setChatsCache((prev) => {
+      if (!prev) return [content];
+      return create(prev, (draft) => {
+        const index = draft.findIndex((item) => item._id === content._id);
+
+        if (index === -1) {
+          draft.push(content);
+        } else {
+          draft[index] = { ...draft[index], ...content };
+        }
+      });
+    });
     if (content.lastMessage.senderId._id !== user?._id && !isWindowActive) {
       throttledNotification();
     }
   });
 
   useSocketSubscription("chatUpdated", ({ content }: { content: Chat }) => {
-    setChats((prev) => {
+    setChatsCache((prev) => {
       if (!prev) return [content];
-      const index = prev.findIndex((item) => item._id === content._id);
-      if (index === -1) return [...prev, content];
-      const updatedChats = [...prev];
-      updatedChats[index] = { ...updatedChats[index], ...content };
+      return create(prev, (draft) => {
+        const index = draft.findIndex((item) => item._id === content._id);
 
-      return updatedChats;
+        if (index === -1) {
+          draft.push(content);
+        } else {
+          draft[index] = { ...draft[index], ...content };
+        }
+      });
     });
     if (content.lastMessage.senderId._id !== user?._id && !isWindowActive) {
       throttledNotification();

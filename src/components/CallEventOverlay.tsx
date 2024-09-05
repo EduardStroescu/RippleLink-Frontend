@@ -25,7 +25,7 @@ export const CallEventOverlay: React.FC<CallEventOverlayProps> = ({
   const { answerCall } = useCallContext();
   const router = useRouter();
   const { removeIncomingCall, addRecentlyEndedCall } = useCallStoreActions();
-  const { playSound, stopSound } = useCallSound("/call.mp3");
+  const { playSound, stopSound } = useCallSound();
 
   const getCurrentChatCaller = (call: Call) => {
     if (!call || !user?._id) return;

@@ -20,6 +20,7 @@ export function ChangeStatusForm() {
     if (user?.status?.statusMessage) {
       setStatusMessage(user?.status?.statusMessage);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleKeyDown = () => {

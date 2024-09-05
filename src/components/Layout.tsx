@@ -29,6 +29,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     } else {
       navigate({ to: "/", replace: true });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -45,7 +46,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div
       style={{ backgroundImage: `url(${appBackground})` }}
-      className="top-0 left-0 flex flex-col h-[100dvh] bg-cover bg-center justify-center overflow-hidden"
+      className="flex flex-col h-[100dvh] bg-cover bg-center justify-center overflow-hidden"
     >
       <main
         className="md:shadow-xl w-full md:w-[90%] bg-black/40 md:shadow-cyan-500/50 h-full md:h-[90%] self-center border-slate-700 sm:border-[1px] sm:rounded backdrop-blur"

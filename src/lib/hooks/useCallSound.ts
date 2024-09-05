@@ -1,25 +1,44 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 
-const useCallSound = (url: string) => {
+const useCallSound = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  useEffect(() => {
-    if (audioRef.current === null) {
-      audioRef.current = new Audio(url);
-    }
-  }, [url]);
-
-  const playSound = () => {
-    if (audioRef.current) {
+  const playSound = async () => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio("/call.mp3");
       audioRef.current.volume = 1;
       audioRef.current.loop = true;
-      audioRef.current.play();
+    }
+
+    if (audioRef.current) {
+      try {
+        // Create a user gesture
+        const playPromise = audioRef.current.play();
+
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              // Audio is playing
+            })
+            .catch((error) => {
+              // Handle error
+              console.error("Playback failed:", error);
+              audioRef.current?.pause();
+              audioRef.current = null;
+            });
+        }
+      } catch (e) {
+        console.error("Error playing sound:", e);
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
     }
   };
 
   const stopSound = () => {
     if (audioRef.current) {
       audioRef.current.pause();
+      audioRef.current.currentTime = 0; // Reset playback position
     }
   };
 

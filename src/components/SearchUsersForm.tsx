@@ -10,15 +10,17 @@ import { User } from "@/types/user";
 import { CheckIcon } from "./Icons";
 
 export const SearchUsersForm = ({
-  existingChatUsersIds,
+  existingChatUsers,
   setOpen,
 }: {
-  existingChatUsersIds?: User["_id"][];
+  existingChatUsers?: Pick<User, "_id" | "displayName">[];
   setOpen?: Dispatch<React.SetStateAction<boolean>>;
 }) => {
   const router = useRouter();
   const [displayName, setDisplayName] = useState("");
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<
+    { _id: string; displayName: string }[]
+  >([]);
 
   const { data: users } = useQuery({
     enabled: displayName.length > 0,
@@ -27,33 +29,61 @@ export const SearchUsersForm = ({
   });
 
   const filteredUsers = useMemo(
-    () => users?.filter((user) => !existingChatUsersIds?.includes(user._id)),
-    [users, existingChatUsersIds]
+    () =>
+      users?.filter(
+        (user) =>
+          !existingChatUsers?.some(
+            (existingUser) => existingUser._id === user._id
+          )
+      ),
+    [users, existingChatUsers]
   );
 
   useEffect(() => {
-    if (existingChatUsersIds) {
-      setSelectedUsers(existingChatUsersIds);
+    if (existingChatUsers) {
+      setSelectedUsers(existingChatUsers);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleUserClick = (userId: string) => {
+  const handleUserClick = (user: { _id: string; displayName: string }) => {
     setSelectedUsers((prev) => {
-      if (prev.includes(userId)) {
-        return prev.filter((id) => id !== userId);
+      const userIndex = prev.findIndex(
+        (selectedUser) => selectedUser._id === user._id
+      );
+      if (prev[userIndex]) {
+        return prev.filter((selectedUser) => selectedUser._id !== user._id);
       } else {
-        return [...prev, userId];
+        return [...prev, user];
       }
     });
   };
 
   const handleCreate = () => {
-    router.navigate({ to: `/chat/create-chat?userIds=${selectedUsers}` });
+    const selectedUsersIds = selectedUsers.map((user) => user._id);
+    router.navigate({ to: `/chat/create-chat?userIds=${selectedUsersIds}` });
     !!setOpen && setOpen(false);
   };
 
   return (
-    <div className="flex flex-col gap-4 py-4 h-full">
+    <div className="flex flex-col gap-4 py-2 h-full">
+      <div className="flex flex-col flex-wrap w-full gap-2">
+        <p className="text-md">Selected Users:</p>
+        <div className="flex gap-1">
+          {selectedUsers.map((user, idx) => (
+            <button
+              key={user._id}
+              className="text-sm hover:text-red-500"
+              onClick={() => handleUserClick(user)}
+              aria-label="Remove user"
+              title="Remove user"
+            >
+              {user.displayName}
+              {idx < selectedUsers.length - 1 ? ", " : ""}
+            </button>
+          ))}
+        </div>
+      </div>
       <Input
         type="search"
         id="search"
@@ -70,7 +100,7 @@ export const SearchUsersForm = ({
           <button
             key={user._id}
             className="flex flex-row gap-2 items-center hover:bg-slate-950 w-full rounded"
-            onClick={() => handleUserClick(user._id)}
+            onClick={() => handleUserClick(user)}
           >
             <AvatarCoin
               source={user.avatarUrl || placeholderAvatar}
@@ -79,7 +109,7 @@ export const SearchUsersForm = ({
               alt=""
             />
             <p className="flex-1 text-start">{user.displayName}</p>
-            {selectedUsers.includes(user._id) && (
+            {selectedUsers.includes(user) && (
               <div className="px-2">
                 <CheckIcon fill="#00fff2" width="15px" height="15px" />
               </div>

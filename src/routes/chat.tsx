@@ -33,12 +33,13 @@ import { DraggableVideos } from "@/components/DraggableVideos";
 import { useCallEvents } from "@/lib/hooks/useCallEvents";
 import { Message } from "@/types/message";
 import { Fragment } from "react/jsx-runtime";
+import { useSetChatsCache } from "@/lib/hooks/useSetChatsCache";
 
 export const Route = createFileRoute("/chat")({
   beforeLoad: async ({ location }) => {
     if (!isAuthenticated()) {
       throw redirect({
-        to: "/login",
+        to: "/",
         search: {
           redirect: location.href,
         },
@@ -79,14 +80,14 @@ function ChatWrapper() {
 
   const user = useUserStore((state) => state.user);
 
-  const { data: chats } = useQuery(chatsQuery);
-  const { data: calls } = useQuery(callsQuery);
   const filterOptions: FilterOption[] = ["All", "Unread", "Groups"];
+  const setChatsCache = useSetChatsCache();
 
-  const { filteredChats, setChats, handleFilter, handleSearch } =
-    useChatsFilters(chats);
-  useChatEvents(setChats);
-  useCallEvents(calls);
+  const { data: chats } = useQuery(chatsQuery);
+  useQuery(callsQuery);
+  const { filteredChats, handleFilter, handleSearch } = useChatsFilters(chats);
+  useChatEvents();
+  useCallEvents();
 
   const deleteChatMutation = useMutation({
     mutationFn: async (chatId: Chat["_id"]) => chatApi.deleteChat(chatId),
@@ -95,7 +96,9 @@ function ChatWrapper() {
   const handleDeleteChat = async (chatId: Chat["_id"]) => {
     await deleteChatMutation.mutateAsync(chatId, {
       onSuccess: () => {
-        setChats((prev) => prev?.filter((item) => item._id !== chatId) || []);
+        setChatsCache(
+          (prev) => prev?.filter((item) => item._id !== chatId) || []
+        );
         router.navigate({ to: "/chat", replace: true });
       },
       onError: (error) => {

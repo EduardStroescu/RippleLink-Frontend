@@ -13,6 +13,7 @@ interface SocketContextType {
 
 const SocketContext = createContext<SocketContextType>({ socket: null });
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useSocketContext = () => useContext(SocketContext);
 
 export function SocketProvider({ children }: SocketProviderProps) {

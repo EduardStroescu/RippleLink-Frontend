@@ -2,8 +2,9 @@ import { useToast } from "@/components/ui/use-toast";
 import { useSocketContext } from "@/providers/SocketProvider";
 import { Message } from "@/types/message";
 import { useState } from "react";
+import { useSetMessagesCache } from "./useSetMessagesCache";
 
-export function useCreateMessage(params: any) {
+export function useCreateMessage(params) {
   const { socket } = useSocketContext();
   const [message, setMessage] = useState<Message["content"]>("");
   const [messageType, setMessageType] = useState<Message["type"]>("text");
@@ -13,6 +14,7 @@ export function useCreateMessage(params: any) {
     name: string | null;
   } | null>(null);
   const { toast } = useToast();
+  const setMessagesCache = useSetMessagesCache(params.chatId);
 
   const handleSubmitMessage = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

@@ -33,6 +33,7 @@ interface CallProviderProps {
 
 const CallContext = createContext<CallContextType | null>(null);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useCallContext = () => {
   const context = useContext(CallContext);
   if (!context) {
@@ -180,7 +181,7 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
         peer.destroy();
       });
 
-      peer.on("error", (err) => {
+      peer.on("error", () => {
         removeStream(participant.userId._id);
         removeConnection(participant.userId._id);
         socket?.off("callAnswered");
@@ -262,7 +263,7 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
         peer.destroy();
       });
 
-      peer.on("error", (err) => {
+      peer.on("error", () => {
         removeStream(participant.userId._id);
         removeConnection(participant.userId._id);
         socket?.off("callCreated");
@@ -513,7 +514,9 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
         setIsUserSharingVideo(false);
       }
     } catch (error) {
-      toast({ variant: "destructive", title: error.message });
+      if (error instanceof DOMException) {
+        toast({ variant: "destructive", title: error.message });
+      }
     }
   }, [
     addStream,
@@ -589,7 +592,9 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
         setIsUserSharingVideo(false);
       }
     } catch (error) {
-      toast({ variant: "destructive", title: error.message });
+      if (error instanceof DOMException) {
+        toast({ variant: "destructive", title: error.message });
+      }
     }
   }, [
     addStream,

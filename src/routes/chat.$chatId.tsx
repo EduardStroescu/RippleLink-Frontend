@@ -5,7 +5,7 @@ import {
   useLocation,
   useParams,
 } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useSocketContext } from "@/providers/SocketProvider";
 import { useUserStore } from "@/stores/useUserStore";
 import { TypingIndicator } from "@/components/ui/TypingIndicator";
@@ -31,6 +31,11 @@ import { useCallStore } from "@/stores/useCallStore";
 import CustomDialogTrigger from "@/components/CustomDialogTrigger";
 import { SearchUsersForm } from "@/components/SearchUsersForm";
 import { ChatHeaderDetails } from "@/components/ChatHeaderDetails";
+import React from "react";
+
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useHandleIsAtBottom } from "@/lib/hooks/useIsAtBottom";
+import { Virtualizer } from "@/components/Virtualizer";
 
 export const Route = createFileRoute("/chat/$chatId")({
   beforeLoad: async ({ params: { chatId } }) => {
@@ -62,7 +67,6 @@ function ChatId() {
   const { data: callData } = useQuery(callsQuery);
 
   const { socket } = useSocketContext();
-  const scrollToBottomRef = useRef<HTMLDivElement>(null);
   const params = useParams({ from: "/chat/$chatId" });
   const { startCall } = useCallContext();
 
@@ -79,6 +83,16 @@ function ChatId() {
     [currentChat, user?._id]
   );
 
+  const scrollParentRef = useRef<HTMLDivElement | null>(null);
+  const count = useMemo(() => (messages ? messages.length + 1 : 0), [messages]);
+  const virtualizer = useVirtualizer({
+    count,
+    getScrollElement: () => scrollParentRef?.current,
+    estimateSize: () => 416,
+    overscan: 10,
+    getItemKey: (index) => messages?.[index]?._id || index,
+  });
+
   const {
     handleSubmitMessage,
     message,
@@ -89,29 +103,54 @@ function ChatId() {
     setContentPreview,
     setMessageType,
   } = useCreateMessage(params);
-  const {
-    interlocutorIsTyping,
-    isInterlocutorOnline,
-    setMessages,
-    setIsInterlocutorOnline,
-  } = useMessageEvents(params, user, scrollToBottomRef);
-  // useMessageFilters(interlocutor, setIsInterlocutorOnline);
+  const { interlocutorIsTyping, isInterlocutorOnline } = useMessageEvents(
+    params,
+    user
+  );
   useUserTyping(params, message);
-  useMessageReadStatus(messages, setMessages, user, params);
+  useMessageReadStatus(messages, user, params);
 
+  // Scroll User to bottom on mount
+  const scrolledToBottomOnMount = useRef(false);
+  useEffect(() => {
+    if (!scrolledToBottomOnMount.current) {
+      const timer = setTimeout(() => {
+        virtualizer?.scrollToIndex(count - 1);
+        scrolledToBottomOnMount.current = true;
+      }, 400);
+
+      return () => clearTimeout(timer);
+    }
+  }, [count, params.chatId, virtualizer]);
+
+  // Reset scrolledToBottomOnMount when chatId changes
+  useEffect(() => {
+    scrolledToBottomOnMount.current = false;
+  }, [params.chatId]);
+
+  // Keep user scrolled to bottom when contentPreview is added
   useEffect(() => {
     setTimeout(() => {
-      scrollToBottomRef?.current?.scrollIntoView({ behavior: "smooth" });
-    }, 400);
-  }, [params?.chatId]);
-
-  useEffect(() => {
-    setTimeout(() => {
-      if (contentPreview && scrollToBottomRef.current) {
-        scrollToBottomRef.current.scrollIntoView({ behavior: "smooth" });
+      if (contentPreview) {
+        virtualizer?.scrollToIndex(count - 1);
       }
-    }, 1000);
-  }, [contentPreview]);
+    }, 400);
+  }, [contentPreview, count, virtualizer]);
+
+  // Keep user scrolled to bottom when new messages are added
+  const { isAtBottom } = useHandleIsAtBottom({
+    scrollParent: scrollParentRef.current,
+  });
+  useEffect(() => {
+    if (virtualizer.isScrolling) return;
+    const timer = setTimeout(() => {
+      if (isAtBottom) {
+        virtualizer?.scrollToIndex(count - 1);
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [count, isAtBottom, virtualizer, virtualizer.isScrolling]);
 
   const handleDelete = (messageId: string) => {
     if (!socket) return;
@@ -127,6 +166,11 @@ function ChatId() {
     ?.map((user) => user?.displayName)
     .slice(0, 3)
     .join(", ");
+
+  const getMessageContent = useCallback(
+    (virtualIndex: number) => messages?.[virtualIndex],
+    [messages]
+  );
 
   return (
     <div className="grid grid-flow-col grid-cols-8 w-full h-full">
@@ -164,9 +208,12 @@ function ChatId() {
               header="Create Group Chat"
               content={
                 <SearchUsersForm
-                  existingChatUsersIds={
+                  existingChatUsers={
                     interlocutors && [
-                      ...interlocutors.map((person) => person._id),
+                      ...interlocutors.map((person) => ({
+                        _id: person._id,
+                        displayName: person.displayName,
+                      })),
                     ]
                   }
                 />
@@ -188,26 +235,28 @@ function ChatId() {
         {(currentCall || currentCallDetails) && (
           <CallComponent currentCallDetails={currentCallDetails} />
         )}
-        <div className="w-full flex-1 h-full p-4 text-white overflow-y-auto overflow-x-hidden flex flex-col gap-4">
-          {!!messages?.length &&
-            messages?.map((message, idx) => {
-              const isOwnMessage = message.senderId._id === user?._id;
-              return (
-                <MessageComponent
-                  key={message._id}
-                  isOwnMessage={isOwnMessage}
-                  message={message}
-                  handleDelete={handleDelete}
-                  idx={idx}
-                />
-              );
-            })}
 
-          <TypingIndicator
-            ref={scrollToBottomRef}
-            interlocutorIsTyping={interlocutorIsTyping}
-          />
-        </div>
+        <Virtualizer virtualizer={virtualizer} ref={scrollParentRef}>
+          {({ virtualItem, ref }) => (
+            <React.Fragment key={virtualItem.key}>
+              {virtualItem.index < count - 1 ? (
+                <MessageComponent
+                  ref={ref}
+                  virtualItem={virtualItem}
+                  message={getMessageContent(virtualItem.index)}
+                  handleDelete={handleDelete}
+                  idx={virtualItem.index}
+                />
+              ) : (
+                <TypingIndicator
+                  ref={ref}
+                  virtualItem={virtualItem}
+                  interlocutorIsTyping={interlocutorIsTyping}
+                />
+              )}
+            </React.Fragment>
+          )}
+        </Virtualizer>
 
         <CreateMessageForm
           handleSubmitMessage={handleSubmitMessage}

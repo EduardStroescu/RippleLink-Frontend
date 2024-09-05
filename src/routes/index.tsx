@@ -15,6 +15,7 @@ function HomePage() {
     if (user) {
       router.history.push("/chat");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

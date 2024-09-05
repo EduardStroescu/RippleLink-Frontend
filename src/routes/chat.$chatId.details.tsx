@@ -85,7 +85,7 @@ function ChatDetails() {
             }
           />
         )}
-        <div className="flex flex-col gap-2 items-center">
+        <div className="flex flex-col gap-2 items-center my-4">
           <h2 className="w-4/5 text-center bg-cyan-400/60 text-white rounded-t py-2">
             Shared Files
           </h2>
@@ -95,7 +95,7 @@ function ChatDetails() {
                 <div key={message._id}>{displayMessageByType(message)}</div>
               ))
             ) : (
-              <p className="self-center text-xl">No files shared</p>
+              <p className="self-center text-lg">No files shared yet</p>
             )}
           </div>
         </div>

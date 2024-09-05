@@ -1,24 +1,21 @@
 import { useUserStore } from "@/stores/useUserStore";
 import { Chat } from "@/types/chat";
 import { FilterOption } from "@/types/filterOptions";
-import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 export function useChatsFilters(chats: Chat[] | [] | undefined) {
   const user = useUserStore((state) => state.user);
-  const queryClient = useQueryClient();
   const [filteredChats, setFilteredChats] = useState<typeof chats>([]);
-  const setChats = useCallback(
-    (updateFunction: (prevChats: typeof chats) => typeof chats) => {
-      queryClient.setQueryData(["chats"], (prevChats: typeof chats) => {
-        return updateFunction(prevChats);
-      });
-    },
-    [queryClient]
-  );
 
   useEffect(() => {
-    setFilteredChats(chats);
+    if (chats) {
+      const sortedChats = [...chats].sort((a, b) => {
+        const dateA = new Date(a.updatedAt).getTime();
+        const dateB = new Date(b.updatedAt).getTime();
+        return dateB - dateA;
+      });
+      setFilteredChats(sortedChats);
+    }
   }, [chats]);
 
   const handleFilter = (filter: FilterOption) => {
@@ -56,7 +53,6 @@ export function useChatsFilters(chats: Chat[] | [] | undefined) {
   return {
     filteredChats,
     setFilteredChats,
-    setChats,
     handleFilter,
     handleSearch,
   };
