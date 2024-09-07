@@ -77,7 +77,7 @@ export const isImageUrl = (url: string) => {
 };
 export const isVidUrlPattern = (url: string): boolean => {
   const vidUrlPattern =
-    /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch.*|playlist.*)|youtu\.be\/|vimeo\.com\/\d+|dailymotion\.com\/video\/\w+|facebook\.com\/[^\/]+\/videos(?:\/\d+)?|twitch\.tv\/(videos\/\d+|[^\/]+)|video\.twitch\.tv\/[^\/]+|streamable\.com\/\w+|soundcloud\.com\/[\w\-]+\/[\w\-]+|soundcloud\.com\/[\w\-]+\/sets\/[\w\-]+)$/i;
+    /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch.*|playlist.*)|youtu\.be\/|vimeo\.com\/\d+|dailymotion\.com\/video\/\w+|facebook\.com\/[^/]+\/videos(?:\/\d+)?|twitch\.tv\/(videos\/\d+|[^/]+)|video\.twitch\.tv\/[^/]+|streamable\.com\/\w+|soundcloud\.com\/[\w-]+\/[\w-]+|soundcloud\.com\/[\w-]+\/sets\/[\w-]+)$/i;
 
   return vidUrlPattern.test(url);
 };

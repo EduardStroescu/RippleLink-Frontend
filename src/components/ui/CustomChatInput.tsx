@@ -82,6 +82,7 @@ export function CustomChatInput({
         <EmojiIcon />
       </EmojiPicker>
       <textarea
+        name="message"
         disabled={disabled}
         ref={chatInputRef}
         value={message}

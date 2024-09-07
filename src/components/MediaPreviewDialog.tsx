@@ -19,7 +19,7 @@ interface MediaPreviewDialogProps {
   className?: string;
 }
 
-const MediaPreviewDialog: React.FC<MediaPreviewDialogProps> = ({
+export const MediaPreviewDialog: React.FC<MediaPreviewDialogProps> = ({
   header,
   content,
   children,
@@ -50,5 +50,3 @@ const MediaPreviewDialog: React.FC<MediaPreviewDialogProps> = ({
     </Dialog>
   );
 };
-
-export default MediaPreviewDialog;

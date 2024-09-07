@@ -8,8 +8,7 @@ import { useCallStore, useCallStoreActions } from "@/stores/useCallStore";
 import { useUserStore } from "@/stores/useUserStore";
 import { useRouter } from "@tanstack/react-router";
 import { Call } from "@/types/call";
-import { useThrottle } from "@/lib/hooks/useThrottle";
-import useCallSound from "@/lib/hooks/useCallSound";
+import { useThrottle, useCallSound } from "@/lib/hooks";
 
 interface CallEventOverlayProps {
   chats: Chat[] | [] | undefined;

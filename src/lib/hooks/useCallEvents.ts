@@ -10,21 +10,15 @@ import { create } from "mutative";
 
 export function useCallEvents() {
   const user = useUserStore((state) => state.user);
-  const {
-    incomingCalls,
-    currentCall,
-    answeredCall,
-    recentlyEndedCalls,
-    joiningCall,
-  } = useCallStore(
-    useShallow((state) => ({
-      incomingCalls: state.incomingCalls,
-      currentCall: state.currentCall,
-      answeredCall: state.answeredCall,
-      recentlyEndedCalls: state.recentlyEndedCalls,
-      joiningCall: state.joiningCall,
-    }))
-  );
+  const { incomingCalls, currentCall, recentlyEndedCalls, joiningCall } =
+    useCallStore(
+      useShallow((state) => ({
+        incomingCalls: state.incomingCalls,
+        currentCall: state.currentCall,
+        recentlyEndedCalls: state.recentlyEndedCalls,
+        joiningCall: state.joiningCall,
+      }))
+    );
   const {
     setCurrentCall,
     addIncomingCall,
@@ -88,11 +82,7 @@ export function useCallEvents() {
           });
         });
 
-        if (
-          answeredCall &&
-          currentCall &&
-          content.chatId._id === currentCall.chatId._id
-        ) {
+        if (currentCall && content.chatId._id === currentCall.chatId._id) {
           setCurrentCall(content);
         }
 
@@ -102,7 +92,9 @@ export function useCallEvents() {
           if (!prev) return [];
           return prev.filter((call) => call._id !== content._id);
         });
-        removeRecentlyEndedCall(content.chatId._id);
+        setTimeout(() => {
+          removeRecentlyEndedCall(content.chatId._id);
+        }, 500);
 
         if (
           incomingCalls.some(
@@ -115,7 +107,6 @@ export function useCallEvents() {
     },
     [
       setCallsCache,
-      answeredCall,
       currentCall,
       setCurrentCall,
       notifyUserOfIncomingCall,

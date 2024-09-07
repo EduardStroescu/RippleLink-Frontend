@@ -65,7 +65,7 @@ const userApi = {
     return await privateClient.get(userEndpoints.getUserInfo);
   },
 
-  getUsersById: async (userId: string): Promise<User[] | []> => {
+  getUsersById: async (userId: string): Promise<User> => {
     return await privateClient.get(
       userEndpoints.getUserById.replace(":id", userId)
     );

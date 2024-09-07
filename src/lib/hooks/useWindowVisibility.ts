@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-function useWindowVisibility() {
+export function useWindowVisibility() {
   const [isWindowActive, setIsWindowActive] = useState(!document.hidden);
 
   useEffect(() => {
@@ -17,5 +17,3 @@ function useWindowVisibility() {
 
   return isWindowActive;
 }
-
-export default useWindowVisibility;

@@ -47,21 +47,15 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
   const { socket } = useSocketContext();
   const user = useUserStore((state) => state.user);
   const audioTracksRef = useRef({});
-  const {
-    answeredCall,
-    streams,
-    connections,
-    currentCall,
-    isUserMicrophoneMuted,
-  } = useCallStore(
-    useShallow((state) => ({
-      answeredCall: state.answeredCall,
-      streams: state.streams,
-      connections: state.connections,
-      currentCall: state.currentCall,
-      isUserMicrophoneMuted: state.isUserMicrophoneMuted,
-    }))
-  );
+  const { streams, connections, currentCall, isUserMicrophoneMuted } =
+    useCallStore(
+      useShallow((state) => ({
+        streams: state.streams,
+        connections: state.connections,
+        currentCall: state.currentCall,
+        isUserMicrophoneMuted: state.isUserMicrophoneMuted,
+      }))
+    );
   const {
     addConnection,
     setCurrentCall,
@@ -70,14 +64,13 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
     removeStream,
     removeConnection,
     resetConnections,
-    setAnsweredCall,
     setIsUserSharingVideo,
     setIsUserMicrophoneMuted,
     setJoiningCall,
   } = useCallStoreActions();
-  const userId = useMemo(() => user?._id, [user?._id]);
+  const userId = user?._id;
   const userStream = useMemo(
-    () => streams[userId as User["_id"]],
+    () => streams[userId as User["_id"]]?.stream,
     [streams, userId]
   );
   const peerConnections = useMemo(() => connections, [connections]);
@@ -123,7 +116,7 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
 
   const sendCallOffers = useCallback(
     (participant: Call["participants"][number], currentCall: Call) => {
-      if (!userId || !participant || !currentCall) return;
+      if (!userId || !participant || !currentCall || !userStream) return;
 
       const peer = new Peer({
         initiator: true,
@@ -203,7 +196,13 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
 
   const sendCallAnswers = useCallback(
     (participant: Call["participants"][number], currentCall: Call) => {
-      if (!userId || !participant || !currentCall || !participant.offers)
+      if (
+        !userId ||
+        !participant ||
+        !currentCall ||
+        !participant.offers ||
+        !userStream
+      )
         return;
 
       const peer = new Peer({
@@ -304,22 +303,23 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
         !peerConnections[participant.userId._id] &&
         participant?.offers?.some((offer) => offer.to === userId)
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentCall?.participants, userId]);
 
   // Send answers to all users in current call who you are not connected to
   useEffect(() => {
-    if (!currentCall || !answeredCall) return;
+    if (!currentCall) return;
 
     const offersNotAnsweredTo = getOffersNotAnsweredTo();
 
     offersNotAnsweredTo?.forEach((participant) => {
       sendCallAnswers(participant, currentCall);
     });
-  }, [answeredCall, currentCall, getOffersNotAnsweredTo, sendCallAnswers]);
+  }, [currentCall, getOffersNotAnsweredTo, sendCallAnswers]);
 
   // Send requests to all users in current call who you are not connected to
   useEffect(() => {
-    if (!currentCall || !userId || !answeredCall) return;
+    if (!currentCall || !userId) return;
     // Extract user IDs from the current call participants
     const currentCallParticipantIds = currentCall.participants.map(
       (participant) => participant.userId._id
@@ -340,7 +340,7 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
     usersInCurrentCallWithoutAConnection.forEach((participant) => {
       sendCallOffers(participant, currentCall);
     });
-  }, [answeredCall, peerConnections, currentCall, sendCallOffers, userId]);
+  }, [peerConnections, currentCall, sendCallOffers, userId]);
 
   const startCall = useCallback(
     async (chat: Chat, videoEnabled?: boolean) => {
@@ -357,19 +357,11 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
       socket?.on("callJoined", (data: { call: Call }) => {
         if (data.call) {
           setCurrentCall(data.call);
-          setAnsweredCall(true);
           socket?.off("callJoined");
         }
       });
     },
-    [
-      addStream,
-      attachStreamToCall,
-      setAnsweredCall,
-      setCurrentCall,
-      socket,
-      userId,
-    ]
+    [addStream, attachStreamToCall, setCurrentCall, socket, userId]
   );
 
   const answerCall = useCallback(
@@ -388,7 +380,6 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
       socket?.on("callJoined", (data: { call: Call }) => {
         if (data.call) {
           setCurrentCall(data.call);
-          setAnsweredCall(true);
           setJoiningCall(null);
           socket?.off("callJoined");
         }
@@ -401,7 +392,6 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
       socket,
       setJoiningCall,
       setCurrentCall,
-      setAnsweredCall,
     ]
   );
 
@@ -419,7 +409,6 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
       Object.values(peerConnections).forEach((peer) => {
         peer.destroy();
       });
-      setAnsweredCall(false);
       resetConnections();
       setCurrentCall(null);
       setIsUserSharingVideo(false);
@@ -429,7 +418,6 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
       socket,
       peerConnections,
       resetConnections,
-      setAnsweredCall,
       setCurrentCall,
       setIsUserSharingVideo,
       setIsUserMicrophoneMuted,
@@ -442,7 +430,7 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
   const handleScreenShare = useCallback(async () => {
     try {
       if (!userId) return;
-      if (userStream.getVideoTracks().length === 0) {
+      if (userStream?.getVideoTracks().length === 0) {
         // Start screen sharing
         const newStream = await navigator.mediaDevices.getDisplayMedia({
           video: {
@@ -454,7 +442,7 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
         });
         const newAudioStream = await attachStreamToCall();
         if (!newStream) return;
-        userStream.getTracks().forEach((track) => {
+        userStream?.getTracks().forEach((track) => {
           track.stop();
           userStream.removeTrack(track);
         });
@@ -504,7 +492,7 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
         });
 
         // Stop video tracks from the current stream
-        userStream.getTracks().forEach((track) => {
+        userStream?.getTracks().forEach((track) => {
           track.stop();
           userStream.removeTrack(track);
         });
@@ -532,7 +520,7 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
     try {
       if (!userId) return;
 
-      if (userStream.getVideoTracks().length === 0) {
+      if (userStream?.getVideoTracks().length === 0) {
         // Start video sharing
         const newStream = await attachStreamToCall(true);
         if (!newStream) return;
@@ -582,9 +570,9 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
         });
 
         // Stop video tracks from the current stream
-        userStream.getTracks().forEach((track) => {
+        userStream?.getTracks().forEach((track) => {
           track.stop();
-          userStream.removeTrack(track);
+          userStream?.removeTrack(track);
         });
 
         // Update local stream and state
@@ -615,7 +603,7 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
 
     currentParticipants.forEach((participant) => {
       const userId = participant.userId._id;
-      const stream = streams[userId];
+      const stream = streams[userId]?.stream;
 
       if (stream) {
         const audioTrack = stream.getAudioTracks()?.[0];

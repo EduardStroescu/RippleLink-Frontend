@@ -1,5 +1,5 @@
 import { PropsWithoutRef } from "react";
-import MediaPreviewDialog from "../MediaPreviewDialog";
+import { MediaPreviewDialog } from "../MediaPreviewDialog";
 
 export function AudioComponent(
   props: PropsWithoutRef<JSX.IntrinsicElements["audio"]>

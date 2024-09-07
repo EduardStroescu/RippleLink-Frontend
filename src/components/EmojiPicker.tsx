@@ -17,7 +17,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
   };
   return (
     <div className="flex items-center">
-      <Popover>
+      <Popover modal>
         <PopoverTrigger className="group text-[25px] origin-center hover:animate-spin-slow cursor-pointer">
           {children}
         </PopoverTrigger>

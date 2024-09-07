@@ -2,6 +2,7 @@ import { Chat } from "@/types/chat";
 import privateClient from "../privateClient";
 import { Message } from "@/types/message";
 import { Call } from "@/types/call";
+import { Status } from "@/types/status";
 
 const chatEndpoints = {
   getAllChats: "chats/all",
@@ -9,6 +10,7 @@ const chatEndpoints = {
   getChatById: "chats/:chatId",
   getSharedFilesByChatId: "chats/sharedFiles/:chatId",
   getMessagesByChatId: "messages/:chatId",
+  getInterlocutorStatus: "status/:userId",
   createChat: "chats",
   deleteChat: "chats/:chatId",
 };
@@ -28,10 +30,21 @@ const chatApi = {
     );
   },
 
-  getMessagesByChatId: async (chatId: string): Promise<Message[] | []> => {
-    return await privateClient.get(
-      chatEndpoints.getMessagesByChatId.replace(":chatId", chatId)
-    );
+  getMessagesByChatId: async (
+    chatId: string,
+    cursor: string | null
+  ): Promise<{ messages: Message[] | []; nextCursor: string | null }> => {
+    if (cursor) {
+      return await privateClient.get(
+        chatEndpoints.getMessagesByChatId.replace(":chatId", chatId) +
+          "?cursor=" +
+          cursor
+      );
+    } else {
+      return await privateClient.get(
+        chatEndpoints.getMessagesByChatId.replace(":chatId", chatId)
+      );
+    }
   },
 
   createChat: async (chatData: {
@@ -53,6 +66,15 @@ const chatApi = {
   deleteChat: async (chatId: string): Promise<{ success: string }> => {
     return await privateClient.delete(
       chatEndpoints.deleteChat.replace(":chatId", chatId)
+    );
+  },
+
+  getInterlocutorStatus: async (
+    userId?: string
+  ): Promise<Status | undefined> => {
+    if (!userId) return;
+    return await privateClient.get(
+      chatEndpoints.getInterlocutorStatus.replace(":userId", userId)
     );
   },
 };

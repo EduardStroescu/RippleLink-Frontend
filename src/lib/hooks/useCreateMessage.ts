@@ -1,11 +1,12 @@
-import { useToast } from "@/components/ui/use-toast";
+import { useState } from "react";
+import { useParams } from "@tanstack/react-router";
 import { useSocketContext } from "@/providers/SocketProvider";
 import { Message } from "@/types/message";
-import { useState } from "react";
-import { useSetMessagesCache } from "./useSetMessagesCache";
+import { useUserTyping } from "./useUserTyping";
 
-export function useCreateMessage(params) {
+export function useCreateMessage() {
   const { socket } = useSocketContext();
+  const params = useParams({ from: "/chat/$chatId" });
   const [message, setMessage] = useState<Message["content"]>("");
   const [messageType, setMessageType] = useState<Message["type"]>("text");
   const [gif, setGif] = useState<string | null>(null);
@@ -13,8 +14,8 @@ export function useCreateMessage(params) {
     content: string | null;
     name: string | null;
   } | null>(null);
-  const { toast } = useToast();
-  const setMessagesCache = useSetMessagesCache(params.chatId);
+
+  useUserTyping(params, message);
 
   const handleSubmitMessage = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -22,37 +23,13 @@ export function useCreateMessage(params) {
       const payload = { room: params.chatId, message: gif, type: "text" };
       socket?.emit("createMessage", payload);
       setGif(null);
-    } else if (contentPreview && messageType === "image") {
+    } else if (contentPreview?.content && messageType !== "text") {
       const payload = {
         room: params.chatId,
         message: contentPreview.content,
         type: "image",
       };
       socket?.emit("createMessage", payload);
-      setContentPreview(null);
-    } else if (contentPreview && messageType === "audio") {
-      const payload = {
-        room: params.chatId,
-        message: contentPreview.content,
-        type: "audio",
-      };
-      socket?.emit("createMessage", payload);
-      setContentPreview(null);
-    } else if (contentPreview && messageType === "video") {
-      const payload = {
-        room: params.chatId,
-        message: contentPreview.content,
-        type: "video",
-      };
-      try {
-        socket?.emit("createMessage", payload);
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: error.message,
-        });
-      }
       setContentPreview(null);
     } else {
       if (message.length === 0) return;

@@ -47,11 +47,11 @@ export function ChangePasswordForm() {
         setUser(null);
         router.navigate({ to: "/" });
       },
-      onError: (error) => {
+      onError: (error: unknown) => {
         toast({
           variant: "destructive",
           title: "Error",
-          description: error,
+          description: error as string,
         });
       },
     });

@@ -29,10 +29,11 @@ export interface AppStore {
 }
 
 export interface CallStore {
-  streams: { [key: string]: MediaStream };
+  streams: {
+    [key: string]: { stream: MediaStream | null; shouldDisplayPopUp?: boolean };
+  };
   connections: { [key: string]: Peer.Instance };
   currentCall: Call | null;
-  answeredCall: boolean;
   incomingCalls: Call[] | [];
   recentlyEndedCalls: Call[] | [];
   isUserSharingVideo: false | "video" | "screen";
@@ -40,13 +41,13 @@ export interface CallStore {
   joiningCall: Call["chatId"]["_id"] | null;
 
   actions: {
-    addStream: (participantId: string, stream: MediaStream) => void;
-    removeStream: (participantId: string) => void;
-    addConnection: (participantId: string, peer: Peer.Instance) => void;
-    removeConnection: (participantId: string) => void;
+    addStream: (participantId: User["_id"], stream: MediaStream) => void;
+    removeStream: (participantId: User["_id"]) => void;
+    toggleStreamPopUp: (participantId: User["_id"]) => void;
+    addConnection: (participantId: User["_id"], peer: Peer.Instance) => void;
+    removeConnection: (participantId: User["_id"]) => void;
     resetConnections: () => void;
     setCurrentCall: (call: Call | null) => void;
-    setAnsweredCall: (newState: boolean) => void;
     addIncomingCall: (call: Call) => void;
     removeIncomingCall: (chatId: Call["chatId"]["_id"]) => void;
     addRecentlyEndedCall: (call: Call) => void;

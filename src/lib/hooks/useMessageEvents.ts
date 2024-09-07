@@ -1,13 +1,17 @@
+import { useCallback, useEffect, useState } from "react";
 import { useSocketContext } from "@/providers/SocketProvider";
-import { Message } from "@/types/message";
-import { User } from "@/types/user";
-import { useEffect, useState } from "react";
-import { useSocketSubscription } from "./useSocketSubscription";
-import { useSetMessagesCache } from "./useSetMessagesCache";
 import { create } from "mutative";
+import { useParams } from "@tanstack/react-router";
+import { useUserStore } from "@/stores/useUserStore";
+import { Message } from "@/types/message";
+import { useSocketSubscription, useSetMessagesCache } from "@/lib/hooks";
+import { User } from "@/types/user";
 
-export function useMessageEvents(params, user: User | null) {
+export function useMessageEvents(interlocutors: User[] | undefined) {
   const { socket } = useSocketContext();
+  const params = useParams({ from: "/chat/$chatId" });
+  const user = useUserStore((state) => state.user);
+  const interlocutor = interlocutors?.[0];
 
   const [isInterlocutorOnline, setIsInterlocutorOnline] =
     useState<boolean>(false);
@@ -24,38 +28,79 @@ export function useMessageEvents(params, user: User | null) {
     };
   }, [socket, params.chatId]);
 
+  // State doesn't reset as Tanstack Router reuses components nested under the same route - see dynamic routes
+  useEffect(() => {
+    setIsInterlocutorOnline(interlocutor?.status?.online || false);
+    setInterlocutorIsTyping(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.chatId]);
+
   useSocketSubscription("messagesRead", () => {
     if (user?._id) {
-      setMessagesCache((prev) =>
-        prev?.map((message: Message) =>
-          message.senderId._id === user?._id
-            ? { ...message, read: true }
-            : message
-        )
-      );
+      setMessagesCache((prevData) => {
+        if (!prevData) {
+          return undefined;
+        }
+
+        return create(prevData, (draft) => {
+          // Mark messages as read for the specific user
+          draft.pages.forEach((page) => {
+            page.messages.forEach((message) => {
+              if (message.senderId._id === user?._id) {
+                message.read = true;
+              }
+            });
+          });
+        });
+      });
     }
   });
 
   useSocketSubscription(
     "messageCreated",
     ({ content }: { content: Message }) => {
-      setMessagesCache((prev) => (prev ? [...prev, content] : [content]));
-      // setTimeout(() => {
-      //   //
-      // }, 100);
+      setMessagesCache((prevData) => {
+        if (!prevData) {
+          return {
+            pages: [{ messages: [content], nextCursor: null }],
+            pageParams: [],
+          };
+        }
+
+        return create(prevData, (draft) => {
+          // Add new message to the end of the latest page's messages
+          if (draft.pages.length > 0) {
+            draft.pages[0].messages.push(content);
+          } else {
+            // No pages exist, initialize with the new message
+            draft.pages.push({ messages: [content], nextCursor: null });
+          }
+        });
+      });
     }
   );
 
   useSocketSubscription(
     "messageUpdated",
     ({ content }: { content: Message }) => {
-      setMessagesCache((prev) => {
-        if (!prev) return [content];
+      setMessagesCache((prevData) => {
+        if (!prevData) {
+          return {
+            pages: [{ messages: [content], nextCursor: null }],
+            pageParams: [],
+          };
+        }
 
-        return create(prev, (draft) => {
-          const index = draft.findIndex((item) => item._id === content._id);
-          if (index === -1) return;
-          draft[index] = { ...draft[index], ...content };
+        return create(prevData, (draft) => {
+          // Update the specific message in all pages
+          draft.pages.forEach((page) => {
+            const index = page.messages.findIndex(
+              (item) => item._id === content._id
+            );
+            if (index !== -1) {
+              page.messages[index] = { ...page.messages[index], ...content };
+            }
+          });
         });
       });
     }
@@ -64,32 +109,52 @@ export function useMessageEvents(params, user: User | null) {
   useSocketSubscription(
     "messageDeleted",
     ({ content }: { content: Message }) => {
-      setMessagesCache((prev) =>
-        prev ? prev.filter((item) => item._id !== content._id) : [content]
-      );
+      setMessagesCache((prevData) => {
+        if (!prevData) {
+          return prevData;
+        }
+
+        return create(prevData, (draft) => {
+          // Filter out the deleted message from all pages
+          draft.pages.forEach((page) => {
+            page.messages = page.messages.filter(
+              (message) => message._id !== content._id
+            );
+          });
+        });
+      });
     }
   );
 
-  useSocketSubscription(
-    "interlocutorIsTyping",
+  const handleInterlocutorTyping = useCallback(
     ({
       content,
     }: {
       content: {
-        user: { _id: string; displayName: string };
+        user: { _id: User["_id"]; displayName: string };
         isTyping: boolean;
       };
     }) => {
-      setInterlocutorIsTyping(content.isTyping);
-    }
+      const isTypingUserInCurrentChat = interlocutors?.some(
+        (person) => person._id === content.user._id
+      );
+      if (isTypingUserInCurrentChat) {
+        setInterlocutorIsTyping(content.isTyping);
+      }
+    },
+    [interlocutors]
   );
+  useSocketSubscription("interlocutorIsTyping", handleInterlocutorTyping);
 
-  useSocketSubscription(
-    "broadcastUserStatus",
-    ({ content }: { content: { _id: string; isOnline: boolean } }) => {
-      setIsInterlocutorOnline(content.isOnline);
-    }
+  const handleInterlocutorOnlineStatus = useCallback(
+    ({ content }: { content: { _id: User["_id"]; isOnline: boolean } }) => {
+      if (interlocutor?._id === content._id) {
+        setIsInterlocutorOnline(content.isOnline);
+      }
+    },
+    [interlocutor?._id]
   );
+  useSocketSubscription("broadcastUserStatus", handleInterlocutorOnlineStatus);
 
   return {
     interlocutorIsTyping,

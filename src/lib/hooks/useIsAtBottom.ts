@@ -6,15 +6,16 @@ type Args = {
 
 type Return = {
   isAtBottom: boolean;
+  setIsAtBottom: (isAtBottom: boolean) => void;
 };
 
-export function useHandleIsAtBottom({ scrollParent }: Args): Return {
+export function useIsAtBottom({ scrollParent }: Args): Return {
   const [isAtBottom, setIsAtBottom] = useState(false);
 
   const handleIsAtBottom = useCallback(() => {
     if (scrollParent) {
       const { scrollTop, clientHeight, scrollHeight } = scrollParent;
-      const threshold = 100; // Buffer for when "close enough" to bottom
+      const threshold = 15; // Buffer for when "close enough" to bottom
       setIsAtBottom(scrollTop + clientHeight >= scrollHeight - threshold);
     }
   }, [scrollParent]);
@@ -31,5 +32,6 @@ export function useHandleIsAtBottom({ scrollParent }: Args): Return {
 
   return {
     isAtBottom,
+    setIsAtBottom,
   };
 }

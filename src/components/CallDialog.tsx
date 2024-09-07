@@ -18,7 +18,7 @@ interface CallDialogProps {
   className?: string;
 }
 
-const CallDialog: React.FC<CallDialogProps> = ({
+export const CallDialog: React.FC<CallDialogProps> = ({
   content,
   header,
   description,
@@ -51,5 +51,3 @@ const CallDialog: React.FC<CallDialogProps> = ({
     </Dialog>
   );
 };
-
-export default CallDialog;

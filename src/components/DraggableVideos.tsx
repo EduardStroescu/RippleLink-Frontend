@@ -1,9 +1,11 @@
 import { useAppStore } from "@/stores/useAppStore";
-import { useCallStore } from "@/stores/useCallStore";
+import { useCallStore, useCallStoreActions } from "@/stores/useCallStore";
 import { useUserStore } from "@/stores/useUserStore";
 import { User } from "@/types/user";
 import { useCallback, useRef, useState, useEffect, useMemo } from "react";
 import { CloseIcon } from "./Icons";
+import { useShallow } from "zustand/react/shallow";
+import { useLocation } from "@tanstack/react-router";
 
 interface Position {
   x: number;
@@ -14,15 +16,28 @@ interface PositionMap {
   [key: string]: Position;
 }
 
-//TODO: FINISH THIS
 export function DraggableVideos() {
+  const location = useLocation();
   const appGlow = useAppStore((state) => state.appGlow);
   const user = useUserStore((state) => state.user);
-  const streams = useCallStore((state) => state.streams);
-  const displayedStreams = useMemo(() => streams, [streams]);
-  const currentStreamsExceptUser = Object.entries(displayedStreams)
-    .filter(([userId]) => userId !== user?._id)
-    .map(([userId, stream]) => ({ userId, source: stream }));
+  const { toggleStreamPopUp } = useCallStoreActions();
+  const { streams, currentCall } = useCallStore(
+    useShallow((state) => ({
+      streams: state.streams,
+      currentCall: state.currentCall,
+    }))
+  );
+  const displayedStreams = useMemo(
+    () =>
+      Object.entries(streams)
+        .filter(
+          ([userId]) =>
+            userId !== user?._id && streams[userId].shouldDisplayPopUp !== false
+        )
+        .map(([userId, content]) => ({ userId, source: content.stream })),
+
+    [streams, user?._id]
+  );
 
   const [dragging, setDragging] = useState<User["_id"] | null>(null);
   const [positions, setPositions] = useState<PositionMap>({});
@@ -122,6 +137,7 @@ export function DraggableVideos() {
         // Remove the stream from the list
         element.style.transform = "scale(0)";
         setTimeout(() => {
+          toggleStreamPopUp(dragging);
           delete displayedStreams[dragging];
           videoRefs.current[dragging]?.pause();
           videoRefs.current[dragging] = null;
@@ -129,7 +145,7 @@ export function DraggableVideos() {
       }
     }
     setDragging(null);
-  }, [displayedStreams, dragging]);
+  }, [displayedStreams, dragging, toggleStreamPopUp]);
 
   useEffect(() => {
     if (dragging) {
@@ -193,7 +209,7 @@ export function DraggableVideos() {
 
   const isParticipantSharingVideo = (userId: string | undefined) => {
     if (!userId) return false;
-    const stream = streams[userId];
+    const stream = streams[userId]?.stream;
 
     if (stream) {
       const videoTrack = stream.getVideoTracks()[0];
@@ -205,11 +221,15 @@ export function DraggableVideos() {
     return false;
   };
 
-  if (!streams) return null;
-
+  if (
+    !streams ||
+    !currentCall ||
+    location.pathname === `/chat/${currentCall.chatId._id}`
+  )
+    return null;
   return (
     <>
-      {currentStreamsExceptUser.map((stream, idx) => {
+      {displayedStreams.map((stream, idx) => {
         const { userId, source } = stream;
         const position = positions[userId] || { x: 0, y: 5 + idx * 2 };
         if (!isParticipantSharingVideo(userId)) {
@@ -221,7 +241,7 @@ export function DraggableVideos() {
               onMouseDown={(e) => startDrag(e, userId)}
               onTouchStart={(e) => startDrag(e, userId)}
               key={userId}
-              className="absolute z-[999] shadow-lg shadow-cyan-500 top-0 left-0 aspect-square w-[150px] h-[150px] rounded-[50%] cursor-grab animate-in zoom-in-0 transition-transform duration-500 ease-in-out"
+              className="absolute z-[999] shadow-lg shadow-cyan-500 top-0 left-0 aspect-square w-[150px] h-[150px] rounded-[50%] cursor-grab animate-in zoom-in-0 transition-transform duration-500 ease-in-out bg-black/70"
               style={{
                 top: `${position.y}px`,
                 left: `${position.x}px`,
@@ -231,6 +251,7 @@ export function DraggableVideos() {
               <video
                 className="w-full h-full object-cover object-center rounded-[50%]"
                 playsInline
+                muted
                 ref={(el) => {
                   if (el) {
                     videoRefs.current[userId] = el;

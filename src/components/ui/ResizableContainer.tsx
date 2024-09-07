@@ -77,6 +77,7 @@ export const ResizableContainer: React.FC<ResizableContainerProps> = ({
       <div
         className="group w-full h-[10px] absolute bottom-0 left-0 cursor-ns-resize flex justify-center items-center"
         aria-label="Drag to resize"
+        title="Drag to resize"
         onMouseDown={startDrag}
         onTouchStart={startDrag}
       >

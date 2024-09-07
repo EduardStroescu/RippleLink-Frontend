@@ -1,6 +1,6 @@
-import { Message } from "@/types/message";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
+import { Message } from "@/types/message";
 
 export function useSetMessagesCache(chatId: string) {
   const queryClient = useQueryClient();
@@ -8,13 +8,30 @@ export function useSetMessagesCache(chatId: string) {
   return useCallback(
     (
       updateFunction: (
-        prevMessages: Message[] | [] | undefined
-      ) => Message[] | [] | undefined
+        prevData:
+          | {
+              pages: { messages: Message[]; nextCursor: string | null }[];
+              pageParams;
+            }
+          | undefined
+      ) =>
+        | {
+            pages: { messages: Message[]; nextCursor: string | null }[];
+            pageParams;
+          }
+        | undefined
     ) => {
       queryClient.setQueryData(
         ["messages", chatId],
-        (prevMessages: Message[] | [] | undefined) => {
-          return updateFunction(prevMessages);
+        (
+          prevData:
+            | {
+                pages: { messages: Message[]; nextCursor: string | null }[];
+                pageParams;
+              }
+            | undefined
+        ) => {
+          return updateFunction(prevData);
         }
       );
     },

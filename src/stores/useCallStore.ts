@@ -5,22 +5,37 @@ export const useCallStore = create<CallStore>((set) => ({
   streams: {},
   connections: {},
   currentCall: null,
-  answeredCall: false,
   incomingCalls: [],
   recentlyEndedCalls: [],
+  joiningCall: null,
   isUserSharingVideo: false,
   isUserMicrophoneMuted: false,
-  joiningCall: null,
 
   actions: {
     addStream: (participantId, stream) =>
-      set((state) => ({
-        streams: { ...state.streams, [participantId]: stream },
-      })),
+      set((state) => {
+        const streams = {
+          ...state.streams,
+          [participantId]: {
+            stream,
+            shouldDisplayPopUp:
+              state.streams[participantId]?.shouldDisplayPopUp !== false
+                ? true
+                : false,
+          },
+        };
+        return { streams: { ...streams } };
+      }),
     removeStream: (id) =>
       set((state) => {
         const newStreams = { ...state.streams };
-        delete newStreams[id];
+        newStreams[id].stream = null;
+        return { streams: newStreams };
+      }),
+    toggleStreamPopUp: (id) =>
+      set((state) => {
+        const newStreams = { ...state.streams };
+        newStreams[id].shouldDisplayPopUp = !newStreams[id].shouldDisplayPopUp;
         return { streams: newStreams };
       }),
     addConnection: (participantId, peer) =>
@@ -35,7 +50,6 @@ export const useCallStore = create<CallStore>((set) => ({
       }),
     resetConnections: () => set({ connections: {} }),
     setCurrentCall: (call) => set({ currentCall: call }),
-    setAnsweredCall: (newState) => set(() => ({ answeredCall: newState })),
     addIncomingCall: (newCall) =>
       set((state) => {
         if (!newCall || !newCall.chatId._id) return state;

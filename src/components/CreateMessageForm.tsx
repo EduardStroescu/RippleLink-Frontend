@@ -5,8 +5,8 @@ import { FileUploadOverlay } from "./FileUploadOverlay";
 import { Message } from "@/types/message";
 import { FileUploadOverlayContent } from "./FileUploadOverlayContent";
 import { FullscreenImage } from "./ui/FullscreenImage";
-import { VideoComponent } from "./ui/Video";
-import { AudioComponent } from "./ui/Audio";
+import { VideoComponent } from "./ui/VideoComponent";
+import { AudioComponent } from "./ui/AudioComponent";
 import { CustomChatInput } from "./ui/CustomChatInput";
 
 type CreateMessageFormProps = {
@@ -42,6 +42,7 @@ export const CreateMessageForm = ({
 
   const handleGifSelect = (gif: string) => {
     setGif(gif);
+    setMessageType("text");
     setTimeout(() => {
       if (formRef.current) {
         formRef.current.requestSubmit();

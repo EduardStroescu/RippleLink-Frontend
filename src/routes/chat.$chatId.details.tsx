@@ -1,17 +1,21 @@
-import { AvatarCoin } from "@/components/ui/AvatarCoin";
-import { BackIcon } from "@/components/Icons";
-import { FullscreenImage } from "@/components/ui/FullscreenImage";
-import { placeholderAvatar } from "@/lib/const";
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { QueryClient, useQueryClient } from "@tanstack/react-query";
-import { Chat } from "@/types/chat";
 import { useMemo } from "react";
+import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useUserStore } from "@/stores/useUserStore";
 import chatApi from "@/api/modules/chat.api";
-import { VideoComponent } from "@/components/ui/Video";
-import { AudioComponent } from "@/components/ui/Audio";
-import { FileComponent } from "@/components/ui/File";
+import { placeholderAvatar } from "@/lib/const";
+import { Chat } from "@/types/chat";
 import { Message } from "@/types/message";
+
+import { FullscreenImage } from "@/components/ui/FullscreenImage";
+
+import { BackIcon } from "@/components";
+import {
+  AvatarCoin,
+  VideoComponent,
+  FileComponent,
+  AudioComponent,
+} from "@/components/ui";
 
 export const Route = createFileRoute("/chat/$chatId/details")({
   beforeLoad: async ({ params: { chatId } }) => {
@@ -24,11 +28,7 @@ export const Route = createFileRoute("/chat/$chatId/details")({
 
     return { sharedFilesQuery };
   },
-  loader: async ({ context }) => {
-    const { queryClient, sharedFilesQuery } = context as typeof context & {
-      queryClient: QueryClient;
-    };
-
+  loader: async ({ context: { queryClient, sharedFilesQuery } }) => {
     return await queryClient.ensureQueryData(sharedFilesQuery);
   },
   component: () => <ChatDetails />,

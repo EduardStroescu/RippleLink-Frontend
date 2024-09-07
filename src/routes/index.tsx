@@ -1,7 +1,7 @@
-import { DemoAccountLoginPanel } from "@/components/DemoAccountLoginPanel";
-import { useUserStore } from "@/stores/useUserStore";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { useUserStore } from "@/stores/useUserStore";
+import { DemoAccountLoginPanel } from "@/components";
 
 export const Route = createFileRoute("/")({
   component: HomePage,

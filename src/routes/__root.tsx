@@ -4,8 +4,13 @@ import {
   ScrollRestoration,
 } from "@tanstack/react-router";
 import { Layout } from "../components/Layout";
+import { QueryClient } from "@tanstack/react-query";
 
-export const Route = createRootRouteWithContext()({
+export interface RouterContext {
+  queryClient: QueryClient;
+}
+
+export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootComponent,
 });
 

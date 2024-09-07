@@ -20,17 +20,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { setAppBackground, setAppTint, setAppGlow, resetAppStore } =
     useAppStoreActions();
   const navigate = useNavigate();
+  const savedUser = getItem();
 
   useEffect(() => {
-    const user = getItem();
-    if (user) {
-      setUser(user as User);
-      navigate({ to: "/chat", replace: true });
-    } else {
-      navigate({ to: "/", replace: true });
+    if (!user) {
+      if (savedUser) {
+        setUser(savedUser as User);
+        navigate({ to: "/chat", replace: true });
+      } else {
+        navigate({ to: "/", replace: true });
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [navigate, savedUser, setUser, user]);
 
   useEffect(() => {
     if (user?.settings) {

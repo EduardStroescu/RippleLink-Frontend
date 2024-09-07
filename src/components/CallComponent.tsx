@@ -4,6 +4,7 @@ import { placeholderAvatar } from "@/lib/const";
 import {
   CallIcon,
   MuteMicIcon,
+  PopUpIcon,
   RejectCallIcon,
   ScreenShareIcon,
   StopVideoIcon,
@@ -11,13 +12,13 @@ import {
   VideoCallIcon,
 } from "./Icons";
 import { useUserStore } from "@/stores/useUserStore";
-import MediaPreviewDialog from "./MediaPreviewDialog";
+import { MediaPreviewDialog } from "./MediaPreviewDialog";
 import { useCallStore, useCallStoreActions } from "@/stores/useCallStore";
 import { useCallContext } from "@/providers/CallProvider";
 import { useShallow } from "zustand/react/shallow";
-import { VideoComponent } from "./ui/Video";
 import { Call } from "@/types/call";
-import { ResizableContainer } from "./ui/ResizableContainer";
+import { VideoComponent, ResizableContainer } from "@/components/ui";
+import { User } from "@/types/user";
 
 interface VideoCallProps {
   currentCallDetails: Call | undefined;
@@ -25,7 +26,7 @@ interface VideoCallProps {
 
 export const CallComponent = memo(({ currentCallDetails }: VideoCallProps) => {
   const user = useUserStore((state) => state.user);
-  const { setIsUserMicrophoneMuted } = useCallStoreActions();
+  const { setIsUserMicrophoneMuted, toggleStreamPopUp } = useCallStoreActions();
   const { answerCall, endCall, handleScreenShare, handleVideoShare } =
     useCallContext();
   const { currentCall, streams, isUserMicrophoneMuted, joiningCall } =
@@ -56,7 +57,7 @@ export const CallComponent = memo(({ currentCallDetails }: VideoCallProps) => {
   ) => {
     setTimeout(() => {
       if (fullscreenVideoRef.current) {
-        fullscreenVideoRef.current.srcObject = streams[userId];
+        fullscreenVideoRef.current.srcObject = streams[userId].stream;
         fullscreenVideoRef.current.play();
       }
     }, 0);
@@ -68,7 +69,7 @@ export const CallComponent = memo(({ currentCallDetails }: VideoCallProps) => {
 
   const handleAudioOff = () => {
     if (!user?._id) return;
-    const audioTracks = streams[user?._id]?.getAudioTracks();
+    const audioTracks = streams[user?._id]?.stream?.getAudioTracks();
     if (!audioTracks) return;
 
     if (isUserMicrophoneMuted) {
@@ -88,7 +89,7 @@ export const CallComponent = memo(({ currentCallDetails }: VideoCallProps) => {
     (userId: string | undefined) => {
       if (!userId) return false;
 
-      const stream = streams[userId];
+      const stream = streams[userId]?.stream;
 
       if (stream) {
         const videoTrack = stream.getVideoTracks()[0];
@@ -100,6 +101,10 @@ export const CallComponent = memo(({ currentCallDetails }: VideoCallProps) => {
     },
     [streams]
   );
+
+  const handleToggleVideoPopUp = (userId: User["_id"]) => {
+    toggleStreamPopUp(userId);
+  };
 
   return (
     <ResizableContainer className="flex flex-col w-full bg-gray-950/70 py-2 pb-6 gap-4 border-b-[1px] border-cyan-600">
@@ -118,6 +123,11 @@ export const CallComponent = memo(({ currentCallDetails }: VideoCallProps) => {
                 )}
                 userStream={streams[participant?.userId?._id]}
                 handleVideoClick={handleVideoClick}
+                handleToggleVideoPopUp={
+                  participant?.userId?._id !== user?._id
+                    ? handleToggleVideoPopUp
+                    : undefined
+                }
               />
             );
           })}
@@ -181,11 +191,12 @@ interface UserBoxProps {
   avatar: string;
   muted: boolean;
   isSharingVideo: boolean;
-  userStream: MediaStream | null;
+  userStream: { stream: MediaStream | null; shouldDisplayPopUp?: boolean };
   handleVideoClick: (
     userId: string,
     fullscreenVideoRef: React.RefObject<HTMLVideoElement>
   ) => void;
+  handleToggleVideoPopUp?: (userId: string) => void;
 }
 
 const UserBox = memo(
@@ -197,11 +208,12 @@ const UserBox = memo(
     isSharingVideo,
     userStream,
     handleVideoClick,
+    handleToggleVideoPopUp,
   }: UserBoxProps) => {
     const fullscreenVideoRef = useRef<HTMLVideoElement>(null);
 
     return (
-      <div className="bg-blue-950 hover:bg-blue-900 border-slate-600 border-[1px] flex rounded flex-col items-center justify-center gap-1 py-6 px-4 w-full overflow-hidden">
+      <div className="relative bg-blue-950 hover:bg-blue-900 border-slate-600 border-[1px] flex rounded flex-col items-center justify-center gap-1 py-6 px-4 w-full overflow-hidden">
         <AvatarCoin
           className={`${isSharingVideo ? "hidden" : "block"} min-w-[80px]`}
           source={avatar}
@@ -224,8 +236,8 @@ const UserBox = memo(
               controls={false}
               className="w-full min-w-[70px] min-h-[70px] h-full object-fit rounded-md"
               ref={(el) => {
-                if (el && el.srcObject !== userStream) {
-                  el.srcObject = userStream;
+                if (el && el.srcObject !== userStream?.stream) {
+                  el.srcObject = userStream?.stream;
                   el.play();
                 }
               }}
@@ -233,6 +245,14 @@ const UserBox = memo(
           </MediaPreviewDialog>
         )}
         <p>{displayName || "User"}</p>
+        {handleToggleVideoPopUp && (
+          <button
+            onClick={() => handleToggleVideoPopUp(userId)}
+            className={`${userStream?.shouldDisplayPopUp ? "bg-green-800" : "bg-red-800"} group absolute right-1.5 top-1.5 rounded-full p-0.5 hover:scale-110 transition-all ease-in-out`}
+          >
+            <PopUpIcon />
+          </button>
+        )}
       </div>
     );
   }

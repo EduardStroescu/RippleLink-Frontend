@@ -210,10 +210,12 @@ export function CheckIcon({
   width = "12px",
   height = "12px",
   fill = "#ffffff",
+  title,
 }: {
   width?: string;
   height?: string;
   fill?: string;
+  title?: string;
 }) {
   return (
     <svg
@@ -227,6 +229,7 @@ export function CheckIcon({
       viewBox="0 -15 512 512"
       xmlSpace="preserve"
     >
+      {title && <title>{title}</title>}
       <g>
         <path
           d="M474.045,173.813c-4.201,1.371-6.494,5.888-5.123,10.088c7.571,23.199,11.411,47.457,11.411,72.1
@@ -535,17 +538,25 @@ export function InfoIcon() {
   );
 }
 
-export function EditIcon() {
+export function EditIcon({
+  title = "Edit Message",
+  width = "20px",
+  height = "20px",
+}: {
+  title?: string;
+  width?: string;
+  height?: string;
+}) {
   return (
     <svg
-      width="20px"
-      height="20px"
+      width={width}
+      height={height}
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className="group-hover:scale-110 transition-all ease-in-out"
     >
-      <title>Edit Message</title>
+      <title>{title}</title>
       <path
         d="M20 12C20 16.4183 16.4183 20 12 20C7.58172 20 4 16.4183 4 12C4 7.58172 7.58172 4 12 4M9.35443 12.4346L15.9429 5.92003C16.4684 5.40046 17.3049 5.3718 17.8647 5.85418C18.4812 6.38542 18.5247 7.32554 17.96 7.91149L11.481 14.6335L9 15L9.35443 12.4346Z"
         strokeLinecap="round"
@@ -793,6 +804,23 @@ export function EmojiIcon() {
         stroke="#b5b5b5"
         className="group-hover:stroke-[#e6e7e8]"
       />
+    </svg>
+  );
+}
+
+export function PopUpIcon() {
+  return (
+    <svg
+      width="20px"
+      height="20px"
+      viewBox="0 0 32 32"
+      version="1.1"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="#d2d0d0"
+      className="group-hover:fill-[#e6e7e8]"
+    >
+      <title>Display Video as Pop Up</title>
+      <path d="M15.694 13.541l2.666 2.665 5.016-5.017 2.59 2.59 0.004-7.734-7.785-0.046 2.526 2.525-5.017 5.017zM25.926 16.945l-1.92-1.947 0.035 9.007-16.015 0.009 0.016-15.973 8.958-0.040-2-2h-7c-1.104 0-2 0.896-2 2v16c0 1.104 0.896 2 2 2h16c1.104 0 2-0.896 2-2l-0.074-7.056z"></path>
     </svg>
   );
 }

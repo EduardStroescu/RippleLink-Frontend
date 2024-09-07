@@ -7,9 +7,11 @@ import { useRouter } from "@tanstack/react-router";
 import { useToast } from "./ui/use-toast";
 import userApi from "@/api/modules/user.api";
 import { User } from "@/types/user";
-import CustomDialogTrigger from "./CustomDialogTrigger";
-import { ChangeStatusForm } from "./ChangeStatusForm";
-import { ChangeAvatarForm } from "./ChangeAvatarForm";
+import {
+  CustomDialogTrigger,
+  ChangeAvatarForm,
+  ChangeStatusForm,
+} from "@/components";
 
 interface UserSettingsOverlayProps {
   children: React.ReactNode;
@@ -26,7 +28,7 @@ export const UserSettingsOverlay: React.FC<UserSettingsOverlayProps> = ({
 
   const logoutMutation = useMutation({
     mutationFn: userApi.logout,
-    onSuccess: () => {
+    onSettled: () => {
       setItem(null);
       setUser(null);
       queryClient.cancelQueries();

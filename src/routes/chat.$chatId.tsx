@@ -1,3 +1,4 @@
+import React, { useEffect, useMemo, useState } from "react";
 import {
   createFileRoute,
   Link,
@@ -5,45 +6,58 @@ import {
   useLocation,
   useParams,
 } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { useSocketContext } from "@/providers/SocketProvider";
-import { useUserStore } from "@/stores/useUserStore";
-import { TypingIndicator } from "@/components/ui/TypingIndicator";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import chatApi from "@/api/modules/chat.api";
+import { getParsedPath } from "@/lib/utils";
 import { groupAvatar, placeholderAvatar } from "@/lib/const";
-import { CreateMessageForm } from "@/components/CreateMessageForm";
+import { useCallStore } from "@/stores/useCallStore";
+
+import { Message } from "@/types/message";
+
+import { TypingIndicator } from "@/components/ui/TypingIndicator";
+
+import { useSocketContext, useCallContext } from "@/providers";
 import {
   AddUsersIcon,
   CallIcon,
   InfoIcon,
   VideoCallIcon,
-} from "@/components/Icons";
-import { useMessageEvents } from "@/lib/hooks/useMessageEvents";
-import { useUserTyping } from "@/lib/hooks/useUserTyping";
-import { useCreateMessage } from "@/lib/hooks/useCreateMessage";
-import { useMessageReadStatus } from "@/lib/hooks/useMessageReadStatus";
-import { useQuery } from "@tanstack/react-query";
-import chatApi from "@/api/modules/chat.api";
-import { MessageComponent } from "@/components/MessageComponent";
-import { CallComponent } from "@/components/CallComponent";
-import { useCallContext } from "@/providers/CallProvider";
-import { getParsedPath } from "@/lib/utils";
-import { useCallStore } from "@/stores/useCallStore";
-import CustomDialogTrigger from "@/components/CustomDialogTrigger";
-import { SearchUsersForm } from "@/components/SearchUsersForm";
-import { ChatHeaderDetails } from "@/components/ChatHeaderDetails";
-import React from "react";
+  CreateMessageForm,
+  MessageComponent,
+  CallComponent,
+  CustomDialogTrigger,
+  SearchUsersForm,
+  ChatHeaderDetails,
+  Virtualizer,
+  MessagesLoadingIndicator,
+} from "@/components";
 
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { useHandleIsAtBottom } from "@/lib/hooks/useIsAtBottom";
-import { Virtualizer } from "@/components/Virtualizer";
+import {
+  useMessageReadStatus,
+  useCreateMessage,
+  useMessageEvents,
+  useVirtualizer,
+  useCurrentChatDetails,
+} from "@/lib/hooks";
 
 export const Route = createFileRoute("/chat/$chatId")({
   beforeLoad: async ({ params: { chatId } }) => {
     const messagesQuery = {
       queryKey: ["messages", chatId],
-      queryFn: () => chatApi.getMessagesByChatId(chatId),
+      queryFn: ({ pageParam }) =>
+        chatApi.getMessagesByChatId(chatId, pageParam),
+      initialPageParam: null,
+      getNextPageParam: (lastPage) => lastPage.nextCursor || null,
       enabled: !!chatId,
-      placeholderData: [],
+      select: (data): { messages: Message[]; pageParams: string[] } => {
+        // Reverse pages and combine messages
+        const reversedPages = [...data.pages].reverse();
+        const combinedMessages = reversedPages.flatMap((page) => page.messages);
+        return {
+          messages: combinedMessages.reverse(),
+          pageParams: [...data.pageParams].reverse(),
+        };
+      },
     };
     return { messagesQuery };
   },
@@ -56,43 +70,31 @@ export const Route = createFileRoute("/chat/$chatId")({
 });
 
 function ChatId() {
-  const location = useLocation();
-  const parsedPath = getParsedPath(location.pathname);
-  const user = useUserStore((state) => state.user);
-  const currentCall = useCallStore((state) => state.currentCall);
-
-  const { messagesQuery, chatsQuery, callsQuery } = Route.useLoaderData();
-  const { data: messages } = useQuery(messagesQuery);
-  const { data: chatData } = useQuery(chatsQuery);
-  const { data: callData } = useQuery(callsQuery);
-
   const { socket } = useSocketContext();
+  const location = useLocation();
   const params = useParams({ from: "/chat/$chatId" });
-  const { startCall } = useCallContext();
+  const parsedPath = getParsedPath(location.pathname);
+  const currentCall = useCallStore((state) => state.currentCall);
+  const { messagesQuery, chatsQuery, callsQuery } = Route.useLoaderData();
 
-  const currentChat = chatData?.find((chat) => chat._id === params.chatId);
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery(messagesQuery);
+  const messages = useMemo(() => data?.messages || [], [data?.messages]);
+
+  const { data: callData } = useQuery(callsQuery);
   const currentCallDetails = callData?.find(
     (call) => call.chatId._id === params.chatId
   );
+  const { startCall } = useCallContext();
 
-  const isDmChat = currentChat?.type === "dm";
-  const interlocutors = useMemo(
-    () =>
-      currentChat &&
-      currentChat?.users?.filter((person) => person._id !== user?._id),
-    [currentChat, user?._id]
-  );
-
-  const scrollParentRef = useRef<HTMLDivElement | null>(null);
-  const count = useMemo(() => (messages ? messages.length + 1 : 0), [messages]);
-  const virtualizer = useVirtualizer({
-    count,
-    getScrollElement: () => scrollParentRef?.current,
-    estimateSize: () => 416,
-    overscan: 10,
-    getItemKey: (index) => messages?.[index]?._id || index,
+  const { isDmChat, interlocutors, interlocutorsDisplayNames, currentChat } =
+    useCurrentChatDetails({ chatsQuery });
+  const { scrollParentRef, virtualizer, getMessageContent } = useVirtualizer({
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    messages,
   });
-
   const {
     handleSubmitMessage,
     message,
@@ -102,55 +104,10 @@ function ChatId() {
     setGif,
     setContentPreview,
     setMessageType,
-  } = useCreateMessage(params);
-  const { interlocutorIsTyping, isInterlocutorOnline } = useMessageEvents(
-    params,
-    user
-  );
-  useUserTyping(params, message);
-  useMessageReadStatus(messages, user, params);
-
-  // Scroll User to bottom on mount
-  const scrolledToBottomOnMount = useRef(false);
-  useEffect(() => {
-    if (!scrolledToBottomOnMount.current) {
-      const timer = setTimeout(() => {
-        virtualizer?.scrollToIndex(count - 1);
-        scrolledToBottomOnMount.current = true;
-      }, 400);
-
-      return () => clearTimeout(timer);
-    }
-  }, [count, params.chatId, virtualizer]);
-
-  // Reset scrolledToBottomOnMount when chatId changes
-  useEffect(() => {
-    scrolledToBottomOnMount.current = false;
-  }, [params.chatId]);
-
-  // Keep user scrolled to bottom when contentPreview is added
-  useEffect(() => {
-    setTimeout(() => {
-      if (contentPreview) {
-        virtualizer?.scrollToIndex(count - 1);
-      }
-    }, 400);
-  }, [contentPreview, count, virtualizer]);
-
-  // Keep user scrolled to bottom when new messages are added
-  const { isAtBottom } = useHandleIsAtBottom({
-    scrollParent: scrollParentRef.current,
-  });
-  useEffect(() => {
-    if (virtualizer.isScrolling) return;
-    const timer = setTimeout(() => {
-      if (isAtBottom) {
-        virtualizer?.scrollToIndex(count - 1);
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [count, isAtBottom, virtualizer, virtualizer.isScrolling]);
+  } = useCreateMessage();
+  const { interlocutorIsTyping, isInterlocutorOnline } =
+    useMessageEvents(interlocutors);
+  useMessageReadStatus(messages);
 
   const handleDelete = (messageId: string) => {
     if (!socket) return;
@@ -162,15 +119,32 @@ function ChatId() {
     startCall(currentChat, videoEnabled);
   };
 
-  const interlocutorsDisplayNames = interlocutors
-    ?.map((user) => user?.displayName)
-    .slice(0, 3)
-    .join(", ");
+  const [chatName, setChatName] = useState("");
+  const [isEditingChatName, setIsEditingChatName] = useState(false);
 
-  const getMessageContent = useCallback(
-    (virtualIndex: number) => messages?.[virtualIndex],
-    [messages]
-  );
+  useEffect(() => {
+    if (!isEditingChatName && !chatName) {
+      setChatName(
+        currentChat?.name || `Group Chat: ${interlocutorsDisplayNames}`
+      );
+    }
+  }, [
+    chatName,
+    currentChat?.name,
+    interlocutorsDisplayNames,
+    isEditingChatName,
+  ]);
+
+  const handleResetInput = () => {
+    setChatName(
+      currentChat?.name || `Group Chat: ${interlocutorsDisplayNames}`
+    );
+    setIsEditingChatName(false);
+  };
+
+  const handleEditChatName = () => {
+    setIsEditingChatName((state) => !state);
+  };
 
   return (
     <div className="grid grid-flow-col grid-cols-8 w-full h-full">
@@ -188,9 +162,11 @@ function ChatId() {
           ) : (
             <ChatHeaderDetails
               avatarUrl={currentChat?.avatarUrl || groupAvatar}
-              name={
-                currentChat?.name || `Group Chat: ${interlocutorsDisplayNames}`
-              }
+              name={chatName}
+              handleEditChatName={handleEditChatName}
+              isEditingChatName={isEditingChatName}
+              setChatName={setChatName}
+              handleResetInput={handleResetInput}
             />
           )}
           <div className="mr-0.5 sm:mr-4 flex gap-2 sm:gap-4">
@@ -232,16 +208,16 @@ function ChatId() {
             </Link>
           </div>
         </div>
-        {(currentCall || currentCallDetails) && (
+        {(currentCall?.chatId._id === params.chatId || currentCallDetails) && (
           <CallComponent currentCallDetails={currentCallDetails} />
         )}
 
         <Virtualizer virtualizer={virtualizer} ref={scrollParentRef}>
-          {({ virtualItem, ref }) => (
+          {({ virtualItem }) => (
             <React.Fragment key={virtualItem.key}>
-              {virtualItem.index < count - 1 ? (
+              {virtualItem.index !== 0 ? (
                 <MessageComponent
-                  ref={ref}
+                  virtualizer={virtualizer}
                   virtualItem={virtualItem}
                   message={getMessageContent(virtualItem.index)}
                   handleDelete={handleDelete}
@@ -249,7 +225,6 @@ function ChatId() {
                 />
               ) : (
                 <TypingIndicator
-                  ref={ref}
                   virtualItem={virtualItem}
                   interlocutorIsTyping={interlocutorIsTyping}
                 />
@@ -257,7 +232,7 @@ function ChatId() {
             </React.Fragment>
           )}
         </Virtualizer>
-
+        <MessagesLoadingIndicator shouldDisplay={isFetchingNextPage} />
         <CreateMessageForm
           handleSubmitMessage={handleSubmitMessage}
           message={message}

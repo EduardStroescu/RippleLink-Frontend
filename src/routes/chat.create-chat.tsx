@@ -1,28 +1,21 @@
-import { groupAvatar } from "@/lib/const";
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
-import { FormEvent, useState } from "react";
-import {
-  QueryClient,
-  useMutation,
-  useQueries,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { FormEvent, useEffect, useState } from "react";
+import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import chatApi from "@/api/modules/chat.api";
 import userApi from "@/api/modules/user.api";
-import { CreateMessageForm } from "@/components/CreateMessageForm";
+import { checkIfChatExists } from "@/lib/utils";
+import { groupAvatar } from "@/lib/const";
+
 import { Chat } from "@/types/chat";
 import { Message } from "@/types/message";
-import { useToast } from "@/components/ui/use-toast";
 import { User } from "@/types/user";
-import { checkIfChatExists } from "@/lib/utils";
-import { ChatHeaderDetails } from "@/components/ChatHeaderDetails";
+
+import { useToast } from "@/components/ui";
+import { CreateMessageForm, ChatHeaderDetails } from "@/components";
 
 export const Route = createFileRoute("/chat/create-chat")({
-  beforeLoad: async ({ search, context }) => {
+  beforeLoad: async ({ search, context: { queryClient } }) => {
     const { userIds } = search as typeof search & { userIds: string };
-    const { queryClient } = context as typeof context & {
-      queryClient: QueryClient;
-    };
     const chatsData = queryClient.getQueryData<Chat[] | []>(["chats"]);
     const userIdsArr = userIds.split(",");
 
@@ -39,7 +32,7 @@ export const Route = createFileRoute("/chat/create-chat")({
       queries: userIdsArr.map((userId: User["_id"]) => ({
         queryKey: ["users", userId],
         queryFn: () => userApi.getUsersById(userId),
-        enabled: !!userId,
+        enabled: !!userId && !!userIdsArr.length,
       })),
       combine: (results) => {
         return {
@@ -66,6 +59,7 @@ function CreateNewChat() {
     content: string | null;
     name: string | null;
   } | null>(null);
+  const [isEditingChatName, setIsEditingChatName] = useState(false);
   const [chatName, setChatName] = useState("");
   const [messageType, setMessageType] = useState<Message["type"]>("text");
   const { toast } = useToast();
@@ -97,13 +91,19 @@ function CreateNewChat() {
       messageType: messageType,
     };
 
-    !chatName && delete values.name;
+    chatName === defaultChatHeaderTitle && delete values.name;
 
     if (gif) {
       values.lastMessage = gif;
-      values.messageType = "image";
+      values.messageType = "text";
+      setGif(null);
+    } else if (contentPreview?.content && messageType !== "text") {
+      values.lastMessage = contentPreview.content;
+      values.messageType = messageType;
     } else {
       if (message.length === 0) return;
+
+      values.lastMessage = message;
     }
 
     await createChatMutation.mutateAsync(values, {
@@ -124,14 +124,37 @@ function CreateNewChat() {
   const newChatUsersDisplayNames = newChatUsers
     ?.map((user: User) => user?.displayName)
     .slice(0, 3);
-  const defaultChatHeaderTitle = `Group Chat: ${newChatUsersDisplayNames.join(", ")} ${newChatUsers.length > 3 ? `(+ ${newChatUsers.length - 3})` : ""}`;
+  const defaultChatHeaderTitle =
+    newChatUsersDisplayNames.every((dName) => typeof dName === "string") &&
+    `Group Chat: ${newChatUsersDisplayNames.join(", ")} ${newChatUsers.length > 3 ? `(+ ${newChatUsers.length - 3})` : ""}`.trim();
+
+  useEffect(() => {
+    if (!isEditingChatName && !chatName.length && defaultChatHeaderTitle) {
+      setChatName(defaultChatHeaderTitle);
+    }
+  }, [chatName, defaultChatHeaderTitle, isEditingChatName]);
+
+  const handleResetInput = () => {
+    if (defaultChatHeaderTitle) {
+      setChatName(defaultChatHeaderTitle);
+      setIsEditingChatName(false);
+    }
+  };
+
+  const handleEditChatName = () => {
+    setIsEditingChatName((state) => !state);
+  };
 
   return (
     <div className="w-full h-full flex flex-col overflow-hidden">
       {newChatUsers?.length > 1 ? (
         <ChatHeaderDetails
           avatarUrl={groupAvatar}
-          name={defaultChatHeaderTitle}
+          name={chatName}
+          handleEditChatName={handleEditChatName}
+          isEditingChatName={isEditingChatName}
+          setChatName={setChatName}
+          handleResetInput={handleResetInput}
         />
       ) : (
         <ChatHeaderDetails

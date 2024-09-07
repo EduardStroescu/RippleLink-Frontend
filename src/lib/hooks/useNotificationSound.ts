@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-const useNotificationSound = () => {
+export const useNotificationSound = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const playSound = () => {
@@ -21,5 +21,3 @@ const useNotificationSound = () => {
 
   return playSound;
 };
-
-export default useNotificationSound;

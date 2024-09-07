@@ -1,5 +1,9 @@
 import { useUserStore } from "@/stores/useUserStore";
-import axios, { InternalAxiosRequestConfig, AxiosRequestHeaders } from "axios";
+import axios, {
+  InternalAxiosRequestConfig,
+  AxiosRequestHeaders,
+  AxiosError,
+} from "axios";
 import queryString from "query-string";
 
 const baseURL = import.meta.env.VITE_BACKEND_URL + "/api/";
@@ -14,7 +18,7 @@ const privateClient = axios.create({
 let isRefreshing = false;
 let failedQueue: Array<(token: string) => void> = [];
 
-const processQueue = (error: any, token: string | null) => {
+const processQueue = (_, token: string | null) => {
   failedQueue.forEach((callback) => token && callback(token));
   failedQueue = [];
 };
@@ -53,7 +57,7 @@ privateClient.interceptors.response.use(
       originalRequest._retry = true;
 
       if (isRefreshing) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
           failedQueue.push((token: string) => {
             originalRequest.headers.Authorization = `Bearer ${token}`;
             resolve(privateClient(originalRequest));
@@ -81,11 +85,13 @@ privateClient.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`;
           return privateClient(originalRequest);
         }
-      } catch (refreshError) {
+      } catch (error) {
+        const refreshError = error as AxiosError;
+
         window.localStorage.removeItem("user");
         processQueue(refreshError, null);
         return Promise.reject(
-          refreshError?.response?.data?.message || "Token refresh failed"
+          refreshError?.response?.data || "Token refresh failed"
         );
       }
     }

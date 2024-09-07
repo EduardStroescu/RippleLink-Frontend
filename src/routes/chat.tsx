@@ -1,39 +1,43 @@
+import { Fragment } from "react/jsx-runtime";
 import {
   createFileRoute,
   Link,
   Outlet,
   redirect,
   useLocation,
+  useRouter,
 } from "@tanstack/react-router";
-import { SocketProvider } from "../providers/SocketProvider";
-import { SearchForm } from "@/components/SearchForm";
-import { isAuthenticated } from "@/lib/utils";
-import { AddIcon, SettingsIcon } from "@/components/Icons";
-import { AvatarCoin } from "@/components/ui/AvatarCoin";
-import { UserSettingsOverlay } from "@/components/UserSettingsOverlay";
-import chatApi from "@/api/modules/chat.api";
-import CustomDialogTrigger from "@/components/CustomDialogTrigger";
-import { SearchUsersForm } from "@/components/SearchUsersForm";
-import { useUserStore } from "@/stores/useUserStore";
-import { groupAvatar, placeholderAvatar } from "@/lib/const";
-import { Chat } from "@/types/chat";
-import { DeleteButton } from "@/components/ui/DeleteButton";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
-import { adaptTimezone } from "@/lib/utils";
-import { useChatEvents } from "@/lib/hooks/useChatEvents";
-import { useChatsFilters } from "@/lib/hooks/useChatsFilters";
-import { FilterOption } from "@/types/filterOptions";
-import { CallProvider } from "@/providers/CallProvider";
-import { useToast } from "@/components/ui/use-toast";
-import { getParsedPath } from "@/lib/utils";
-import { CallEventOverlay } from "@/components/CallEventOverlay";
-import CallDialog from "@/components/CallDialog";
-import { DraggableVideos } from "@/components/DraggableVideos";
-import { useCallEvents } from "@/lib/hooks/useCallEvents";
+
+import chatApi from "@/api/modules/chat.api";
+import { useUserStore } from "@/stores/useUserStore";
+import { Chat } from "@/types/chat";
 import { Message } from "@/types/message";
-import { Fragment } from "react/jsx-runtime";
-import { useSetChatsCache } from "@/lib/hooks/useSetChatsCache";
+import { FilterOption } from "@/types/filterOptions";
+
+import { groupAvatar, placeholderAvatar } from "@/lib/const";
+import { getParsedPath, adaptTimezone, isAuthenticated } from "@/lib/utils";
+
+import { SocketProvider, CallProvider } from "@/providers";
+import { DeleteButton, AvatarCoin, useToast } from "@/components/ui";
+import {
+  SearchForm,
+  UserSettingsOverlay,
+  AddIcon,
+  SettingsIcon,
+  CustomDialogTrigger,
+  SearchUsersForm,
+  CallEventOverlay,
+  DraggableVideos,
+  CallDialog,
+} from "@/components";
+
+import {
+  useChatEvents,
+  useChatsFilters,
+  useSetChatsCache,
+  useCallEvents,
+} from "@/lib/hooks";
 
 export const Route = createFileRoute("/chat")({
   beforeLoad: async ({ location }) => {
@@ -213,7 +217,7 @@ function ChatWrapper() {
         <Outlet />
       </aside>
       <CallDialog content={<CallEventOverlay chats={chats} />} />
-      {parsedPath !== "/chat/$chatId" && <DraggableVideos />}
+      <DraggableVideos />
     </div>
   );
 }

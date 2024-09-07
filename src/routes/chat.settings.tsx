@@ -1,15 +1,18 @@
-import { ChangeBackgroundForm } from "@/components/ChangeBackgroundForm";
-import { ChangePasswordForm } from "@/components/ChangePasswordForm";
-import { ChangeUserDetailsForm } from "@/components/ChangeUserDetailsForm";
-import { DeleteAccountForm } from "@/components/DeleteAccountForm";
-import { BackIcon } from "@/components/Icons";
+import { createFileRoute, Link } from "@tanstack/react-router";
+
+import {
+  ChangeBackgroundForm,
+  ChangePasswordForm,
+  ChangeUserDetailsForm,
+  DeleteAccountForm,
+  BackIcon,
+} from "@/components";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/Accordion";
-import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/chat/settings")({
   component: () => <ChatSettings />,

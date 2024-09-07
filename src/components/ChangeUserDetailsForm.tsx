@@ -70,11 +70,11 @@ export function ChangeUserDetailsForm() {
       onSuccess: (response) => {
         setUser((prevUser) => prevUser && { ...prevUser, response });
       },
-      onError: (error) => {
+      onError: (error: unknown) => {
         toast({
           variant: "destructive",
           title: "Error",
-          description: error,
+          description: error as string,
         });
       },
     });

@@ -2,11 +2,15 @@ import { useSocketContext } from "@/providers/SocketProvider";
 import { useUserStore } from "@/stores/useUserStore";
 import { Chat } from "@/types/chat";
 import { useEffect, useState } from "react";
-import useNotificationSound from "./useNotificationSound";
-import { useThrottle } from "./useThrottle";
-import useWindowVisibility from "./useWindowVisibility";
-import { useSocketSubscription } from "./useSocketSubscription";
-import { useSetChatsCache } from "./useSetChatsCache";
+
+import {
+  useNotificationSound,
+  useThrottle,
+  useWindowVisibility,
+  useSocketSubscription,
+  useSetChatsCache,
+} from "@/lib/hooks";
+
 import { create } from "mutative";
 
 export function useChatEvents() {
