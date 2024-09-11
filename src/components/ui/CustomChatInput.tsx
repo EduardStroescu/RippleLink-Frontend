@@ -3,6 +3,7 @@ import { EmojiPicker } from "../EmojiPicker";
 import { EmojiIcon } from "../Icons";
 
 interface CustomChatInputProps {
+  emojiClassName?: string;
   disabled?: boolean;
   message: string | undefined;
   setMessage: (message: string) => void;
@@ -16,6 +17,7 @@ export function CustomChatInput({
   setMessage,
   handleKeyDown,
   handlePaste,
+  emojiClassName,
 }: CustomChatInputProps) {
   const chatInputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -79,7 +81,7 @@ export function CustomChatInput({
   return (
     <>
       <EmojiPicker getValue={insertEmoji}>
-        <EmojiIcon />
+        <EmojiIcon className={emojiClassName} />
       </EmojiPicker>
       <textarea
         name="message"

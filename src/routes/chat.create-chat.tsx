@@ -147,23 +147,25 @@ function CreateNewChat() {
 
   return (
     <div className="w-full h-full flex flex-col overflow-hidden">
-      {newChatUsers?.length > 1 ? (
-        <ChatHeaderDetails
-          avatarUrl={groupAvatar}
-          name={chatName}
-          handleEditChatName={handleEditChatName}
-          isEditingChatName={isEditingChatName}
-          setChatName={setChatName}
-          handleResetInput={handleResetInput}
-        />
-      ) : (
-        <ChatHeaderDetails
-          avatarUrl={newChatUsers[0]?.avatarUrl}
-          name={newChatUsers[0]?.displayName}
-          lastSeen={newChatUsers[0]?.status?.lastSeen}
-          isInterlocutorOnline={newChatUsers[0]?.status?.online}
-        />
-      )}
+      <div className="p-2">
+        {newChatUsers?.length > 1 ? (
+          <ChatHeaderDetails
+            avatarUrl={groupAvatar}
+            name={chatName}
+            handleEditChatName={handleEditChatName}
+            isEditingChatName={isEditingChatName}
+            setChatName={setChatName}
+            handleResetInput={handleResetInput}
+          />
+        ) : (
+          <ChatHeaderDetails
+            avatarUrl={newChatUsers[0]?.avatarUrl}
+            name={newChatUsers[0]?.displayName}
+            lastSeen={newChatUsers[0]?.status?.lastSeen}
+            isInterlocutorOnline={newChatUsers[0]?.status?.online}
+          />
+        )}
+      </div>
       <div className="w-full flex-1 h-full p-4 text-white overflow-y-auto flex flex-col gap-4" />
 
       <CreateMessageForm

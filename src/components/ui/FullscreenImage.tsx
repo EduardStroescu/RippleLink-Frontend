@@ -11,11 +11,11 @@ export function FullscreenImage({ className, ...props }: FullscreenImageProps) {
     <img className="w-full h-full object-cover rounded-md" {...props} />
   );
   return (
-    <div className="max-w-[400px] max-h-[400px] w-[22rem] h-[22rem]">
+    <div className="">
       <MediaPreviewDialog content={<ImageContent />} className="group">
         <img
           className={cn(
-            "rounded-xl aspect-square object-auto cursor-pointer py-1",
+            "rounded-xl aspect-square object-cover cursor-pointer py-1",
             className
           )}
           {...props}

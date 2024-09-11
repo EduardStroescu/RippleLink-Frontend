@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import {
   createFileRoute,
   Link,
@@ -87,8 +87,16 @@ function ChatId() {
   );
   const { startCall } = useCallContext();
 
-  const { isDmChat, interlocutors, interlocutorsDisplayNames, currentChat } =
-    useCurrentChatDetails({ chatsQuery });
+  const {
+    isDmChat,
+    interlocutors,
+    currentChat,
+    chatName,
+    setChatName,
+    isEditingChatName,
+    handleEditChatName,
+    handleResetInput,
+  } = useCurrentChatDetails({ chatsQuery });
   const { scrollParentRef, virtualizer, getMessageContent } = useVirtualizer({
     hasNextPage,
     isFetchingNextPage,
@@ -118,34 +126,6 @@ function ChatId() {
     if (!currentChat) return;
     startCall(currentChat, videoEnabled);
   };
-
-  const [chatName, setChatName] = useState("");
-  const [isEditingChatName, setIsEditingChatName] = useState(false);
-
-  useEffect(() => {
-    if (!isEditingChatName && !chatName) {
-      setChatName(
-        currentChat?.name || `Group Chat: ${interlocutorsDisplayNames}`
-      );
-    }
-  }, [
-    chatName,
-    currentChat?.name,
-    interlocutorsDisplayNames,
-    isEditingChatName,
-  ]);
-
-  const handleResetInput = () => {
-    setChatName(
-      currentChat?.name || `Group Chat: ${interlocutorsDisplayNames}`
-    );
-    setIsEditingChatName(false);
-  };
-
-  const handleEditChatName = () => {
-    setIsEditingChatName((state) => !state);
-  };
-
   return (
     <div className="grid grid-flow-col grid-cols-8 w-full h-full">
       <div

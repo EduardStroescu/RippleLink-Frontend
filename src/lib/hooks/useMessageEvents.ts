@@ -21,19 +21,14 @@ export function useMessageEvents(interlocutors: User[] | undefined) {
   const setMessagesCache = useSetMessagesCache(params.chatId);
 
   useEffect(() => {
+    // State doesn't reset as Tanstack Router reuses components nested under the same route - see dynamic routes
+    setInterlocutorIsTyping(false);
     if (!socket) return;
     socket.emit("joinRoom", { room: params.chatId });
     return () => {
       socket.emit("leaveRoom", { room: params.chatId });
     };
   }, [socket, params.chatId]);
-
-  // State doesn't reset as Tanstack Router reuses components nested under the same route - see dynamic routes
-  useEffect(() => {
-    setIsInterlocutorOnline(interlocutor?.status?.online || false);
-    setInterlocutorIsTyping(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params.chatId]);
 
   useSocketSubscription("messagesRead", () => {
     if (user?._id) {
@@ -145,6 +140,10 @@ export function useMessageEvents(interlocutors: User[] | undefined) {
     [interlocutors]
   );
   useSocketSubscription("interlocutorIsTyping", handleInterlocutorTyping);
+
+  useEffect(() => {
+    setIsInterlocutorOnline(interlocutor?.status?.online || false);
+  }, [interlocutor?.status?.online, params.chatId]);
 
   const handleInterlocutorOnlineStatus = useCallback(
     ({ content }: { content: { _id: User["_id"]; isOnline: boolean } }) => {

@@ -195,8 +195,7 @@ function ChatWrapper() {
                       linkTo={chat?._id}
                       avatarUrl={chat?.avatarUrl || groupAvatar}
                       name={
-                        `Group Chat: ${interlocutorsDisplayNames}` ||
-                        "Group Chat"
+                        chat?.name || `Group Chat: ${interlocutorsDisplayNames}`
                       }
                       lastMessage={chat.lastMessage}
                       displayLastMessageReceipt={

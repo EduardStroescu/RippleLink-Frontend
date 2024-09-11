@@ -1,4 +1,12 @@
-export function SendIcon({ title = "Send" }: { title?: string }) {
+import { cn } from "@/lib/utils";
+
+export function SendIcon({
+  title = "Send",
+  className,
+}: {
+  title?: string;
+  className?: string;
+}) {
   return (
     <svg
       version="1.1"
@@ -7,7 +15,10 @@ export function SendIcon({ title = "Send" }: { title?: string }) {
       xmlnsXlink="http://www.w3.org/1999/xlink"
       viewBox="0 0 512 512"
       xmlSpace="preserve"
-      className="group-hover:scale-[1.1] transition-transform duration-500 ease-in-out w-[25px] h-[25px] sm:w-[30px] sm:h-[30px]"
+      className={cn(
+        "group-hover:scale-[1.1] transition-transform duration-500 ease-in-out w-[25px] h-[25px] sm:w-[30px] sm:h-[30px]",
+        className
+      )}
     >
       <title>{title}</title>
       <circle style={{ fill: "#B5F1F4" }} cx="256" cy="256" r="256" />
@@ -757,13 +768,16 @@ export function RejectCallIcon({
   );
 }
 
-export function EmojiIcon() {
+export function EmojiIcon({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="group-hover:scale-110 transition-all ease-in-out w-[25px] h-[25px] sm:w-[30px] sm:h-[30px]"
+      className={cn(
+        "group-hover:scale-110 transition-all ease-in-out w-[25px] h-[25px] sm:w-[30px] sm:h-[30px]",
+        className
+      )}
     >
       <title>Pick Emoji</title>
       <path

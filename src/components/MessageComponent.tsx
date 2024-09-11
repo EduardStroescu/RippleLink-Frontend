@@ -1,5 +1,5 @@
 import { Message } from "@/types/message";
-import { CheckIcon, EditIcon } from "./Icons";
+import { CheckIcon, EditIcon, SendIcon } from "./Icons";
 import { DeleteButton } from "./ui/DeleteButton";
 import { adaptTimezone } from "@/lib/utils";
 import { FullscreenImage } from "./ui/FullscreenImage";
@@ -41,11 +41,20 @@ export const MessageComponent = memo(
     const currentMessageContentRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
-      const elemHeight =
-        currentMessageWrapperRef.current?.getBoundingClientRect()?.height;
-      if (!elemHeight) return;
+      const resizeHandler = () => {
+        const elemHeight =
+          currentMessageWrapperRef.current?.getBoundingClientRect()?.height;
+        if (!elemHeight) return;
 
-      virtualizer.resizeItem(idx, elemHeight);
+        virtualizer.resizeItem(idx, elemHeight);
+      };
+
+      resizeHandler();
+      window.addEventListener("resize", resizeHandler);
+
+      return () => {
+        window.removeEventListener("resize", resizeHandler);
+      };
     }, [idx, virtualizer, isEditing]);
 
     if (!message) return null;
@@ -105,30 +114,40 @@ export const MessageComponent = memo(
         {canEditMessage(message.createdAt, isOwnMessage, message.type) && (
           <button
             onClick={() => setIsEditing((prev) => !prev)}
-            className="hidden group-hover:flex"
+            className="absolute hidden group-hover:flex bottom-3 right-11 z-50"
           >
-            <EditIcon />
+            <EditIcon width="15px" height="15px" />
           </button>
         )}
         <div
           className={`${
             isOwnMessage ? "bg-green-600/60" : "bg-black/60"
-          } relative flex flex-row py-2 px-4 max-w-xs md:max-w-md lg:max-w-lg rounded-xl overflow-hidden`}
+          } relative flex flex-row py-2 px-3 max-w-full md:max-w-md lg:max-w-3xl rounded-xl overflow-hidden`}
         >
-          <div ref={currentMessageContentRef} className="flex flex-col w-full">
+          <div
+            ref={currentMessageContentRef}
+            className="flex flex-col w-full overflow-hidden"
+          >
             {!isEditing ? (
               displayMessageByType(message)
             ) : (
               <form
                 ref={formRef}
                 onSubmit={handleSubmit}
-                className="md:min-w-[30rem] py-1 pr-3 flex gap-1 sm:gap-2 text-white"
+                className="w-screen max-w-full min-w-fit py-1 pr-0.5 flex gap-0.5 sm:gap-2 text-white"
               >
                 <CustomChatInput
                   message={updatedMessage}
                   setMessage={setUpdatedMessage}
                   handleKeyDown={handleKeyDown}
+                  emojiClassName="w-[20px] h-[20px] sm:w-[20px] sm:h-[20px]"
                 />
+                <button type="submit">
+                  <SendIcon
+                    className="w-[20px] h-[20px] sm:w-[20px] sm:h-[20px]"
+                    title="Confirm Edit"
+                  />
+                </button>
               </form>
             )}
             <div className="flex gap-1 items-center self-end">
@@ -141,7 +160,7 @@ export const MessageComponent = memo(
               {message.read && isOwnMessage && <CheckIcon />}
             </div>
           </div>
-          {isOwnMessage && idx !== 0 && (
+          {isOwnMessage && idx !== 0 && !isEditing && (
             <div className="w-[50px] h-[40px] absolute justify-end py-2 px-2.5 -right-1 -top-1 hidden group-hover:flex bg-message-gradient pointer-events-none">
               <DeleteButton
                 className="group h-fit pointer-events-auto"
@@ -194,7 +213,7 @@ const renderImage = (message: Message) => (
 const renderVideo = (content: string) => <VideoComponent src={content} />;
 
 const renderEmbedVideo = (content: string) => (
-  <div className="w-full h-full rounded overflow-clip mr-2 my-2">
+  <div className="w-full h-full rounded overflow-clip my-2">
     <ReactPlayer
       url={content}
       controls

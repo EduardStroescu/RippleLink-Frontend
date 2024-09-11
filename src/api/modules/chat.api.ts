@@ -12,6 +12,7 @@ const chatEndpoints = {
   getMessagesByChatId: "messages/:chatId",
   getInterlocutorStatus: "status/:userId",
   createChat: "chats",
+  updateChat: "chats/:chatId",
   deleteChat: "chats/:chatId",
 };
 
@@ -60,6 +61,16 @@ const chatApi = {
   getSharedFilesByChatId: async (chatId: string): Promise<Message[] | []> => {
     return await privateClient.get(
       chatEndpoints.getSharedFilesByChatId.replace(":chatId", chatId)
+    );
+  },
+
+  updateChat: async (
+    chatId: string,
+    chatData: { name?: string }
+  ): Promise<Chat> => {
+    return await privateClient.patch(
+      chatEndpoints.updateChat.replace(":chatId", chatId),
+      chatData
     );
   },
 
