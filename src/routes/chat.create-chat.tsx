@@ -1,14 +1,11 @@
-import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { FormEvent, useEffect, useState } from "react";
+import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import chatApi from "@/api/modules/chat.api";
 import userApi from "@/api/modules/user.api";
 import { checkIfChatExists } from "@/lib/utils";
 import { groupAvatar } from "@/lib/const";
-
-import { Chat } from "@/types/chat";
-import { Message } from "@/types/message";
-import { User } from "@/types/user";
+import { Chat, Message, User } from "@/types";
 
 import { useToast } from "@/components/ui";
 import { CreateMessageForm, ChatHeaderDetails } from "@/components";

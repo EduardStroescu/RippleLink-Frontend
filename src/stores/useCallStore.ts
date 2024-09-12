@@ -10,6 +10,11 @@ export const useCallStore = create<CallStore>((set) => ({
   joiningCall: null,
   isUserSharingVideo: false,
   isUserMicrophoneMuted: false,
+  selectedDevices: {
+    audioInput: undefined,
+    audioOutput: undefined,
+    videoInput: undefined,
+  },
 
   actions: {
     addStream: (participantId, stream) =>
@@ -39,9 +44,11 @@ export const useCallStore = create<CallStore>((set) => ({
         return { streams: newStreams };
       }),
     addConnection: (participantId, peer) =>
-      set((state) => ({
-        connections: { ...state.connections, [participantId]: peer },
-      })),
+      set((state) => {
+        const updatedConnections = { ...state.connections };
+        updatedConnections[participantId] = peer;
+        return { connections: updatedConnections };
+      }),
     removeConnection: (id) =>
       set((state) => {
         const newConnections = { ...state.connections };
@@ -100,6 +107,10 @@ export const useCallStore = create<CallStore>((set) => ({
     setIsUserMicrophoneMuted: (newState) =>
       set(() => ({ isUserMicrophoneMuted: newState })),
     setJoiningCall: (chatId) => set(() => ({ joiningCall: chatId })),
+    setSelectedDevices: (updatedDevices) =>
+      set((state) => ({
+        selectedDevices: { ...state.selectedDevices, ...updatedDevices },
+      })),
   },
 }));
 

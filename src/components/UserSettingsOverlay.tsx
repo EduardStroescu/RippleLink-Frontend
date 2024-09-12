@@ -1,17 +1,21 @@
 import React from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/Popover";
+import { useRouter } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUserStoreActions } from "@/stores/useUserStore";
-import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
-import { useRouter } from "@tanstack/react-router";
-import { useToast } from "./ui/use-toast";
 import userApi from "@/api/modules/user.api";
-import { User } from "@/types/user";
+import { useLocalStorage } from "@/lib/hooks";
+import {
+  useToast,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui";
 import {
   CustomDialogTrigger,
   ChangeAvatarForm,
   ChangeStatusForm,
 } from "@/components";
+import { User } from "@/types/user";
 
 interface UserSettingsOverlayProps {
   children: React.ReactNode;

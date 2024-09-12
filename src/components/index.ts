@@ -24,7 +24,6 @@ export { LoginForm } from "./LoginForm";
 export { MediaPreviewDialog } from "./MediaPreviewDialog";
 export { MessageComponent } from "./MessageComponent";
 export { MessagesLoadingIndicator } from "./MessagesLoadingIndicator";
-export { Popover } from "./Popover";
 export { RegisterForm } from "./RegisterForm";
 export { SearchForm } from "./SearchForm";
 export { SearchUsersForm } from "./SearchUsersForm";

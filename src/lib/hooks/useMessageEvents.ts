@@ -1,28 +1,19 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useSocketContext } from "@/providers/SocketProvider";
 import { create } from "mutative";
 import { useParams } from "@tanstack/react-router";
 import { useUserStore } from "@/stores/useUserStore";
-import { Message } from "@/types/message";
 import { useSocketSubscription, useSetMessagesCache } from "@/lib/hooks";
-import { User } from "@/types/user";
+import { Message } from "@/types";
 
-export function useMessageEvents(interlocutors: User[] | undefined) {
+export function useMessageEvents() {
   const { socket } = useSocketContext();
   const params = useParams({ from: "/chat/$chatId" });
   const user = useUserStore((state) => state.user);
-  const interlocutor = interlocutors?.[0];
-
-  const [isInterlocutorOnline, setIsInterlocutorOnline] =
-    useState<boolean>(false);
-  const [interlocutorIsTyping, setInterlocutorIsTyping] =
-    useState<boolean>(false);
 
   const setMessagesCache = useSetMessagesCache(params.chatId);
 
   useEffect(() => {
-    // State doesn't reset as Tanstack Router reuses components nested under the same route - see dynamic routes
-    setInterlocutorIsTyping(false);
     if (!socket) return;
     socket.emit("joinRoom", { room: params.chatId });
     return () => {
@@ -53,7 +44,7 @@ export function useMessageEvents(interlocutors: User[] | undefined) {
 
   useSocketSubscription(
     "messageCreated",
-    ({ content }: { content: Message }) => {
+    ({ content }: { content: Message & { tempId?: string } }) => {
       setMessagesCache((prevData) => {
         if (!prevData) {
           return {
@@ -65,7 +56,17 @@ export function useMessageEvents(interlocutors: User[] | undefined) {
         return create(prevData, (draft) => {
           // Add new message to the end of the latest page's messages
           if (draft.pages.length > 0) {
-            draft.pages[0].messages.push(content);
+            if (content.tempId) {
+              // If a temporary message matches the message, replace the temporary message
+              const index = draft.pages[0].messages.findIndex(
+                (item) => item._id === content.tempId
+              );
+              if (index !== -1) {
+                draft.pages[0].messages[index] = content;
+              }
+            } else {
+              draft.pages[0].messages.push(content);
+            }
           } else {
             // No pages exist, initialize with the new message
             draft.pages.push({ messages: [content], nextCursor: null });
@@ -120,44 +121,4 @@ export function useMessageEvents(interlocutors: User[] | undefined) {
       });
     }
   );
-
-  const handleInterlocutorTyping = useCallback(
-    ({
-      content,
-    }: {
-      content: {
-        user: { _id: User["_id"]; displayName: string };
-        isTyping: boolean;
-      };
-    }) => {
-      const isTypingUserInCurrentChat = interlocutors?.some(
-        (person) => person._id === content.user._id
-      );
-      if (isTypingUserInCurrentChat) {
-        setInterlocutorIsTyping(content.isTyping);
-      }
-    },
-    [interlocutors]
-  );
-  useSocketSubscription("interlocutorIsTyping", handleInterlocutorTyping);
-
-  useEffect(() => {
-    setIsInterlocutorOnline(interlocutor?.status?.online || false);
-  }, [interlocutor?.status?.online, params.chatId]);
-
-  const handleInterlocutorOnlineStatus = useCallback(
-    ({ content }: { content: { _id: User["_id"]; isOnline: boolean } }) => {
-      if (interlocutor?._id === content._id) {
-        setIsInterlocutorOnline(content.isOnline);
-      }
-    },
-    [interlocutor?._id]
-  );
-  useSocketSubscription("broadcastUserStatus", handleInterlocutorOnlineStatus);
-
-  return {
-    interlocutorIsTyping,
-    isInterlocutorOnline,
-    setIsInterlocutorOnline,
-  };
 }

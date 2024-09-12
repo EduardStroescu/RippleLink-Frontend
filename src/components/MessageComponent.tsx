@@ -1,23 +1,20 @@
-import { Message } from "@/types/message";
-import { CheckIcon, EditIcon, SendIcon } from "./Icons";
-import { DeleteButton } from "./ui/DeleteButton";
-import { adaptTimezone } from "@/lib/utils";
-import { FullscreenImage } from "./ui/FullscreenImage";
-import { VideoComponent } from "./ui/VideoComponent";
-import { AudioComponent } from "./ui/AudioComponent";
-import { FileComponent } from "./ui/FileComponent";
-import { memo, useEffect, useRef, useState } from "react";
-import { CustomChatInput } from "./ui/CustomChatInput";
-import { useSocketContext } from "@/providers/SocketProvider";
+import { memo, useRef, useState } from "react";
 import { useParams } from "@tanstack/react-router";
-import { isImageUrl, isVidUrlPattern } from "@/lib/utils";
-import ReactPlayer from "react-player";
-import { useUserStore } from "@/stores/useUserStore";
 import { VirtualItem, Virtualizer } from "@tanstack/react-virtual";
+import { useSocketContext } from "@/providers/SocketProvider";
+import { useUserStore } from "@/stores/useUserStore";
+
+import { CheckIcon, EditIcon } from "./Icons";
+import { DeleteButton } from "./ui/DeleteButton";
+import { adaptTimezone, canEditMessage } from "@/lib/utils";
+import { useResizeVirtualItem } from "@/lib/hooks/useResizeVirtualItem";
+import { MessageEditor } from "./MessageEditor";
+import { MessageContent } from "./MessageContent";
+import { Message } from "@/types/message";
 
 interface MessageComponentProps {
   message: Message | undefined;
-  handleDelete: (messageId: string) => void;
+  handleDelete: (messageId?: string) => void;
   idx: number;
   virtualItem: VirtualItem;
   virtualizer: Virtualizer<HTMLDivElement, Element>;
@@ -31,38 +28,22 @@ export const MessageComponent = memo(
     virtualItem,
     virtualizer,
   }: MessageComponentProps) => {
+    const { chatId } = useParams({ from: "/chat/$chatId" });
     const { socket } = useSocketContext();
+
+    const user = useUserStore((state) => state.user);
     const [isEditing, setIsEditing] = useState(false);
     const [updatedMessage, setUpdatedMessage] = useState(message?.content);
+
     const formRef = useRef<HTMLFormElement>(null);
-    const { chatId } = useParams({ from: "/chat/$chatId" });
-    const user = useUserStore((state) => state.user);
-    const currentMessageWrapperRef = useRef<HTMLDivElement | null>(null);
-    const currentMessageContentRef = useRef<HTMLDivElement | null>(null);
 
-    useEffect(() => {
-      const resizeHandler = () => {
-        const elemHeight =
-          currentMessageWrapperRef.current?.getBoundingClientRect()?.height;
-        if (!elemHeight) return;
+    const { resizerRef } = useResizeVirtualItem(idx, virtualizer, isEditing);
 
-        virtualizer.resizeItem(idx, elemHeight);
-      };
-
-      resizeHandler();
-      window.addEventListener("resize", resizeHandler);
-
-      return () => {
-        window.removeEventListener("resize", resizeHandler);
-      };
-    }, [idx, virtualizer, isEditing]);
-
-    if (!message) return null;
-    const isOwnMessage = message.senderId._id === user?._id;
+    const isOwnMessage = message?.senderId?._id === user?._id;
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      if (socket) {
+      if (socket && message) {
         setIsEditing(false);
         socket.emit("updateMessage", {
           room: chatId,
@@ -78,28 +59,9 @@ export const MessageComponent = memo(
       }
     };
 
-    const canEditMessage = (
-      createdAt: string | undefined,
-      isOwnMessage: boolean,
-      messageType: string
-    ): boolean => {
-      if (!createdAt) return false;
-
-      const messageCreatedAt = new Date(createdAt).getTime();
-      const now = Date.now();
-
-      // Calculate the difference in milliseconds and convert it to minutes
-      const timeDifferenceInMinutes = (now - messageCreatedAt) / (1000 * 60);
-
-      // Return true if the message is still within the allowed edit interval
-      return (
-        timeDifferenceInMinutes <= 15 && isOwnMessage && messageType === "text"
-      );
-    };
-
     return (
       <div
-        ref={currentMessageWrapperRef}
+        ref={resizerRef}
         style={{
           position: "absolute",
           top: 0,
@@ -111,60 +73,45 @@ export const MessageComponent = memo(
           isOwnMessage ? "justify-end" : "justify-start"
         } group flex flex-row gap-2 items-center max-w-full py-1`}
       >
-        {canEditMessage(message.createdAt, isOwnMessage, message.type) && (
-          <button
-            onClick={() => setIsEditing((prev) => !prev)}
-            className="absolute hidden group-hover:flex bottom-3 right-11 z-50"
-          >
-            <EditIcon width="15px" height="15px" />
-          </button>
-        )}
         <div
           className={`${
             isOwnMessage ? "bg-green-600/60" : "bg-black/60"
-          } relative flex flex-row py-2 px-3 max-w-full md:max-w-md lg:max-w-3xl rounded-xl overflow-hidden`}
+          } relative flex flex-row py-2 px-3 max-w-full md:max-w-md lg:max-w-xl rounded-xl overflow-hidden`}
         >
-          <div
-            ref={currentMessageContentRef}
-            className="flex flex-col w-full overflow-hidden"
-          >
+          <div className="flex flex-col w-full overflow-hidden">
             {!isEditing ? (
-              displayMessageByType(message)
+              <MessageContent message={message} />
             ) : (
-              <form
+              <MessageEditor
                 ref={formRef}
-                onSubmit={handleSubmit}
-                className="w-screen max-w-full min-w-fit py-1 pr-0.5 flex gap-0.5 sm:gap-2 text-white"
-              >
-                <CustomChatInput
-                  message={updatedMessage}
-                  setMessage={setUpdatedMessage}
-                  handleKeyDown={handleKeyDown}
-                  emojiClassName="w-[20px] h-[20px] sm:w-[20px] sm:h-[20px]"
-                />
-                <button type="submit">
-                  <SendIcon
-                    className="w-[20px] h-[20px] sm:w-[20px] sm:h-[20px]"
-                    title="Confirm Edit"
-                  />
-                </button>
-              </form>
+                handleSubmit={handleSubmit}
+                setUpdatedMessage={setUpdatedMessage}
+                updatedMessage={updatedMessage}
+                handleKeyDown={handleKeyDown}
+              />
             )}
             <div className="flex gap-1 items-center self-end">
               {!isOwnMessage && (
-                <p className="text-xs">{message.senderId.displayName}</p>
+                <p className="text-xs">{message?.senderId.displayName}</p>
               )}
+              {canEditMessage(
+                isOwnMessage,
+                message?.createdAt,
+                message?.type
+              ) && <EditButton onClick={() => setIsEditing((prev) => !prev)} />}
               <p className="text-xs">
-                {adaptTimezone(message.createdAt, "ro-RO")?.slice(0, 6)}
+                {adaptTimezone(message?.createdAt, "ro-RO")?.slice(0, 6)}
               </p>
-              {message.read && isOwnMessage && <CheckIcon />}
+              {message?.read && isOwnMessage && (
+                <CheckIcon width="10px" height="10px" />
+              )}
             </div>
           </div>
           {isOwnMessage && idx !== 0 && !isEditing && (
-            <div className="w-[50px] h-[40px] absolute justify-end py-2 px-2.5 -right-1 -top-1 hidden group-hover:flex bg-message-gradient pointer-events-none">
+            <div className="w-[40px] h-[35px] absolute justify-end py-1.5 px-2 -right-1 -top-1 hidden group-hover:flex bg-message-gradient pointer-events-none">
               <DeleteButton
                 className="group h-fit pointer-events-auto"
-                onClick={() => handleDelete(message._id)}
+                onClick={() => handleDelete(message?._id)}
               />
             </div>
           )}
@@ -174,62 +121,10 @@ export const MessageComponent = memo(
   }
 );
 
-const displayMessageByType = (message: Message) => {
-  switch (message.type) {
-    case "text": {
-      if (isImageUrl(message.content)) {
-        return renderImage(message);
-      } else if (isVidUrlPattern(message.content)) {
-        return renderEmbedVideo(message.content);
-      } else {
-        return renderText(message.content);
-      }
-    }
-    case "image":
-      return renderImage(message);
-    case "file":
-      return renderFile(message.content);
-    case "video":
-      return renderVideo(message.content);
-    case "audio":
-      return renderAudio(message.content);
-    default:
-      return renderText(message.content);
-  }
+const EditButton = ({ onClick }: { onClick: () => void }) => {
+  return (
+    <button onClick={onClick} className="opacity-0 group-hover:opacity-100">
+      <EditIcon width="13px" height="13px" />
+    </button>
+  );
 };
-
-const renderText = (content: string) => (
-  <p className="break-words whitespace-normal">{content}</p>
-);
-
-const renderImage = (message: Message) => (
-  <FullscreenImage
-    src={message.content}
-    alt={`Image sent by ${message.senderId.displayName}`}
-    width={400}
-  />
-);
-
-const renderVideo = (content: string) => <VideoComponent src={content} />;
-
-const renderEmbedVideo = (content: string) => (
-  <div className="w-full h-full rounded overflow-clip my-2">
-    <ReactPlayer
-      url={content}
-      controls
-      light={content.includes("youtube") || content.includes("soundcloud")}
-      pip
-      stopOnUnmount
-      style={{
-        maxWidth: "100%",
-        maxHeight: "100%",
-      }}
-    />
-  </div>
-);
-
-const renderAudio = (content: string) => <AudioComponent src={content} />;
-
-const renderFile = (content: string) => (
-  <FileComponent href={content} download fileName={content} />
-);

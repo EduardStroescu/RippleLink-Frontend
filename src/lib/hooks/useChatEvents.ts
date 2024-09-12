@@ -1,7 +1,7 @@
 import { useSocketContext } from "@/providers/SocketProvider";
 import { useUserStore } from "@/stores/useUserStore";
-import { Chat } from "@/types/chat";
 import { useEffect, useState } from "react";
+import { Chat } from "@/types";
 
 import {
   useNotificationSound,

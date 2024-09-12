@@ -5,6 +5,9 @@ export { useSetChatsCache } from "./useSetChatsCache";
 export { useChatEvents } from "./useChatEvents";
 export { useChatsFilters } from "./useChatsFilters";
 export { useCurrentChatDetails } from "./useCurrentChatDetails";
+export { useChatName } from "./useChatName";
+export { useIsInterlocutorOnline } from "./useIsInterlocutorOnline";
+export { useIsInterlocutorTyping } from "./useIsInterlocutorTyping";
 
 export { useVirtualizer } from "./useVirtualizer";
 export { useIsAtBottom } from "./useIsAtBottom";
@@ -24,3 +27,4 @@ export { useSocketSubscription } from "./useSocketSubscription";
 export { useLocalStorage } from "./useLocalStorage";
 export { useDebounce } from "./useDebounce";
 export { useThrottle } from "./useThrottle";
+export { useResizeVirtualItem } from "./useResizeVirtualItem";

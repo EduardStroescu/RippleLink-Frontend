@@ -1,8 +1,5 @@
-import { Chat } from "@/types/chat";
 import privateClient from "../privateClient";
-import { Message } from "@/types/message";
-import { Call } from "@/types/call";
-import { Status } from "@/types/status";
+import { Chat, Message, Call, Status } from "@/types";
 
 const chatEndpoints = {
   getAllChats: "chats/all",

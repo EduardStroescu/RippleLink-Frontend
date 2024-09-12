@@ -1,8 +1,6 @@
-import { User } from "@/types/user";
 import privateClient from "../privateClient";
 import publicClient from "../publicClient";
-import { Settings } from "@/types/settings";
-import { Status } from "@/types/status";
+import { Settings, User, Status } from "@/types";
 
 const userEndpoints = {
   login: "auth/login",

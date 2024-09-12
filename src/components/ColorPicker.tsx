@@ -1,6 +1,6 @@
 import React from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/Popover";
 import { RgbaColor, RgbaColorPicker } from "react-colorful";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui";
 
 interface ColorPickerProps {
   children: React.ReactNode;

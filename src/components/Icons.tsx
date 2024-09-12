@@ -64,11 +64,17 @@ export function ArrowSvg() {
   );
 }
 
-export function SettingsIcon() {
+export function SettingsIcon({
+  width = 25,
+  height = 25,
+}: {
+  width?: number;
+  height?: number;
+}) {
   return (
     <svg
-      width="25px"
-      height="25px"
+      width={width}
+      height={height}
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -176,8 +182,8 @@ export function CloseIcon({
 export function TrashIcon() {
   return (
     <svg
-      width="18px"
-      height="18px"
+      width="15px"
+      height="15px"
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -237,7 +243,7 @@ export function CheckIcon({
       id="Capa_1"
       xmlns="http://www.w3.org/2000/svg"
       xmlnsXlink="http://www.w3.org/1999/xlink"
-      viewBox="0 -15 512 512"
+      viewBox="0 0 512 512"
       xmlSpace="preserve"
     >
       {title && <title>{title}</title>}
@@ -835,6 +841,50 @@ export function PopUpIcon() {
     >
       <title>Display Video as Pop Up</title>
       <path d="M15.694 13.541l2.666 2.665 5.016-5.017 2.59 2.59 0.004-7.734-7.785-0.046 2.526 2.525-5.017 5.017zM25.926 16.945l-1.92-1.947 0.035 9.007-16.015 0.009 0.016-15.973 8.958-0.040-2-2h-7c-1.104 0-2 0.896-2 2v16c0 1.104 0.896 2 2 2h16c1.104 0 2-0.896 2-2l-0.074-7.056z"></path>
+    </svg>
+  );
+}
+
+export function CameraOrientationSwitchIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="25px"
+      height="25px"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      stroke="#d2d0d0"
+      className="group-hover:stroke-[#e6e7e8] group-hover:scale-110 transition-all ease-in-out"
+    >
+      <title>Switch Camera Orientation</title>
+      <path d="M11 19H4a2 2 0 01-2-2V7a2 2 0 012-2h5" />
+      <path d="M13 5h7a2 2 0 012 2v10a2 2 0 01-2 2h-5" />
+      <circle cx="12" cy="12" r="3" />
+      <path d="M18 22l-3-3 3-3" />
+      <path d="M6 2l3 3-3 3" />
+    </svg>
+  );
+}
+
+export function VolumeIcon() {
+  return (
+    <svg
+      width="25px"
+      height="25px"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="group-hover:scale-110 transition-all ease-in-out"
+    >
+      <title>Adjust Volume</title>
+      <path
+        d="M5.00304 11.7155C5.04093 9.87326 5.05988 8.95215 5.68099 8.16363C5.79436 8.0197 5.9607 7.8487 6.10011 7.73274C6.86393 7.09741 7.8724 7.09741 9.88932 7.09741C10.6099 7.09741 10.9702 7.09741 11.3137 7.00452C11.385 6.98522 11.4556 6.96296 11.5253 6.93781C11.8608 6.81674 12.1616 6.60837 12.7632 6.19161C15.137 4.54738 16.3239 3.72527 17.3201 4.08241C17.5111 4.15088 17.6959 4.24972 17.8611 4.37162C18.7222 5.00744 18.7877 6.48675 18.9185 9.44538C18.967 10.5409 19 11.4785 19 12C19 12.5215 18.967 13.4591 18.9185 14.5546C18.7877 17.5132 18.7222 18.9926 17.8611 19.6284C17.6959 19.7503 17.5111 19.8491 17.3201 19.9176C16.3239 20.2747 15.137 19.4526 12.7632 17.8084C12.1616 17.3916 11.8608 17.1833 11.5253 17.0622C11.4556 17.037 11.385 17.0148 11.3137 16.9955C10.9702 16.9026 10.6099 16.9026 9.88932 16.9026C7.8724 16.9026 6.86393 16.9026 6.10011 16.2673C5.9607 16.1513 5.79436 15.9803 5.68099 15.8364C5.05988 15.0478 5.04093 14.1267 5.00304 12.2845C5.00104 12.1878 5 12.0928 5 12C5 11.9072 5.00104 11.8122 5.00304 11.7155Z"
+        fill="#d2d0d0"
+        className="group-hover:fill-[#e6e7e8]"
+      />
     </svg>
   );
 }

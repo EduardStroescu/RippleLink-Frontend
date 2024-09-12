@@ -39,6 +39,11 @@ export interface CallStore {
   isUserSharingVideo: false | "video" | "screen";
   isUserMicrophoneMuted: boolean;
   joiningCall: Call["chatId"]["_id"] | null;
+  selectedDevices: {
+    audioInput?: MediaDeviceInfo;
+    audioOutput?: MediaDeviceInfo;
+    videoInput?: MediaDeviceInfo;
+  };
 
   actions: {
     addStream: (participantId: User["_id"], stream: MediaStream) => void;
@@ -58,5 +63,8 @@ export interface CallStore {
       newState: CallStore["isUserMicrophoneMuted"]
     ) => void;
     setJoiningCall: (chatId: Call["chatId"]["_id"] | null) => void;
+    setSelectedDevices: (
+      devices: Partial<CallStore["selectedDevices"]>
+    ) => void;
   };
 }

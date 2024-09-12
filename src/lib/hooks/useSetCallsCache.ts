@@ -1,6 +1,6 @@
-import { Call } from "@/types/call";
-import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Call } from "@/types";
 
 export function useSetCallsCache() {
   const queryClient = useQueryClient();

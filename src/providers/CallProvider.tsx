@@ -5,26 +5,26 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 import { useCallStore, useCallStoreActions } from "@/stores/useCallStore";
 import Peer, { SignalData } from "simple-peer";
 import { useSocketContext } from "@/providers/SocketProvider";
 import { useShallow } from "zustand/react/shallow";
-import { User } from "@/types/user";
-import { Chat } from "@/types/chat";
 import { useUserStore } from "@/stores/useUserStore";
 import { useToast } from "@/components/ui/use-toast";
-import { Call } from "@/types/call";
+import { User, Chat, Call } from "@/types";
+import { audioConstraints, videoConstraints } from "@/lib/const";
 
 interface CallContextType {
   startCall: (chat: Chat, videoEnabled?: boolean) => Promise<void>;
   answerCall: (callDetails: Call, videoEnabled?: boolean) => Promise<void>;
   endCall: (call: Call) => void;
-  attachStreamToCall: (
-    includeVideo?: boolean
-  ) => Promise<MediaStream | undefined>;
   handleScreenShare: () => Promise<void>;
   handleVideoShare: () => Promise<void>;
+  handleSwitchCameraOrientation: () => Promise<void>;
+  handleSwitchDevice: (device: MediaDeviceInfo) => void;
+  handleAdjustVolume: (volume: number) => void;
 }
 
 interface CallProviderProps {
@@ -47,15 +47,22 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
   const { socket } = useSocketContext();
   const user = useUserStore((state) => state.user);
   const audioTracksRef = useRef({});
-  const { streams, connections, currentCall, isUserMicrophoneMuted } =
-    useCallStore(
-      useShallow((state) => ({
-        streams: state.streams,
-        connections: state.connections,
-        currentCall: state.currentCall,
-        isUserMicrophoneMuted: state.isUserMicrophoneMuted,
-      }))
-    );
+  const [cameraOrientation, setCameraOrientation] = useState(false);
+  const {
+    streams,
+    connections,
+    currentCall,
+    isUserMicrophoneMuted,
+    selectedDevices,
+  } = useCallStore(
+    useShallow((state) => ({
+      streams: state.streams,
+      connections: state.connections,
+      currentCall: state.currentCall,
+      isUserMicrophoneMuted: state.isUserMicrophoneMuted,
+      selectedDevices: state.selectedDevices,
+    }))
+  );
   const {
     addConnection,
     setCurrentCall,
@@ -67,6 +74,7 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
     setIsUserSharingVideo,
     setIsUserMicrophoneMuted,
     setJoiningCall,
+    setSelectedDevices,
   } = useCallStoreActions();
   const userId = user?._id;
   const userStream = useMemo(
@@ -76,25 +84,39 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
   const peerConnections = useMemo(() => connections, [connections]);
 
   const attachStreamToCall = useCallback(
-    async (includeVideo: boolean = false): Promise<MediaStream | undefined> => {
+    async ({
+      videoEnabled = false,
+      audioEnabled = false,
+      videoInputId = selectedDevices?.videoInput?.deviceId,
+      audioInputId = selectedDevices?.audioInput?.deviceId,
+      orientation = cameraOrientation,
+    }: {
+      videoEnabled?: boolean;
+      audioEnabled?: boolean;
+      videoInputId?: MediaDeviceInfo["deviceId"];
+      audioInputId?: MediaDeviceInfo["deviceId"];
+      orientation?: boolean;
+    } = {}): Promise<MediaStream | undefined> => {
       try {
-        const includeVideoContraints = {
-          width: { min: 640, ideal: 1920, max: 3840 },
-          height: { min: 480, ideal: 1080, max: 2160 },
-        };
+        const includeVideoContraints = videoConstraints;
+        const includeAudioConstraints = audioConstraints;
+        if (videoEnabled && videoInputId) {
+          includeVideoContraints.deviceId = { exact: videoInputId };
+        }
+        if (audioEnabled && audioInputId) {
+          includeAudioConstraints.deviceId = { exact: audioInputId };
+        }
+        includeVideoContraints.facingMode = !orientation
+          ? "user"
+          : "environment";
+
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: includeVideo ? includeVideoContraints : false,
-          audio: {
-            autoGainControl: false,
-            channelCount: 2,
-            echoCancellation: false,
-            noiseSuppression: false,
-            sampleRate: 48000,
-            sampleSize: 16,
-          },
+          video: videoEnabled ? includeVideoContraints : false,
+          audio: audioEnabled ? includeAudioConstraints : false,
         });
-        if (isUserMicrophoneMuted) stream.getAudioTracks()[0].enabled = false;
-        if (includeVideo) setIsUserSharingVideo("video");
+        if (audioEnabled && isUserMicrophoneMuted)
+          stream.getAudioTracks()[0].enabled = false;
+        if (videoEnabled) setIsUserSharingVideo("video");
 
         return stream;
       } catch (error) {
@@ -102,6 +124,7 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
           toast({
             variant: "destructive",
             title: "Error accessing camera.",
+            description: (error as { message: string }).message,
           });
         } else {
           toast({
@@ -111,7 +134,14 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
         }
       }
     },
-    [toast, setIsUserSharingVideo, isUserMicrophoneMuted]
+    [
+      cameraOrientation,
+      isUserMicrophoneMuted,
+      selectedDevices?.audioInput?.deviceId,
+      selectedDevices?.videoInput?.deviceId,
+      setIsUserSharingVideo,
+      toast,
+    ]
   );
 
   const sendCallOffers = useCallback(
@@ -154,6 +184,10 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
       });
 
       peer.on("stream", (stream) => {
+        addStream(participant.userId._id, stream);
+      });
+
+      peer.on("track", (_, stream) => {
         addStream(participant.userId._id, stream);
       });
 
@@ -242,6 +276,10 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
       });
 
       peer.on("stream", (stream) => {
+        addStream(participant.userId._id, stream);
+      });
+
+      peer.on("track", (_, stream) => {
         addStream(participant.userId._id, stream);
       });
 
@@ -346,7 +384,10 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
     async (chat: Chat, videoEnabled?: boolean) => {
       if (!chat || !userId) return;
 
-      const currUserStream = await attachStreamToCall(videoEnabled);
+      const currUserStream = await attachStreamToCall({
+        videoEnabled,
+        audioEnabled: true,
+      });
       if (!currUserStream) return;
       addStream(userId, currUserStream);
 
@@ -368,7 +409,10 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
     async (callDetails: Call, videoEnabled?: boolean) => {
       if (!callDetails || !userId) return;
 
-      const currUserStream = await attachStreamToCall(videoEnabled);
+      const currUserStream = await attachStreamToCall({
+        videoEnabled,
+        audioEnabled: true,
+      });
       if (!currUserStream) return;
       addStream(userId, currUserStream);
       setJoiningCall(callDetails.chatId._id);
@@ -389,8 +433,8 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
       userId,
       attachStreamToCall,
       addStream,
-      socket,
       setJoiningCall,
+      socket,
       setCurrentCall,
     ]
   );
@@ -440,61 +484,41 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
           },
           audio: false,
         });
-        const newAudioStream = await attachStreamToCall();
-        if (!newStream) return;
-        userStream?.getTracks().forEach((track) => {
-          track.stop();
-          userStream.removeTrack(track);
-        });
 
-        if (newAudioStream) {
-          newStream.addTrack(newAudioStream.getAudioTracks()[0]);
-        }
+        const oldStream = userStream;
+        if (!newStream || !oldStream) return;
 
-        // Remove existing streams and tracks
+        oldStream.addTrack(newStream.getVideoTracks()[0]);
+
+        // Add the new video track to the peer
         Object.values(peerConnections).forEach((peer) => {
-          const oldStream = peer.streams[0];
-          if (oldStream) {
-            // Remove old video tracks from the peer
-            oldStream.getTracks().forEach((track) => {
-              peer.removeTrack(track, oldStream);
-              track.stop();
-            });
-            peer.removeStream(oldStream);
-          }
+          peer.addTrack(oldStream.getVideoTracks()[0], oldStream);
         });
 
-        // Add the new screen share stream to all peer connections
-        Object.values(peerConnections).forEach((peer) => {
-          peer.addStream(newStream);
-        });
-
+        newStream.removeTrack(newStream.getVideoTracks()[0]);
         // Update local stream and state
-        addStream(userId, newStream);
+        addStream(userId, oldStream);
         setIsUserSharingVideo("screen");
       } else {
-        // Stop current video stream and create a new one
-        const newStream = await attachStreamToCall();
-        if (!newStream) return;
+        // Stop current video stream and create a new audio-only one
+        const newStream = await attachStreamToCall({
+          audioEnabled: true,
+        });
+        const oldStream = userStream;
+        if (!newStream || !oldStream) return;
 
-        // Remove existing streams and tracks
+        // Remove existing streams
         Object.values(peerConnections).forEach((peer) => {
-          const oldStream = peer.streams[0];
-          if (oldStream) {
-            // Remove old video tracks from the peer
-            oldStream.getTracks().forEach((track) => {
-              peer.removeTrack(track, oldStream);
-            });
-            peer.removeStream(oldStream);
-          }
+          peer.removeStream(oldStream);
+
           // Add new stream
           peer.addStream(newStream);
         });
 
         // Stop video tracks from the current stream
-        userStream?.getTracks().forEach((track) => {
+        oldStream?.getTracks().forEach((track) => {
           track.stop();
-          userStream.removeTrack(track);
+          oldStream.removeTrack(track);
         });
 
         // Update local stream and state
@@ -507,72 +531,56 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
       }
     }
   }, [
-    addStream,
-    attachStreamToCall,
-    peerConnections,
-    userStream,
-    toast,
     userId,
+    userStream,
+    peerConnections,
+    addStream,
     setIsUserSharingVideo,
+    attachStreamToCall,
+    toast,
   ]);
 
   const handleVideoShare = useCallback(async () => {
     try {
       if (!userId) return;
-
       if (userStream?.getVideoTracks().length === 0) {
         // Start video sharing
-        const newStream = await attachStreamToCall(true);
-        if (!newStream) return;
-        userStream.getTracks().forEach((track) => {
-          track.stop();
-          userStream.removeTrack(track);
+        const newStream = await attachStreamToCall({
+          videoEnabled: true,
         });
+        const oldStream = userStream;
+        if (!newStream || !oldStream) return;
 
-        // Remove existing streams and tracks
+        // Add the new video track to the peer
         Object.values(peerConnections).forEach((peer) => {
-          const oldStream = peer.streams[0];
-          if (oldStream) {
-            // Remove old video tracks from the peer
-            oldStream.getTracks().forEach((track) => {
-              peer.removeTrack(track, oldStream);
-              track.stop();
-            });
-            peer.removeStream(oldStream);
-          }
+          peer.addTrack(newStream.getVideoTracks()[0], oldStream);
         });
 
-        // Add the new screen share stream to all peer connections
-        Object.values(peerConnections).forEach((peer) => {
-          peer.addStream(newStream);
-        });
-
+        oldStream.addTrack(newStream.getVideoTracks()[0]);
+        newStream.removeTrack(newStream.getVideoTracks()[0]);
         // Update local stream and state
-        addStream(userId, newStream);
+        addStream(userId, oldStream);
         setIsUserSharingVideo("video");
       } else {
-        // Stop current video stream and create a new one
-        const newStream = await attachStreamToCall();
-        if (!newStream) return;
+        // Stop current video stream and create a new audio-only one
+        const newStream = await attachStreamToCall({
+          audioEnabled: true,
+        });
+        const oldStream = userStream;
+        if (!newStream || !oldStream) return;
 
-        // Remove existing streams and tracks
+        // Remove existing streams
         Object.values(peerConnections).forEach((peer) => {
-          const oldStream = peer.streams[0];
-          if (oldStream) {
-            // Remove old video tracks from the peer
-            oldStream.getTracks().forEach((track) => {
-              peer.removeTrack(track, oldStream);
-            });
-            peer.removeStream(oldStream);
-          }
+          peer.removeStream(oldStream);
+
           // Add new stream
           peer.addStream(newStream);
         });
 
         // Stop video tracks from the current stream
-        userStream?.getTracks().forEach((track) => {
+        oldStream?.getTracks().forEach((track) => {
           track.stop();
-          userStream?.removeTrack(track);
+          oldStream?.removeTrack(track);
         });
 
         // Update local stream and state
@@ -585,14 +593,156 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
       }
     }
   }, [
-    addStream,
+    userId,
+    userStream,
     attachStreamToCall,
     peerConnections,
+    addStream,
     setIsUserSharingVideo,
-    userStream,
     toast,
-    userId,
   ]);
+
+  const handleSwitchCameraOrientation = useCallback(async () => {
+    setCameraOrientation((prev) => !prev);
+
+    const oldStream = userStream;
+    // Stop existing video tracks before switching
+    userStream?.getVideoTracks().forEach((track) => track.stop());
+
+    const newStream = await attachStreamToCall({
+      videoEnabled: true,
+      orientation: !cameraOrientation,
+    });
+
+    if (!newStream || !oldStream || !userId) return;
+
+    // Replace video track in the peer connection
+    Object.values(peerConnections).forEach((peer) => {
+      peer.replaceTrack(
+        oldStream.getVideoTracks()[0],
+        newStream.getVideoTracks()[0],
+        oldStream
+      );
+    });
+
+    // Add new track to the local stream
+    userStream.getTracks().forEach((track) => oldStream.removeTrack(track));
+    oldStream.getVideoTracks().forEach((track) => oldStream.removeTrack(track));
+    oldStream.addTrack(newStream.getVideoTracks()[0]);
+
+    addStream(userId, oldStream);
+  }, [
+    addStream,
+    attachStreamToCall,
+    cameraOrientation,
+    peerConnections,
+    userId,
+    userStream,
+  ]);
+
+  const handleSwitchDevice = useCallback(
+    async (device: MediaDeviceInfo) => {
+      if (device.kind === "audioinput") {
+        setSelectedDevices({
+          audioInput: device,
+        });
+        const newStream = await attachStreamToCall({
+          audioEnabled: true,
+        });
+        const peerStream = userStream;
+        if (!newStream || !peerStream) return;
+        Object.values(peerConnections).forEach((peer) => {
+          const oldAudioTrack = peerStream.getAudioTracks()[0];
+          if (oldAudioTrack) {
+            peer.replaceTrack(
+              oldAudioTrack,
+              newStream.getAudioTracks()[0],
+              peerStream
+            );
+          }
+        });
+        const currAudioTrack = userStream?.getAudioTracks()[0];
+        if (currAudioTrack && userId) {
+          userStream.removeTrack(currAudioTrack);
+          userStream.addTrack(newStream.getAudioTracks()[0]);
+          addStream(userId, userStream);
+        }
+      } else if (device.kind === "videoinput") {
+        setSelectedDevices({
+          videoInput: device,
+        });
+        if (userStream?.getVideoTracks().length === 0) {
+          const newStream = await attachStreamToCall({
+            videoEnabled: true,
+          });
+          const peerStream = userStream;
+          if (!newStream || !peerStream) return;
+          Object.values(peerConnections).forEach((peer) => {
+            if (!peerStream) return;
+            const oldVideoTrack = peerStream.getVideoTracks()[0];
+            if (oldVideoTrack) {
+              peer.replaceTrack(
+                oldVideoTrack,
+                newStream.getVideoTracks()[0],
+                peerStream
+              );
+            }
+          });
+          const currVideoTrack = userStream?.getVideoTracks()[0];
+          if (currVideoTrack && userId) {
+            userStream.removeTrack(currVideoTrack);
+            userStream.addTrack(newStream.getVideoTracks()[0]);
+            addStream(userId, userStream);
+          }
+        }
+      } else if (device.kind === "audiooutput") {
+        setSelectedDevices({
+          audioOutput: device,
+        });
+
+        const switchOutputDevice = async (deviceId: string) => {
+          // Iterate over audio elements and attempt to set sink ID
+          const audioElements = Object.values(audioTracksRef.current);
+
+          for (const audioElement of audioElements) {
+            if (audioElement instanceof HTMLAudioElement) {
+              try {
+                await audioElement.setSinkId(deviceId);
+              } catch (error) {
+                toast({
+                  variant: "destructive",
+                  title: "Error accessing audio device.",
+                });
+              }
+            } else {
+              toast({
+                variant: "destructive",
+                title: "Could not set audio device. Please try again.",
+              });
+            }
+          }
+        };
+        switchOutputDevice(device.deviceId);
+      }
+    },
+    [
+      addStream,
+      attachStreamToCall,
+      peerConnections,
+      setSelectedDevices,
+      toast,
+      userId,
+      userStream,
+    ]
+  );
+
+  const handleAdjustVolume = useCallback((volume: number) => {
+    Object.values(audioTracksRef.current).forEach((audioElement) => {
+      if (audioElement instanceof HTMLAudioElement) {
+        audioElement.volume = volume;
+      }
+    });
+  }, []);
 
   useEffect(() => {
     if (!currentCall) return;
@@ -669,17 +819,21 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
       startCall,
       answerCall,
       endCall,
-      attachStreamToCall,
       handleScreenShare,
       handleVideoShare,
+      handleSwitchCameraOrientation,
+      handleSwitchDevice,
+      handleAdjustVolume,
     }),
     [
       answerCall,
-      attachStreamToCall,
       endCall,
       handleScreenShare,
       startCall,
       handleVideoShare,
+      handleSwitchCameraOrientation,
+      handleSwitchDevice,
+      handleAdjustVolume,
     ]
   );
 

@@ -1,15 +1,18 @@
-import { memo, useCallback, useRef } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { AvatarCoin } from "./ui/AvatarCoin";
 import { placeholderAvatar } from "@/lib/const";
 import {
   CallIcon,
+  CameraOrientationSwitchIcon,
   MuteMicIcon,
   PopUpIcon,
   RejectCallIcon,
   ScreenShareIcon,
+  SettingsIcon,
   StopVideoIcon,
   UnmuteMicIcon,
   VideoCallIcon,
+  VolumeIcon,
 } from "./Icons";
 import { useUserStore } from "@/stores/useUserStore";
 import { MediaPreviewDialog } from "./MediaPreviewDialog";
@@ -19,6 +22,8 @@ import { useShallow } from "zustand/react/shallow";
 import { Call } from "@/types/call";
 import { VideoComponent, ResizableContainer } from "@/components/ui";
 import { User } from "@/types/user";
+import { MediaDevicesPicker } from "./MediaDevicesPicker";
+import { VolumeSwitcher } from "./VolumeSwitcher";
 
 interface VideoCallProps {
   currentCallDetails: Call | undefined;
@@ -27,8 +32,14 @@ interface VideoCallProps {
 export const CallComponent = memo(({ currentCallDetails }: VideoCallProps) => {
   const user = useUserStore((state) => state.user);
   const { setIsUserMicrophoneMuted, toggleStreamPopUp } = useCallStoreActions();
-  const { answerCall, endCall, handleScreenShare, handleVideoShare } =
-    useCallContext();
+  const {
+    answerCall,
+    endCall,
+    handleScreenShare,
+    handleVideoShare,
+    handleSwitchCameraOrientation,
+    handleSwitchDevice,
+  } = useCallContext();
   const { currentCall, streams, isUserMicrophoneMuted, joiningCall } =
     useCallStore(
       useShallow((state) => ({
@@ -144,7 +155,7 @@ export const CallComponent = memo(({ currentCallDetails }: VideoCallProps) => {
         )}
       </div>
 
-      <div className="flex justify-center items-center gap-2">
+      <div className="relative flex justify-center items-center gap-2">
         {!currentCall && !isUserInOngoingCall && !joiningCall && (
           <>
             <button
@@ -175,9 +186,18 @@ export const CallComponent = memo(({ currentCallDetails }: VideoCallProps) => {
             >
               <RejectCallIcon />
             </button>
-            <AudioButton handleAudio={handleAudioOff} />
-            <ShareVideoButton handleShareVideo={handleVideoShare} />
+            <MicrophoneSwitch handleAudio={handleAudioOff} />
             <ScreenShareButton handleScreenShare={handleScreenShare} />
+            <AudioSlider />
+            <VideoButton handleShareVideo={handleVideoShare} />
+            <SwitchVideoOrientationButton
+              switchCameraOrientation={handleSwitchCameraOrientation}
+            />
+            <MediaDevicesPicker getValue={handleSwitchDevice}>
+              <div className="p-1 max-w-fit h-fit rounded-full bg-blue-950 hover:bg-blue-900">
+                <SettingsIcon width={20} height={20} />
+              </div>
+            </MediaDevicesPicker>
           </>
         )}
       </div>
@@ -258,7 +278,28 @@ const UserBox = memo(
   }
 );
 
-const AudioButton = ({ handleAudio }: { handleAudio: () => void }) => {
+const AudioSlider = () => {
+  const [volume, setVolume] = useState(1);
+  const { handleAdjustVolume } = useCallContext();
+
+  useEffect(() => {
+    handleAdjustVolume(volume);
+  }, [handleAdjustVolume, volume]);
+
+  return (
+    <VolumeSwitcher volume={volume} setVolume={setVolume}>
+      <div
+        className={`
+        ${volume === 0 ? "bg-red-950 hover:bg-red-900" : "bg-green-950 hover:bg-green-900"}
+        group p-2 max-w-fit h-fit rounded-full`}
+      >
+        <VolumeIcon />
+      </div>
+    </VolumeSwitcher>
+  );
+};
+
+const MicrophoneSwitch = ({ handleAudio }: { handleAudio: () => void }) => {
   const isUserMicrophoneMuted = useCallStore(
     (state) => state.isUserMicrophoneMuted
   );
@@ -274,7 +315,7 @@ const AudioButton = ({ handleAudio }: { handleAudio: () => void }) => {
   );
 };
 
-const ShareVideoButton = ({
+const VideoButton = ({
   handleShareVideo,
 }: {
   handleShareVideo: () => void;
@@ -286,11 +327,30 @@ const ShareVideoButton = ({
     return (
       <button
         className={`
-            ${isUserSharingVideo ? "bg-red-950 hover:bg-red-900" : "bg-green-950 hover:bg-green-900"}
-            group p-2 max-w-fit h-fit rounded-full `}
+          ${isUserSharingVideo ? "bg-red-950 hover:bg-red-900" : "bg-green-950 hover:bg-green-900"}
+          group p-2 max-w-fit h-fit rounded-full `}
         onClick={handleShareVideo}
       >
         {isUserSharingVideo ? <StopVideoIcon /> : <VideoCallIcon />}
+      </button>
+    );
+};
+
+const SwitchVideoOrientationButton = ({
+  switchCameraOrientation,
+}: {
+  switchCameraOrientation: () => void;
+}) => {
+  const isUserSharingVideo = useCallStore((state) => state.isUserSharingVideo);
+  if (isUserSharingVideo !== "video") {
+    return null;
+  } else
+    return (
+      <button
+        onClick={switchCameraOrientation}
+        className="group p-2 max-w-fit h-fit rounded-full"
+      >
+        <CameraOrientationSwitchIcon />
       </button>
     );
 };
@@ -301,18 +361,22 @@ const ScreenShareButton = ({
   handleScreenShare: () => void;
 }) => {
   const isUserSharingVideo = useCallStore((state) => state.isUserSharingVideo);
-  return (
-    <button
-      className={`
+
+  if (isUserSharingVideo === "video") {
+    return null;
+  } else
+    return (
+      <button
+        className={`
         ${isUserSharingVideo ? "bg-red-950 hover:bg-red-900" : "bg-blue-950 hover:bg-blue-900"}
         group p-2 max-w-fit h-fit rounded-full`}
-      onClick={handleScreenShare}
-    >
-      {isUserSharingVideo ? (
-        <ScreenShareIcon screenShare={true} />
-      ) : (
-        <ScreenShareIcon screenShare={false} />
-      )}
-    </button>
-  );
+        onClick={handleScreenShare}
+      >
+        {isUserSharingVideo ? (
+          <ScreenShareIcon screenShare={true} />
+        ) : (
+          <ScreenShareIcon screenShare={false} />
+        )}
+      </button>
+    );
 };

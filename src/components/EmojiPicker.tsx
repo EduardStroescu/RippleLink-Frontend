@@ -1,7 +1,6 @@
 import React from "react";
 import Picker, { Theme } from "emoji-picker-react";
-
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/Popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui";
 
 interface EmojiPickerProps {
   children: React.ReactNode;

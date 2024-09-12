@@ -1,16 +1,15 @@
-import { useUserStoreActions } from "../stores/useUserStore";
-import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
+import { useState } from "react";
 import { Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
-import userApi from "@/api/modules/user.api";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { z } from "zod";
-import { RegisterSchema } from "@/lib/formSchemas/auth.schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useUserStoreActions } from "../stores/useUserStore";
+import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
+import userApi from "@/api/modules/user.api";
+import { RegisterSchema } from "@/lib/formSchemas/auth.schemas";
+import { AvatarCoin, useToast } from "@/components/ui";
 import { placeholderAvatar } from "@/lib/const";
-import { useState } from "react";
-import { AvatarCoin } from "@/components/ui/AvatarCoin";
-import { useToast } from "./ui/use-toast";
 import { User } from "@/types/user";
 
 export function RegisterForm() {

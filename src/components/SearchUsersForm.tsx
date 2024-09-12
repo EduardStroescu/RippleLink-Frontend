@@ -1,12 +1,11 @@
 import { Dispatch, useEffect, useMemo, useState } from "react";
-
-import userApi from "@/api/modules/user.api";
 import { useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Input } from "@/components/ui/Input";
-import { AvatarCoin } from "@/components/ui/AvatarCoin";
+
+import userApi from "@/api/modules/user.api";
 import { placeholderAvatar } from "@/lib/const";
 import { User } from "@/types/user";
+import { Input, AvatarCoin } from "@/components/ui";
 import { CheckIcon } from "./Icons";
 
 export const SearchUsersForm = ({

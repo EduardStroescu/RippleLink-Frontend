@@ -8,15 +8,8 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
-
 import chatApi from "@/api/modules/chat.api";
 import { useUserStore } from "@/stores/useUserStore";
-import { Chat } from "@/types/chat";
-import { Message } from "@/types/message";
-import { FilterOption } from "@/types/filterOptions";
-
-import { groupAvatar, placeholderAvatar } from "@/lib/const";
-import { getParsedPath, adaptTimezone, isAuthenticated } from "@/lib/utils";
 
 import { SocketProvider, CallProvider } from "@/providers";
 import { DeleteButton, AvatarCoin, useToast } from "@/components/ui";
@@ -38,6 +31,9 @@ import {
   useSetChatsCache,
   useCallEvents,
 } from "@/lib/hooks";
+import { groupAvatar, placeholderAvatar } from "@/lib/const";
+import { getParsedPath, adaptTimezone, isAuthenticated } from "@/lib/utils";
+import { Chat, Message, FilterOption } from "@/types";
 
 export const Route = createFileRoute("/chat")({
   beforeLoad: async ({ location }) => {
@@ -76,22 +72,120 @@ export const Route = createFileRoute("/chat")({
 });
 
 function ChatWrapper() {
-  const { toast } = useToast();
   const location = useLocation();
-  const router = useRouter();
   const parsedPath = getParsedPath(location.pathname);
   const { chatsQuery, callsQuery } = Route.useLoaderData();
-
-  const user = useUserStore((state) => state.user);
-
-  const filterOptions: FilterOption[] = ["All", "Unread", "Groups"];
-  const setChatsCache = useSetChatsCache();
 
   const { data: chats } = useQuery(chatsQuery);
   useQuery(callsQuery);
   const { filteredChats, handleFilter, handleSearch } = useChatsFilters(chats);
   useChatEvents();
   useCallEvents();
+
+  return (
+    <div className="relative grid grid-flow-col grid-cols-1 md:grid-cols-7 xl:grid-cols-8 w-full h-full">
+      <aside
+        className={`${parsedPath === "/chat" ? "flex" : "hidden"} md:flex flex-col flex-1 max-w-full col-span-3 lg:col-span-3 xl:col-span-2 overflow-hidden`}
+      >
+        <ChatHeaderSection />
+        <div className="flex flex-col overflow-hidden">
+          <ChatSearchSection handleSearch={handleSearch} />
+          <ChatFilterSection handleFilter={handleFilter} />
+          <ChatsSection filteredChats={filteredChats} />
+        </div>
+      </aside>
+      <aside
+        className={`${parsedPath === "/chat" ? "hidden" : "flex"} md:flex flex-col border-l-[1px] border-slate-700 col-span-6 overflow-hidden`}
+      >
+        <Outlet />
+      </aside>
+      <CallDialog content={<CallEventOverlay chats={chats} />} />
+      <DraggableVideos />
+    </div>
+  );
+}
+
+function ChatHeaderSection() {
+  const user = useUserStore((state) => state.user);
+
+  return (
+    <div className="flex flex-row justify-between text-white py-1 sm:py-2 px-4 items-center">
+      <div className="flex items-center gap-2">
+        <UserSettingsOverlay>
+          <AvatarCoin
+            source={user?.avatarUrl || placeholderAvatar}
+            width={50}
+            alt=""
+          />
+        </UserSettingsOverlay>
+        <p className="font-bold">{user?.displayName}</p>
+      </div>
+      <div className="flex flex-row gap-2">
+        <Link
+          to={
+            !/\/chat\/settings/.test(location.pathname)
+              ? "/chat/settings"
+              : "/chat"
+          }
+          className="group flex items-center gap-2"
+        >
+          <SettingsIcon />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function ChatSearchSection({
+  handleSearch,
+}: {
+  handleSearch: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) {
+  return (
+    <div className="flex flex-row mx-3.5 items-center justify-center gap-2">
+      <SearchForm onChange={handleSearch} />
+      <CustomDialogTrigger
+        header="Start new chat"
+        content={<SearchUsersForm />}
+        className="group"
+      >
+        <AddIcon title="Start new chat" />
+      </CustomDialogTrigger>
+    </div>
+  );
+}
+
+function ChatFilterSection({
+  handleFilter,
+}: {
+  handleFilter: (filter: FilterOption) => void;
+}) {
+  const filterOptions: FilterOption[] = ["All", "Unread", "Groups"];
+  return (
+    <div className="flex justify-around items-center gap-2 py-2 text-white border-b-[1px] border-slate-700">
+      {filterOptions.map((option) => (
+        <button
+          key={option}
+          onClick={() => handleFilter(option)}
+          className="w-full text-slate-300 hover:text-white"
+        >
+          {option}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ChatsSection({
+  filteredChats,
+}: {
+  filteredChats: [] | Chat[] | undefined;
+}) {
+  const router = useRouter();
+  const user = useUserStore((state) => state.user);
+
+  const { toast } = useToast();
+  const setChatsCache = useSetChatsCache();
 
   const deleteChatMutation = useMutation({
     mutationFn: async (chatId: Chat["_id"]) => chatApi.deleteChat(chatId),
@@ -114,109 +208,44 @@ function ChatWrapper() {
       },
     });
   };
-
   return (
-    <div className="relative grid grid-flow-col grid-cols-1 md:grid-cols-7 xl:grid-cols-8 w-full h-full">
-      <aside
-        className={`${parsedPath === "/chat" ? "flex" : "hidden"} md:flex flex-col flex-1 max-w-full col-span-3 lg:col-span-3 xl:col-span-2 overflow-hidden`}
-      >
-        <div className="flex flex-row justify-between text-white py-1 sm:py-2 px-4 items-center">
-          <div className="flex items-center gap-2">
-            <UserSettingsOverlay>
-              <AvatarCoin
-                source={user?.avatarUrl || placeholderAvatar}
-                width={50}
-                alt=""
+    <div className="flex flex-col h-full overflow-y-auto overflow-x-hidden">
+      {filteredChats?.map((chat: Chat) => {
+        const interlocutors = chat?.users?.filter(
+          (participant) => participant._id !== user?._id
+        );
+        const interlocutorsDisplayNames = interlocutors
+          ?.map((user) => user?.displayName)
+          .slice(0, 3)
+          .join(", ");
+        return (
+          <Fragment key={chat?._id}>
+            {chat.type === "dm" ? (
+              <ChatListItem
+                linkTo={chat?._id}
+                avatarUrl={interlocutors?.[0]?.avatarUrl || placeholderAvatar}
+                name={interlocutors?.[0]?.displayName || "User"}
+                lastMessage={chat?.lastMessage}
+                displayLastMessageReceipt={
+                  chat?.lastMessage?.senderId?._id === user?._id
+                }
+                handleDeleteChat={handleDeleteChat}
               />
-            </UserSettingsOverlay>
-            <p className="font-bold">{user?.displayName}</p>
-          </div>
-          <div className="flex flex-row gap-2">
-            <Link
-              to={
-                !/\/chat\/settings/.test(location.pathname)
-                  ? "/chat/settings"
-                  : "/chat"
-              }
-              className="group flex items-center gap-2"
-            >
-              <SettingsIcon />
-            </Link>
-          </div>
-        </div>
-        <div className="flex flex-col overflow-hidden">
-          <div className="flex flex-row mx-3.5 items-center justify-center gap-2">
-            <SearchForm onChange={handleSearch} />
-            <CustomDialogTrigger
-              header="Start new chat"
-              content={<SearchUsersForm />}
-              className="group"
-            >
-              <AddIcon title="Start new chat" />
-            </CustomDialogTrigger>
-          </div>
-          <div className="flex justify-around items-center gap-2 py-2 text-white border-b-[1px] border-slate-700">
-            {filterOptions.map((option) => (
-              <button
-                key={option}
-                onClick={() => handleFilter(option)}
-                className="w-full text-slate-300 hover:text-white"
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-col h-full overflow-y-auto overflow-x-hidden">
-            {filteredChats?.map((chat: Chat) => {
-              const interlocutors = chat?.users?.filter(
-                (participant) => participant._id !== user?._id
-              );
-              const interlocutorsDisplayNames = interlocutors
-                ?.map((user) => user?.displayName)
-                .slice(0, 3)
-                .join(", ");
-              return (
-                <Fragment key={chat?._id}>
-                  {chat.type === "dm" ? (
-                    <ChatListItem
-                      linkTo={chat?._id}
-                      avatarUrl={
-                        interlocutors?.[0]?.avatarUrl || placeholderAvatar
-                      }
-                      name={interlocutors?.[0]?.displayName || "User"}
-                      lastMessage={chat?.lastMessage}
-                      displayLastMessageReceipt={
-                        chat?.lastMessage?.senderId?._id === user?._id
-                      }
-                      handleDeleteChat={handleDeleteChat}
-                    />
-                  ) : (
-                    <ChatListItem
-                      linkTo={chat?._id}
-                      avatarUrl={chat?.avatarUrl || groupAvatar}
-                      name={
-                        chat?.name || `Group Chat: ${interlocutorsDisplayNames}`
-                      }
-                      lastMessage={chat.lastMessage}
-                      displayLastMessageReceipt={
-                        chat?.lastMessage?.senderId?._id === user?._id
-                      }
-                      handleDeleteChat={handleDeleteChat}
-                    />
-                  )}
-                </Fragment>
-              );
-            })}
-          </div>
-        </div>
-      </aside>
-      <aside
-        className={`${parsedPath === "/chat" ? "hidden" : "flex"} md:flex flex-col border-l-[1px] border-slate-700 col-span-6 overflow-hidden`}
-      >
-        <Outlet />
-      </aside>
-      <CallDialog content={<CallEventOverlay chats={chats} />} />
-      <DraggableVideos />
+            ) : (
+              <ChatListItem
+                linkTo={chat?._id}
+                avatarUrl={chat?.avatarUrl || groupAvatar}
+                name={chat?.name || `Group Chat: ${interlocutorsDisplayNames}`}
+                lastMessage={chat.lastMessage}
+                displayLastMessageReceipt={
+                  chat?.lastMessage?.senderId?._id === user?._id
+                }
+                handleDeleteChat={handleDeleteChat}
+              />
+            )}
+          </Fragment>
+        );
+      })}
     </div>
   );
 }

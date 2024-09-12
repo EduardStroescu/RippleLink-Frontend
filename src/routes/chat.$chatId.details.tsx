@@ -4,10 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useUserStore } from "@/stores/useUserStore";
 import chatApi from "@/api/modules/chat.api";
 import { placeholderAvatar } from "@/lib/const";
-import { Chat } from "@/types/chat";
-import { Message } from "@/types/message";
-
-import { FullscreenImage } from "@/components/ui/FullscreenImage";
+import { Chat, Message } from "@/types";
 
 import { BackIcon } from "@/components";
 import {
@@ -15,6 +12,11 @@ import {
   VideoComponent,
   FileComponent,
   AudioComponent,
+  FullscreenImage,
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
 } from "@/components/ui";
 
 export const Route = createFileRoute("/chat/$chatId/details")({
@@ -85,26 +87,54 @@ function ChatDetails() {
             }
           />
         )}
-        <div className="flex flex-col gap-2 items-center my-4">
-          <h2 className="w-4/5 text-center bg-cyan-400/60 text-white rounded-t py-2">
-            Shared Files
-          </h2>
-          <div className="flex flex-wrap w-4/5 h-full items-start justify-center overflow-y-auto">
-            {sharedFilesData?.length ? (
-              sharedFilesData?.map((message) => (
-                <div key={message._id}>{displayMessageByType(message)}</div>
-              ))
-            ) : (
-              <p className="self-center text-lg">No files shared yet</p>
+        <div className="w-full flex flex-col items-center mt-4 mb-2">
+          <Accordion
+            type="single"
+            collapsible
+            className="w-4/5 flex flex-col gap-2"
+          >
+            {interlocutors && interlocutors?.length > 1 && (
+              <AccordionItem value="item-1">
+                <AccordionTrigger className="text-center bg-green-500/60 text-white rounded-t p-2">
+                  Users In Chat
+                </AccordionTrigger>
+                <AccordionContent className="mt-1">
+                  <div className="flex flex-col w-full h-full max-h-[300px] items-center justify-center overflow-y-auto gap-1">
+                    {interlocutors?.map((interlocutor) => (
+                      <div key={interlocutor._id}>
+                        <p>{interlocutor.displayName}</p>
+                      </div>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
             )}
+            <AccordionItem value="item-2">
+              <AccordionTrigger className="text-center bg-cyan-500/60 text-white rounded-t p-2">
+                Shared Files
+              </AccordionTrigger>
+              <AccordionContent className="mt-1">
+                <div className="flex flex-wrap w-full h-full max-h-[300px] items-start justify-center overflow-y-auto">
+                  {sharedFilesData?.length ? (
+                    sharedFilesData?.map((file) => (
+                      <div key={file._id}>{displayFileByType(file)}</div>
+                    ))
+                  ) : (
+                    <p className="self-center text-lg">No files shared yet</p>
+                  )}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+        {/* TODO: FINISH IMPLEMENTING THIS */}
+        {interlocutors && interlocutors?.length <= 1 && (
+          <div className="flex flex-col jutify-center items-center">
+            <button className="text-white w-4/5 rounded bg-red-900 hover:bg-red-800 py-2 px-3">
+              Block User
+            </button>
           </div>
-        </div>
-        <div className="flex flex-col jutify-center items-center">
-          {/* TODO: FINISH IMPLEMENTING THIS */}
-          <button className="text-white w-4/5 rounded bg-red-900 hover:bg-red-800 py-2 px-3">
-            Block User
-          </button>
-        </div>
+        )}
       </div>
     </aside>
   );
@@ -133,7 +163,7 @@ function UserDetailsHeader({
   );
 }
 
-const displayMessageByType = (message: Message) => {
+const displayFileByType = (message: Message) => {
   switch (message.type) {
     case "image":
       return renderImage(message);

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useUserStore } from "@/stores/useUserStore";
-import { Chat } from "@/types/chat";
-import { FilterOption } from "@/types/filterOptions";
+import { Chat, FilterOption } from "@/types";
 
 export function useChatsFilters(chats: Chat[] | [] | undefined) {
   const user = useUserStore((state) => state.user);

@@ -1,6 +1,6 @@
-import { Chat } from "@/types/chat";
-import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Chat } from "@/types";
 
 export function useSetChatsCache() {
   const queryClient = useQueryClient();

@@ -241,7 +241,7 @@ export function DraggableVideos() {
               onMouseDown={(e) => startDrag(e, userId)}
               onTouchStart={(e) => startDrag(e, userId)}
               key={userId}
-              className="absolute z-[999] shadow-lg shadow-cyan-500 top-0 left-0 aspect-square w-[150px] h-[150px] rounded-[50%] cursor-grab animate-in zoom-in-0 transition-transform duration-500 ease-in-out bg-black/70"
+              className="absolute z-[999] shadow-lg shadow-cyan-500 top-0 left-0 aspect-square w-[120px] h-[120px] sm:w-[150px] sm:h-[150px] rounded-full cursor-grab animate-in zoom-in-0 transition-transform duration-500 ease-in-out bg-black/70"
               style={{
                 top: `${position.y}px`,
                 left: `${position.x}px`,
@@ -249,7 +249,7 @@ export function DraggableVideos() {
               }}
             >
               <video
-                className="w-full h-full object-cover object-center rounded-[50%]"
+                className="w-full h-full object-cover object-center rounded-full"
                 playsInline
                 muted
                 ref={(el) => {
@@ -268,7 +268,7 @@ export function DraggableVideos() {
       {dragging && (
         <div
           ref={removeDivRef}
-          className="absolute bottom-2 left-1/2 -translate-x-[50%] bg-black/70 flex justify-center items-center w-[80px] h-[80px] md:w-[100px] md:h-[100px] rounded-full"
+          className="absolute bottom-2 left-1/2 -translate-x-[50%] bg-black/70 flex justify-center items-center w-[60px] h-[60px] md:w-[100px] md:h-[100px] rounded-full"
         >
           <CloseIcon width="40" height="40" />
         </div>

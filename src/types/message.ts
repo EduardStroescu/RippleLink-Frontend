@@ -7,7 +7,7 @@ export type Message = {
   content: string;
   type: "text" | "image" | "file" | "video" | "audio";
   read: boolean;
-  readAt: string;
+  readAt?: string;
   createdAt?: string;
   updatedAt?: string;
 };

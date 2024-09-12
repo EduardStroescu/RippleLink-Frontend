@@ -1,12 +1,12 @@
 import { useSocketContext } from "@/providers/SocketProvider";
-import { Message } from "@/types/message";
 import { useEffect } from "react";
 import { useSetMessagesCache } from "./useSetMessagesCache";
 import { create } from "mutative";
 import { useUserStore } from "@/stores/useUserStore";
 import { useParams } from "@tanstack/react-router";
+import { Message } from "@/types";
 
-export function useMessageReadStatus(messages: Message[] | [] | undefined) {
+export function useMessageReadStatus(messages: Message[] | []) {
   const { socket } = useSocketContext();
   const user = useUserStore((state) => state.user);
   const params = useParams({ from: "/chat/$chatId" });

@@ -1,5 +1,4 @@
 import { useCallStore, useCallStoreActions } from "@/stores/useCallStore";
-import { Call } from "@/types/call";
 import { useCallback } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useUserStore } from "@/stores/useUserStore";
@@ -7,6 +6,7 @@ import { useSocketSubscription } from "./useSocketSubscription";
 import { useThrottle } from "./useThrottle";
 import { useSetCallsCache } from "./useSetCallsCache";
 import { create } from "mutative";
+import { Call } from "@/types";
 
 export function useCallEvents() {
   const user = useUserStore((state) => state.user);

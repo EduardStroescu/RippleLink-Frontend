@@ -1,6 +1,6 @@
 import React from "react";
 import Picker, { Theme } from "gif-picker-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/Popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui";
 
 interface GifPickerProps {
   children: React.ReactNode;

@@ -1,9 +1,8 @@
 import { useUserStore } from "@/stores/useUserStore";
-import { Chat } from "@/types/chat";
-import { User } from "@/types/user";
 import clsx, { ClassValue } from "clsx";
 import { RgbaColor } from "react-colorful";
 import { twMerge } from "tailwind-merge";
+import { User, Chat } from "@/types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -106,3 +105,22 @@ export function checkIfChatExists(
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+export const canEditMessage = (
+  isOwnMessage: boolean,
+  createdAt?: string,
+  messageType?: string
+): boolean => {
+  if (!createdAt) return false;
+
+  const messageCreatedAt = new Date(createdAt).getTime();
+  const now = Date.now();
+
+  // Calculate the difference in milliseconds and convert it to minutes
+  const timeDifferenceInMinutes = (now - messageCreatedAt) / (1000 * 60);
+
+  // Return true if the message is still within the allowed edit interval
+  return (
+    timeDifferenceInMinutes <= 15 && isOwnMessage && messageType === "text"
+  );
+};
