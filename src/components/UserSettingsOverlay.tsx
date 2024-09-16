@@ -26,14 +26,14 @@ export const UserSettingsOverlay: React.FC<UserSettingsOverlayProps> = ({
 }) => {
   const queryClient = useQueryClient();
   const { setUser } = useUserStoreActions();
-  const { setItem } = useLocalStorage<User | null>("user");
+  const { removeItem } = useLocalStorage<User | null>("user");
   const router = useRouter();
   const { toast } = useToast();
 
   const logoutMutation = useMutation({
     mutationFn: userApi.logout,
     onSettled: () => {
-      setItem(null);
+      removeItem();
       setUser(null);
       queryClient.cancelQueries();
       router.navigate({ to: "/" });

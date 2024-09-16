@@ -8,6 +8,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/Dialog";
 import clsx from "clsx";
+import { cn } from "@/lib/utils";
 
 interface MediaPreviewDialogProps {
   header?: string;
@@ -17,6 +18,7 @@ interface MediaPreviewDialogProps {
   children: React.ReactNode;
   description?: string;
   className?: string;
+  contentClassName?: string;
 }
 
 export const MediaPreviewDialog: React.FC<MediaPreviewDialogProps> = ({
@@ -25,6 +27,7 @@ export const MediaPreviewDialog: React.FC<MediaPreviewDialogProps> = ({
   children,
   description,
   className,
+  contentClassName,
 }) => {
   const [open, setOpen] = useState(false);
 
@@ -37,9 +40,10 @@ export const MediaPreviewDialog: React.FC<MediaPreviewDialogProps> = ({
       <DialogTrigger className={clsx("", className)}>{children}</DialogTrigger>
       <DialogContent
         closeButtonEnabled={false}
-        className="block max-w-fit
-        border-none bg-transparent shadow-none outline-none
-      "
+        className={cn(
+          "block w-fit md:w-fit max-w-[80dvw] max-h-[80dvh] p-0 border-none bg-transparent shadow-none outline-none",
+          contentClassName
+        )}
       >
         <DialogHeader>
           <DialogTitle>{header}</DialogTitle>

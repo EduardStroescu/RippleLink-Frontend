@@ -6,6 +6,7 @@ export function AudioComponent(
 ) {
   return (
     <MediaPreviewDialog
+      className="group w-full py-2"
       content={
         <audio
           controls
@@ -13,7 +14,6 @@ export function AudioComponent(
           {...props}
         />
       }
-      className="group w-full"
     >
       <audio controls className="rounded-md" {...props} />
     </MediaPreviewDialog>

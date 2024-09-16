@@ -6,18 +6,26 @@ interface FullscreenImageProps
   className?: string;
 }
 
-export function FullscreenImage({ className, ...props }: FullscreenImageProps) {
+export function FullscreenImage({
+  className,
+  width,
+  ...props
+}: FullscreenImageProps) {
   const ImageContent = () => (
-    <img className="w-full h-full object-cover rounded-md" {...props} />
+    <img
+      className="w-full h-full object-contain aspect-square rounded-md"
+      {...props}
+    />
   );
   return (
-    <div className="">
+    <div>
       <MediaPreviewDialog content={<ImageContent />} className="group">
         <img
           className={cn(
-            "rounded-xl aspect-square object-cover cursor-pointer py-1",
+            "rounded-md aspect-square object-cover cursor-pointer py-1",
             className
           )}
+          width={width}
           {...props}
         />
       </MediaPreviewDialog>

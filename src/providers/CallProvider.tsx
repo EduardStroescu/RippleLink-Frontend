@@ -438,7 +438,6 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
       setCurrentCall,
     ]
   );
-
   const endCall = useCallback(
     (call: Call) => {
       if (
@@ -448,13 +447,13 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
       ) {
         socket?.emit("endCall", { callId: call._id });
         addRecentlyEndedCall(call);
+        setCurrentCall(null);
       }
       userStream?.getTracks().forEach((track) => track.stop());
       Object.values(peerConnections).forEach((peer) => {
         peer.destroy();
       });
       resetConnections();
-      setCurrentCall(null);
       setIsUserSharingVideo(false);
       setIsUserMicrophoneMuted(false);
     },
@@ -474,6 +473,8 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
   const handleScreenShare = useCallback(async () => {
     try {
       if (!userId) return;
+
+      const oldStream = userStream;
       if (userStream?.getVideoTracks().length === 0) {
         // Start screen sharing
         const newStream = await navigator.mediaDevices.getDisplayMedia({
@@ -485,7 +486,6 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
           audio: false,
         });
 
-        const oldStream = userStream;
         if (!newStream || !oldStream) return;
 
         oldStream.addTrack(newStream.getVideoTracks()[0]);
@@ -504,7 +504,7 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
         const newStream = await attachStreamToCall({
           audioEnabled: true,
         });
-        const oldStream = userStream;
+
         if (!newStream || !oldStream) return;
 
         // Remove existing streams
@@ -543,12 +543,13 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
   const handleVideoShare = useCallback(async () => {
     try {
       if (!userId) return;
+
+      const oldStream = userStream;
       if (userStream?.getVideoTracks().length === 0) {
         // Start video sharing
         const newStream = await attachStreamToCall({
           videoEnabled: true,
         });
-        const oldStream = userStream;
         if (!newStream || !oldStream) return;
 
         // Add the new video track to the peer
@@ -566,7 +567,7 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
         const newStream = await attachStreamToCall({
           audioEnabled: true,
         });
-        const oldStream = userStream;
+
         if (!newStream || !oldStream) return;
 
         // Remove existing streams
@@ -607,7 +608,7 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
 
     const oldStream = userStream;
     // Stop existing video tracks before switching
-    userStream?.getVideoTracks().forEach((track) => track.stop());
+    oldStream?.getVideoTracks().forEach((track) => track.stop());
 
     const newStream = await attachStreamToCall({
       videoEnabled: true,
@@ -626,7 +627,6 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
     });
 
     // Add new track to the local stream
-    userStream.getTracks().forEach((track) => oldStream.removeTrack(track));
     oldStream.getVideoTracks().forEach((track) => oldStream.removeTrack(track));
     oldStream.addTrack(newStream.getVideoTracks()[0]);
 
@@ -651,21 +651,22 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
         });
         const peerStream = userStream;
         if (!newStream || !peerStream) return;
+
+        const oldAudioTrack = peerStream.getAudioTracks()[0];
         Object.values(peerConnections).forEach((peer) => {
-          const oldAudioTrack = peerStream.getAudioTracks()[0];
-          if (oldAudioTrack) {
-            peer.replaceTrack(
-              oldAudioTrack,
-              newStream.getAudioTracks()[0],
-              peerStream
-            );
-          }
+          if (!oldAudioTrack) return;
+          peer.replaceTrack(
+            oldAudioTrack,
+            newStream.getAudioTracks()[0],
+            peerStream
+          );
         });
-        const currAudioTrack = userStream?.getAudioTracks()[0];
-        if (currAudioTrack && userId) {
-          userStream.removeTrack(currAudioTrack);
-          userStream.addTrack(newStream.getAudioTracks()[0]);
-          addStream(userId, userStream);
+
+        if (oldAudioTrack && userId) {
+          oldAudioTrack.stop();
+          peerStream.removeTrack(oldAudioTrack);
+          peerStream.addTrack(newStream.getAudioTracks()[0]);
+          addStream(userId, peerStream);
         }
       } else if (device.kind === "videoinput") {
         setSelectedDevices({
@@ -676,23 +677,24 @@ export const CallProvider: React.FC<CallProviderProps> = ({ children }) => {
             videoEnabled: true,
           });
           const peerStream = userStream;
+
           if (!newStream || !peerStream) return;
+
+          const oldVideoTrack = peerStream.getVideoTracks()[0];
           Object.values(peerConnections).forEach((peer) => {
-            if (!peerStream) return;
-            const oldVideoTrack = peerStream.getVideoTracks()[0];
-            if (oldVideoTrack) {
-              peer.replaceTrack(
-                oldVideoTrack,
-                newStream.getVideoTracks()[0],
-                peerStream
-              );
-            }
+            if (oldVideoTrack) return;
+            peer.replaceTrack(
+              oldVideoTrack,
+              newStream.getVideoTracks()[0],
+              peerStream
+            );
           });
-          const currVideoTrack = userStream?.getVideoTracks()[0];
-          if (currVideoTrack && userId) {
-            userStream.removeTrack(currVideoTrack);
-            userStream.addTrack(newStream.getVideoTracks()[0]);
-            addStream(userId, userStream);
+
+          if (oldVideoTrack && userId) {
+            oldVideoTrack.stop();
+            peerStream.removeTrack(oldVideoTrack);
+            peerStream.addTrack(newStream.getVideoTracks()[0]);
+            addStream(userId, peerStream);
           }
         }
       } else if (device.kind === "audiooutput") {

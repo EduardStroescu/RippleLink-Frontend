@@ -12,7 +12,7 @@ export const VideoComponent = forwardRef<HTMLVideoElement, VideoProps>(
         ref={ref}
         playsInline
         controls
-        className="w-full h-full object-cover rounded-md"
+        className="w-full h-full object-contain aspect-square rounded-md"
         {...props}
       />
     );

@@ -34,7 +34,13 @@ export const useCallStore = create<CallStore>((set) => ({
     removeStream: (id) =>
       set((state) => {
         const newStreams = { ...state.streams };
-        newStreams[id].stream = null;
+        if (newStreams[id]?.stream) {
+          newStreams[id].stream.getTracks().forEach((track) => {
+            track.stop();
+            newStreams[id].stream?.removeTrack(track);
+          });
+          newStreams[id].stream = null;
+        }
         return { streams: newStreams };
       }),
     toggleStreamPopUp: (id) =>

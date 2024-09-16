@@ -18,6 +18,7 @@ interface MessageComponentProps {
   idx: number;
   virtualItem: VirtualItem;
   virtualizer: Virtualizer<HTMLDivElement, Element>;
+  canDeleteMessage: boolean;
 }
 
 export const MessageComponent = memo(
@@ -27,6 +28,7 @@ export const MessageComponent = memo(
     idx,
     virtualItem,
     virtualizer,
+    canDeleteMessage,
   }: MessageComponentProps) => {
     const { chatId } = useParams({ from: "/chat/$chatId" });
     const { socket } = useSocketContext();
@@ -107,7 +109,7 @@ export const MessageComponent = memo(
               )}
             </div>
           </div>
-          {isOwnMessage && idx !== 0 && !isEditing && (
+          {isOwnMessage && canDeleteMessage && !isEditing && (
             <div className="w-[40px] h-[35px] absolute justify-end py-1.5 px-2 -right-1 -top-1 hidden group-hover:flex bg-message-gradient pointer-events-none">
               <DeleteButton
                 className="group h-fit pointer-events-auto"

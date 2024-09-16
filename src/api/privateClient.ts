@@ -18,31 +18,29 @@ const privateClient = axios.create({
 let isRefreshing = false;
 let failedQueue: Array<(token: string) => void> = [];
 
-const processQueue = (_, token: string | null) => {
-  failedQueue.forEach((callback) => token && callback(token));
+const processQueue = (token: string | null) => {
+  if (token) {
+    failedQueue.forEach((callback) => callback(token));
+  } else {
+    failedQueue.forEach((callback) => callback("")); // Handle failed refresh queue
+  }
   failedQueue = [];
 };
 
 privateClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     const user = window.localStorage.getItem("user");
-    if (!user) {
-      return {
-        ...config,
-        headers: {
+    if (user) {
+      const parsedUser = JSON.parse(user);
+      const token = parsedUser?.access_token;
+
+      if (token) {
+        config.headers = {
           "Content-Type": "application/json",
-        } as AxiosRequestHeaders,
-      };
+          Authorization: `Bearer ${token}`,
+        } as AxiosRequestHeaders;
+      }
     }
-
-    const parsedUser = JSON.parse(user);
-    const token = parsedUser?.access_token;
-
-    config.headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    } as AxiosRequestHeaders;
-
     return config;
   },
   (error) => Promise.reject(error)
@@ -57,10 +55,14 @@ privateClient.interceptors.response.use(
       originalRequest._retry = true;
 
       if (isRefreshing) {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
           failedQueue.push((token: string) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            resolve(privateClient(originalRequest));
+            if (token) {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              resolve(privateClient(originalRequest));
+            } else {
+              reject(new Error("Token refresh failed"));
+            }
           });
         });
       }
@@ -80,16 +82,16 @@ privateClient.interceptors.response.use(
           useUserStore.setState({ user: response.data });
           window.localStorage.setItem("user", JSON.stringify(response.data));
           isRefreshing = false;
-          processQueue(null, response.data.access_token);
+
+          processQueue(response.data.access_token);
 
           originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`;
           return privateClient(originalRequest);
         }
       } catch (error) {
         const refreshError = error as AxiosError;
-
         window.localStorage.removeItem("user");
-        processQueue(refreshError, null);
+        processQueue(null);
         return Promise.reject(
           refreshError?.response?.data || "Token refresh failed"
         );

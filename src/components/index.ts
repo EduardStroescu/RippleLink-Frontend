@@ -29,3 +29,4 @@ export { SearchForm } from "./SearchForm";
 export { SearchUsersForm } from "./SearchUsersForm";
 export { UserSettingsOverlay } from "./UserSettingsOverlay";
 export { Virtualizer } from "./Virtualizer";
+export { MediaComponent } from "./MediaComponent";

@@ -6,12 +6,10 @@ import chatApi from "@/api/modules/chat.api";
 import { placeholderAvatar } from "@/lib/const";
 import { Chat, Message } from "@/types";
 
-import { BackIcon } from "@/components";
+import { BackIcon, MediaComponent } from "@/components";
 import {
   AvatarCoin,
-  VideoComponent,
   FileComponent,
-  AudioComponent,
   FullscreenImage,
   Accordion,
   AccordionItem,
@@ -114,10 +112,15 @@ function ChatDetails() {
                 Shared Files
               </AccordionTrigger>
               <AccordionContent className="mt-1">
-                <div className="flex flex-wrap w-full h-full max-h-[300px] items-start justify-center overflow-y-auto">
+                <div className="flex flex-wrap gap-2 w-full h-full max-h-[500px] items-center justify-center overflow-y-auto">
                   {sharedFilesData?.length ? (
                     sharedFilesData?.map((file) => (
-                      <div key={file._id}>{displayFileByType(file)}</div>
+                      <div
+                        key={file._id}
+                        className="max-h-[100px] max-w-[100px] overflow-hidden"
+                      >
+                        {displayFileByType(file)}
+                      </div>
                     ))
                   ) : (
                     <p className="self-center text-lg">No files shared yet</p>
@@ -127,14 +130,6 @@ function ChatDetails() {
             </AccordionItem>
           </Accordion>
         </div>
-        {/* TODO: FINISH IMPLEMENTING THIS */}
-        {interlocutors && interlocutors?.length <= 1 && (
-          <div className="flex flex-col jutify-center items-center">
-            <button className="text-white w-4/5 rounded bg-red-900 hover:bg-red-800 py-2 px-3">
-              Block User
-            </button>
-          </div>
-        )}
       </div>
     </aside>
   );
@@ -170,9 +165,9 @@ const displayFileByType = (message: Message) => {
     case "file":
       return renderFile(message.content);
     case "video":
-      return renderVideo(message.content);
+      return renderMediaContent(message.content);
     case "audio":
-      return renderAudio(message.content);
+      return renderMediaContent(message.content);
     default:
       return renderImage(message);
   }
@@ -182,15 +177,21 @@ const renderImage = (message: Message) => (
   <FullscreenImage
     src={message.content}
     alt={`Image sent by ${message.senderId.displayName}`}
-    width={100}
     className="aspect-square"
   />
 );
 
-const renderVideo = (content: string) => <VideoComponent src={content} />;
-
-const renderAudio = (content: string) => <AudioComponent src={content} />;
+const renderMediaContent = (content: string) => (
+  <MediaComponent file={content} />
+);
 
 const renderFile = (content: string) => (
-  <FileComponent href={content} download fileName={content} />
+  <div className="group">
+    <FileComponent
+      href={content}
+      download
+      fileName={content}
+      className="max-w-none min-w-0 w-full h-full max-h-[95px] m-0"
+    />
+  </div>
 );

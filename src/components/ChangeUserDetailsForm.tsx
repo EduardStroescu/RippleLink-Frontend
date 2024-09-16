@@ -69,6 +69,10 @@ export function ChangeUserDetailsForm() {
     await updateUserMutation.mutateAsync(updateObj, {
       onSuccess: (response) => {
         setUser((prevUser) => prevUser && { ...prevUser, response });
+        toast({
+          title: "Success",
+          description: "User details updated successfully",
+        });
       },
       onError: (error: unknown) => {
         toast({
@@ -143,6 +147,9 @@ export function ChangeUserDetailsForm() {
       >
         {isSubmitting ? "Saving..." : "Save"}
       </button>
+      <p className="text-center text-xs font-bold">
+        *Some changes will be reflected in about 1hr.
+      </p>
     </form>
   );
 }

@@ -20,18 +20,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { setAppBackground, setAppTint, setAppGlow, resetAppStore } =
     useAppStoreActions();
   const navigate = useNavigate();
-  const savedUser = getItem();
 
   useEffect(() => {
-    if (!user) {
-      if (savedUser) {
-        setUser(savedUser as User);
-        navigate({ to: "/chat", replace: true });
-      } else {
-        navigate({ to: "/", replace: true });
-      }
+    if (user) return;
+
+    const savedUser = getItem(); // Get the user from localStorage
+    if (savedUser) {
+      setUser(savedUser as User);
+      navigate({ to: "/chat", replace: true });
+    } else {
+      navigate({ to: "/", replace: true });
     }
-  }, [navigate, savedUser, setUser, user]);
+  }, [getItem, navigate, setUser, user]);
 
   useEffect(() => {
     if (user?.settings) {

@@ -242,6 +242,7 @@ const UserBox = memo(
         {isSharingVideo && (
           <MediaPreviewDialog
             className="w-full h-full"
+            contentClassName="w-fit h-full md:w-fit"
             content={
               <VideoComponent
                 ref={fullscreenVideoRef}

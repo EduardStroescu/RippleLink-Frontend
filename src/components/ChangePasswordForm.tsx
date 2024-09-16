@@ -13,7 +13,7 @@ import { ChangePasswordSchema } from "@/lib/formSchemas/user.schemas";
 export function ChangePasswordForm() {
   const { toast } = useToast();
   const { setUser } = useUserStoreActions();
-  const { setItem } = useLocalStorage<User | null>("user");
+  const { removeItem } = useLocalStorage<User | null>("user");
   const router = useRouter();
 
   const changePasswordMutation = useMutation({
@@ -43,9 +43,13 @@ export function ChangePasswordForm() {
   > = async (formData) => {
     await changePasswordMutation.mutateAsync(formData, {
       onSuccess: () => {
-        setItem(null);
+        removeItem();
         setUser(null);
         router.navigate({ to: "/" });
+        toast({
+          title: "Success",
+          description: "Password changed successfully",
+        });
       },
       onError: (error: unknown) => {
         toast({

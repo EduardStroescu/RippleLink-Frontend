@@ -53,23 +53,35 @@ export function useChatEvents() {
     }
   });
 
-  useSocketSubscription("chatUpdated", ({ content }: { content: Chat }) => {
-    setChatsCache((prev) => {
-      if (!prev) return [content];
-      return create(prev, (draft) => {
-        const index = draft.findIndex((item) => item._id === content._id);
+  useSocketSubscription(
+    "chatUpdated",
+    ({
+      content,
+    }: {
+      content: Chat & { eventType: "create" | "update" | "delete" };
+    }) => {
+      setChatsCache((prev) => {
+        if (!prev) return prev;
+        return create(prev, (draft) => {
+          const index = draft.findIndex((item) => item._id === content._id);
 
-        if (index === -1) {
-          draft.push(content);
-        } else {
-          draft[index] = { ...draft[index], ...content };
-        }
+          if (index === -1) {
+            if (content.eventType !== "create") return draft;
+            draft.push(content);
+          } else {
+            draft[index] = { ...draft[index], ...content };
+          }
+        });
       });
-    });
-    if (content.lastMessage.senderId._id !== user?._id && !isWindowActive) {
-      throttledNotification();
+      if (
+        content.lastMessage.senderId._id !== user?._id &&
+        content.eventType === "create" &&
+        !isWindowActive
+      ) {
+        throttledNotification();
+      }
     }
-  });
+  );
 
   // Update document title based on window visibility and new message count
   useEffect(() => {

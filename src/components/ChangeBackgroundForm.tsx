@@ -84,6 +84,10 @@ export function ChangeBackgroundForm() {
           updatedUser && setItem(updatedUser);
           return updatedUser;
         });
+        toast({
+          title: "Success",
+          description: "Theme updated successfully",
+        });
       },
       onError: (error) => {
         toast({

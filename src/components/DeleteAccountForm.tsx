@@ -13,7 +13,7 @@ import { DeleteAccountSchema } from "@/lib/formSchemas/user.schemas";
 export function DeleteAccountForm() {
   const { toast } = useToast();
   const { setUser } = useUserStoreActions();
-  const { setItem } = useLocalStorage<User | null>("user");
+  const { removeItem } = useLocalStorage<User | null>("user");
   const router = useRouter();
 
   const deleteAccountMutation = useMutation({
@@ -41,9 +41,13 @@ export function DeleteAccountForm() {
   > = async (formData) => {
     await deleteAccountMutation.mutateAsync(formData, {
       onSuccess: () => {
-        setItem(null);
+        removeItem();
         setUser(null);
         router.navigate({ to: "/" });
+        toast({
+          title: "Success",
+          description: "Account deleted successfully",
+        });
       },
       onError: (error: unknown) => {
         toast({

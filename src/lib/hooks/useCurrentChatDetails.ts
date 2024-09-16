@@ -25,7 +25,10 @@ export function useCurrentChatDetails({
   const { data: chatData } = useQuery(chatsQuery);
   const currentChat = chatData?.find((chat) => chat._id === params.chatId);
 
-  const isDmChat = currentChat?.type === "dm";
+  const isDmChat = useMemo(
+    () => currentChat?.type === "dm",
+    [currentChat?.type]
+  );
   const interlocutors = useMemo(
     () =>
       currentChat &&
@@ -33,17 +36,17 @@ export function useCurrentChatDetails({
     [currentChat, user?._id]
   );
 
+  const shouldQueryInterlocutorStatus = interlocutors?.[0]._id && isDmChat;
   const { data: interlocutorStatus } = useQuery({
     queryKey: ["interlocutorStatus", interlocutors?.[0]._id],
     queryFn: () => chatApi.getInterlocutorStatus(interlocutors?.[0]._id),
-    enabled: !!interlocutors?.[0]._id && isDmChat,
+    enabled: !!shouldQueryInterlocutorStatus,
   });
 
   const updateInterlocutorStatus = useCallback(
     (interlocutorStatus: Status) => {
-      if (!user?._id) return;
       setChatsCache((prev) => {
-        if (!prev) [];
+        if (!prev) return prev;
 
         return create(prev, (draft) => {
           const chatIndex = draft.findIndex(
@@ -59,7 +62,7 @@ export function useCurrentChatDetails({
         });
       });
     },
-    [params.chatId, setChatsCache, user?._id]
+    [params.chatId, setChatsCache]
   );
 
   useEffect(() => {

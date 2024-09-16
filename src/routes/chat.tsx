@@ -199,11 +199,11 @@ function ChatsSection({
         );
         router.navigate({ to: "/chat", replace: true });
       },
-      onError: (error) => {
+      onError: (error: unknown) => {
         toast({
           variant: "destructive",
           title: "Error",
-          description: error.message,
+          description: error as string,
         });
       },
     });

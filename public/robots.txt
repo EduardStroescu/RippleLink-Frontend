@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+Disallow: /chat/
+
+Sitemap: https://ripple-link.vercel.app/sitemap.xml

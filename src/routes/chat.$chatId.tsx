@@ -241,6 +241,7 @@ const ChatContent = ({
                 message={getMessageContent(virtualItem.index)}
                 handleDelete={handleDelete}
                 idx={virtualItem.index}
+                canDeleteMessage={virtualItem.index !== messages.length}
               />
             ) : (
               <TypingIndicator
