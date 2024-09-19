@@ -1,7 +1,6 @@
 import { memo, useRef, useState } from "react";
 import { useParams } from "@tanstack/react-router";
 import { VirtualItem, Virtualizer } from "@tanstack/react-virtual";
-import { useSocketContext } from "@/providers/SocketProvider";
 import { useUserStore } from "@/stores/useUserStore";
 
 import { CheckIcon, EditIcon } from "./Icons";
@@ -11,6 +10,7 @@ import { useResizeVirtualItem } from "@/lib/hooks/useResizeVirtualItem";
 import { MessageEditor } from "./MessageEditor";
 import { MessageContent } from "./MessageContent";
 import { Message } from "@/types/message";
+import { useAppStore } from "@/stores/useAppStore";
 
 interface MessageComponentProps {
   message: Message | undefined;
@@ -31,7 +31,7 @@ export const MessageComponent = memo(
     canDeleteMessage,
   }: MessageComponentProps) => {
     const { chatId } = useParams({ from: "/chat/$chatId" });
-    const { socket } = useSocketContext();
+    const socket = useAppStore((state) => state.socket);
 
     const user = useUserStore((state) => state.user);
     const [isEditing, setIsEditing] = useState(false);

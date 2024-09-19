@@ -1,13 +1,13 @@
 import { useEffect } from "react";
-import { useSocketContext } from "@/providers/SocketProvider";
 import { create } from "mutative";
 import { useParams } from "@tanstack/react-router";
 import { useUserStore } from "@/stores/useUserStore";
 import { useSocketSubscription, useSetMessagesCache } from "@/lib/hooks";
 import { Message } from "@/types";
+import { useAppStore } from "@/stores/useAppStore";
 
 export function useMessageEvents() {
-  const { socket } = useSocketContext();
+  const socket = useAppStore((state) => state.socket);
   const params = useParams({ from: "/chat/$chatId" });
   const user = useUserStore((state) => state.user);
 

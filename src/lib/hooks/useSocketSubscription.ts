@@ -1,11 +1,11 @@
-import { useSocketContext } from "@/providers/SocketProvider";
+import { useAppStore } from "@/stores/useAppStore";
 import { useEffect, useRef } from "react";
 
 export function useSocketSubscription<T>(
   event: string,
   callback: (data: T) => void
 ) {
-  const { socket } = useSocketContext();
+  const socket = useAppStore((state) => state.socket);
   const callbackRef = useRef(callback);
 
   // Keep the callback reference updated

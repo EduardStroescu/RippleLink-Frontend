@@ -1,4 +1,3 @@
-import { useSocketContext } from "@/providers/SocketProvider";
 import { useUserStore } from "@/stores/useUserStore";
 import { useEffect, useState } from "react";
 import { Chat } from "@/types";
@@ -12,10 +11,11 @@ import {
 } from "@/lib/hooks";
 
 import { create } from "mutative";
+import { useAppStore } from "@/stores/useAppStore";
 
 export function useChatEvents() {
   const user = useUserStore((state) => state.user);
-  const { socket } = useSocketContext();
+  const socket = useAppStore((state) => state.socket);
   const playSound = useNotificationSound();
   const isWindowActive = useWindowVisibility();
   const [newMessageCount, setNewMessageCount] = useState(0);

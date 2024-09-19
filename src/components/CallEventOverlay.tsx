@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { CallIcon, CloseIcon } from "./Icons";
 import { AvatarCoin } from "./ui/AvatarCoin";
 import { placeholderAvatar } from "@/lib/const";
-import { useCallContext } from "@/providers/CallProvider";
 import { Chat } from "@/types/chat";
 import { useCallStore, useCallStoreActions } from "@/stores/useCallStore";
 import { useUserStore } from "@/stores/useUserStore";
@@ -19,11 +18,11 @@ export const CallEventOverlay: React.FC<CallEventOverlayProps> = ({
   chats,
   open,
 }) => {
+  const router = useRouter();
   const user = useUserStore((state) => state.user);
   const incomingCalls = useCallStore((state) => state.incomingCalls);
-  const { answerCall } = useCallContext();
-  const router = useRouter();
-  const { removeIncomingCall, addRecentlyEndedCall } = useCallStoreActions();
+  const { answerCall, removeIncomingCall, addRecentlyEndedCall } =
+    useCallStoreActions();
   const { playSound, stopSound } = useCallSound();
 
   const getCurrentChatCaller = (call: Call) => {
@@ -98,7 +97,7 @@ export const CallEventOverlay: React.FC<CallEventOverlayProps> = ({
                   onClick={() => handleRejectCall(call)}
                   className="group p-2 bg-red-950 rounded-full hover:bg-red-900"
                 >
-                  <CloseIcon width="15px" height="15px" />
+                  <CloseIcon className="w-[15px] h-[15px]" />
                 </button>
               </div>
             </div>

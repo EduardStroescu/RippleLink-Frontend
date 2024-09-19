@@ -1,67 +1,25 @@
 import { CallStore } from "@/types/storeInterfaces";
 import { create } from "zustand";
+import { useUserStore } from "./useUserStore";
+import { useAppStore } from "./useAppStore";
+import { Call } from "@/types";
+import { useStreamsStore } from "./useStreamsStore";
+import { useConnectionsStore } from "./useConnectionsStore";
 
-export const useCallStore = create<CallStore>((set) => ({
-  streams: {},
-  connections: {},
+const getStreamsStoreActions = () => useStreamsStore.getState().actions;
+const getConnectionsStoreActions = () => useConnectionsStore.getState().actions;
+const getStreamsStoreState = () => useStreamsStore.getState();
+const getConnectionsStoreState = () => useConnectionsStore.getState();
+const getAppStoreState = () => useAppStore.getState();
+const getUserStoreState = () => useUserStore.getState();
+
+export const useCallStore = create<CallStore>((set, get) => ({
   currentCall: null,
   incomingCalls: [],
   recentlyEndedCalls: [],
   joiningCall: null,
-  isUserSharingVideo: false,
-  isUserMicrophoneMuted: false,
-  selectedDevices: {
-    audioInput: undefined,
-    audioOutput: undefined,
-    videoInput: undefined,
-  },
 
   actions: {
-    addStream: (participantId, stream) =>
-      set((state) => {
-        const streams = {
-          ...state.streams,
-          [participantId]: {
-            stream,
-            shouldDisplayPopUp:
-              state.streams[participantId]?.shouldDisplayPopUp !== false
-                ? true
-                : false,
-          },
-        };
-        return { streams: { ...streams } };
-      }),
-    removeStream: (id) =>
-      set((state) => {
-        const newStreams = { ...state.streams };
-        if (newStreams[id]?.stream) {
-          newStreams[id].stream.getTracks().forEach((track) => {
-            track.stop();
-            newStreams[id].stream?.removeTrack(track);
-          });
-          newStreams[id].stream = null;
-        }
-        return { streams: newStreams };
-      }),
-    toggleStreamPopUp: (id) =>
-      set((state) => {
-        const newStreams = { ...state.streams };
-        newStreams[id].shouldDisplayPopUp = !newStreams[id].shouldDisplayPopUp;
-        return { streams: newStreams };
-      }),
-    addConnection: (participantId, peer) =>
-      set((state) => {
-        const updatedConnections = { ...state.connections };
-        updatedConnections[participantId] = peer;
-        return { connections: updatedConnections };
-      }),
-    removeConnection: (id) =>
-      set((state) => {
-        const newConnections = { ...state.connections };
-        delete newConnections[id];
-        return { connections: newConnections };
-      }),
-    resetConnections: () => set({ connections: {} }),
     setCurrentCall: (call) => set({ currentCall: call }),
     addIncomingCall: (newCall) =>
       set((state) => {
@@ -108,15 +66,88 @@ export const useCallStore = create<CallStore>((set) => ({
         ),
       })),
     resetIncomingCalls: () => set({ incomingCalls: [] }),
-    setIsUserSharingVideo: (newState) =>
-      set(() => ({ isUserSharingVideo: newState })),
-    setIsUserMicrophoneMuted: (newState) =>
-      set(() => ({ isUserMicrophoneMuted: newState })),
     setJoiningCall: (chatId) => set(() => ({ joiningCall: chatId })),
-    setSelectedDevices: (updatedDevices) =>
-      set((state) => ({
-        selectedDevices: { ...state.selectedDevices, ...updatedDevices },
-      })),
+    startCall: async (chat, videoEnabled) => {
+      const userId = getUserStoreState().user?._id;
+      const { socket } = getAppStoreState();
+      const { addStream } = getStreamsStoreActions();
+      const attachStreamToCall = getStreamsStoreActions().attachStreamToCall;
+
+      if (!chat || !userId || !socket) return;
+
+      const currUserStream = await attachStreamToCall({
+        videoEnabled,
+        audioEnabled: true,
+      });
+      if (!currUserStream) return;
+      addStream(userId, currUserStream);
+
+      socket.emit("joinCall", {
+        chatId: chat._id,
+        isInitiator: true,
+      });
+      socket.on("callJoined", (data: { call: Call }) => {
+        if (data.call) {
+          get().actions.setCurrentCall(data.call);
+          socket.off("callJoined");
+        }
+      });
+    },
+    answerCall: async (callDetails, videoEnabled) => {
+      const userId = getUserStoreState().user?._id;
+      const { socket } = getAppStoreState();
+      const { addStream } = getStreamsStoreActions();
+      const attachStreamToCall = getStreamsStoreActions().attachStreamToCall;
+      if (!callDetails || !userId || !socket) return;
+
+      const currUserStream = await attachStreamToCall({
+        videoEnabled,
+        audioEnabled: true,
+      });
+      if (!currUserStream) return;
+      addStream(userId, currUserStream);
+      get().actions.setJoiningCall(callDetails.chatId._id);
+
+      socket.emit("joinCall", {
+        chatId: callDetails.chatId._id,
+      });
+
+      socket.on("callJoined", (data: { call: Call }) => {
+        if (data.call) {
+          get().actions.setCurrentCall(data.call);
+          get().actions.setJoiningCall(null);
+          socket.off("callJoined");
+        }
+      });
+    },
+    endCall: (call) => {
+      const userId = getUserStoreState().user?._id;
+      const { streams } = getStreamsStoreState();
+      const { setIsUserMicrophoneMuted, setIsUserSharingVideo } =
+        getStreamsStoreActions();
+      const { socket } = getAppStoreState();
+      const { resetConnections } = getConnectionsStoreActions();
+
+      if (!userId || !socket) return;
+      const userStream = streams[userId]?.stream;
+      const peerConnections = getConnectionsStoreState().connections;
+      if (
+        call.participants.some(
+          (participant) => participant.userId._id === userId
+        )
+      ) {
+        socket.emit("endCall", { callId: call._id });
+        get().actions.addRecentlyEndedCall(call);
+        get().actions.setCurrentCall(null);
+      }
+      userStream?.getTracks().forEach((track) => track.stop());
+      Object.values(peerConnections).forEach((peer) => {
+        peer.destroy();
+      });
+      resetConnections();
+      setIsUserSharingVideo(false);
+      setIsUserMicrophoneMuted(false);
+    },
   },
 }));
 

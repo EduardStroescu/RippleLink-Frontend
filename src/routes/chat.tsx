@@ -11,7 +11,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import chatApi from "@/api/modules/chat.api";
 import { useUserStore } from "@/stores/useUserStore";
 
-import { SocketProvider, CallProvider } from "@/providers";
 import { DeleteButton, AvatarCoin, useToast } from "@/components/ui";
 import {
   SearchForm,
@@ -30,6 +29,8 @@ import {
   useChatsFilters,
   useSetChatsCache,
   useCallEvents,
+  useSocketConnection,
+  useCurrentCallState,
 } from "@/lib/hooks";
 import { groupAvatar, placeholderAvatar } from "@/lib/const";
 import { getParsedPath, adaptTimezone, isAuthenticated } from "@/lib/utils";
@@ -62,25 +63,21 @@ export const Route = createFileRoute("/chat")({
     chatsQuery,
     callsQuery,
   }),
-  component: () => (
-    <SocketProvider>
-      <CallProvider>
-        <ChatWrapper />
-      </CallProvider>
-    </SocketProvider>
-  ),
+  component: () => <ChatWrapper />,
 });
 
 function ChatWrapper() {
   const location = useLocation();
   const parsedPath = getParsedPath(location.pathname);
   const { chatsQuery, callsQuery } = Route.useLoaderData();
+  useSocketConnection();
 
   const { data: chats } = useQuery(chatsQuery);
   useQuery(callsQuery);
   const { filteredChats, handleFilter, handleSearch } = useChatsFilters(chats);
   useChatEvents();
   useCallEvents();
+  useCurrentCallState();
 
   return (
     <div className="relative grid grid-flow-col grid-cols-1 md:grid-cols-7 xl:grid-cols-8 w-full h-full">

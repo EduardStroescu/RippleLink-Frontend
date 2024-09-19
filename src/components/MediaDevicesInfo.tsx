@@ -1,6 +1,6 @@
-import { useCallStore } from "@/stores/useCallStore";
 import { useEffect, useState } from "react";
 import { useToast } from "./ui";
+import { useStreamsStore } from "@/stores/useStreamsStore";
 
 export function MediaDevicesInfo({
   onDeviceClick,
@@ -8,7 +8,7 @@ export function MediaDevicesInfo({
   onDeviceClick: (device: MediaDeviceInfo) => void;
 }) {
   const { toast } = useToast();
-  const selectedDevices = useCallStore((state) => state.selectedDevices);
+  const selectedDevices = useStreamsStore((state) => state.selectedDevices);
   const [devices, setDevices] = useState<{
     defaultDevices: MediaDeviceInfo[];
     inputDevices: MediaDeviceInfo[];

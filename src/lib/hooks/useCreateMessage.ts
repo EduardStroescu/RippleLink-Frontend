@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { useParams } from "@tanstack/react-router";
-import { useSocketContext } from "@/providers/SocketProvider";
 import { useUserTyping } from "./useUserTyping";
 import { Message, User } from "@/types";
 import { useSetMessagesCache } from "./useSetMessagesCache";
 import { create } from "mutative";
 import { v4 as uuidv4 } from "uuid";
 import { useUserStore } from "@/stores/useUserStore";
+import { useAppStore } from "@/stores/useAppStore";
 
 export function useCreateMessage() {
-  const { socket } = useSocketContext();
+  const socket = useAppStore((state) => state.socket);
   const user = useUserStore((state) => state.user);
 
   const params = useParams({ from: "/chat/$chatId" });

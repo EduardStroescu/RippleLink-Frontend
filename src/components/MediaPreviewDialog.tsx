@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,8 @@ interface MediaPreviewDialogProps {
   description?: string;
   className?: string;
   contentClassName?: string;
+  open?: boolean;
+  setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const MediaPreviewDialog: React.FC<MediaPreviewDialogProps> = ({
@@ -28,13 +30,9 @@ export const MediaPreviewDialog: React.FC<MediaPreviewDialogProps> = ({
   description,
   className,
   contentClassName,
+  open,
+  setOpen,
 }) => {
-  const [open, setOpen] = useState(false);
-
-  const contentWithProps = content
-    ? React.cloneElement(content, { setOpen })
-    : null;
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger className={clsx("", className)}>{children}</DialogTrigger>
@@ -49,7 +47,7 @@ export const MediaPreviewDialog: React.FC<MediaPreviewDialogProps> = ({
           <DialogTitle>{header}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        {contentWithProps}
+        {content}
       </DialogContent>
     </Dialog>
   );

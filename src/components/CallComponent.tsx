@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useRef, useState } from "react";
 import { AvatarCoin } from "./ui/AvatarCoin";
 import { placeholderAvatar } from "@/lib/const";
 import {
@@ -17,13 +17,16 @@ import {
 import { useUserStore } from "@/stores/useUserStore";
 import { MediaPreviewDialog } from "./MediaPreviewDialog";
 import { useCallStore, useCallStoreActions } from "@/stores/useCallStore";
-import { useCallContext } from "@/providers/CallProvider";
 import { useShallow } from "zustand/react/shallow";
 import { Call } from "@/types/call";
 import { VideoComponent, ResizableContainer } from "@/components/ui";
 import { User } from "@/types/user";
 import { MediaDevicesPicker } from "./MediaDevicesPicker";
 import { VolumeSwitcher } from "./VolumeSwitcher";
+import {
+  useStreamsStore,
+  useStreamsStoreActions,
+} from "@/stores/useStreamsStore";
 
 interface VideoCallProps {
   currentCallDetails: Call | undefined;
@@ -31,24 +34,27 @@ interface VideoCallProps {
 
 export const CallComponent = memo(({ currentCallDetails }: VideoCallProps) => {
   const user = useUserStore((state) => state.user);
-  const { setIsUserMicrophoneMuted, toggleStreamPopUp } = useCallStoreActions();
+  const { streams, isUserMicrophoneMuted } = useStreamsStore(
+    useShallow((state) => ({
+      streams: state.streams,
+      isUserMicrophoneMuted: state.isUserMicrophoneMuted,
+    }))
+  );
+  const { currentCall, joiningCall } = useCallStore(
+    useShallow((state) => ({
+      currentCall: state.currentCall,
+      joiningCall: state.joiningCall,
+    }))
+  );
   const {
-    answerCall,
-    endCall,
     handleScreenShare,
     handleVideoShare,
     handleSwitchCameraOrientation,
     handleSwitchDevice,
-  } = useCallContext();
-  const { currentCall, streams, isUserMicrophoneMuted, joiningCall } =
-    useCallStore(
-      useShallow((state) => ({
-        currentCall: state.currentCall,
-        streams: state.streams,
-        isUserMicrophoneMuted: state.isUserMicrophoneMuted,
-        joiningCall: state.joiningCall,
-      }))
-    );
+    setIsUserMicrophoneMuted,
+    toggleStreamPopUp,
+  } = useStreamsStoreActions();
+  const { answerCall, endCall } = useCallStoreActions();
 
   const handleAnswerCall = (videoEnabled?: boolean) => {
     if (currentCallDetails) {
@@ -230,6 +236,7 @@ const UserBox = memo(
     handleVideoClick,
     handleToggleVideoPopUp,
   }: UserBoxProps) => {
+    const [isVideoFullscreen, setIsVideoFullscreen] = useState(false);
     const fullscreenVideoRef = useRef<HTMLVideoElement>(null);
 
     return (
@@ -243,6 +250,8 @@ const UserBox = memo(
           <MediaPreviewDialog
             className="w-full h-full"
             contentClassName="w-fit h-full md:w-fit"
+            open={isVideoFullscreen}
+            setOpen={setIsVideoFullscreen}
             content={
               <VideoComponent
                 ref={fullscreenVideoRef}
@@ -257,9 +266,16 @@ const UserBox = memo(
               controls={false}
               className="w-full min-w-[70px] min-h-[70px] h-full object-fit rounded-md"
               ref={(el) => {
-                if (el && el.srcObject !== userStream?.stream) {
+                if (
+                  el &&
+                  el.srcObject !== userStream?.stream &&
+                  !isVideoFullscreen
+                ) {
                   el.srcObject = userStream?.stream;
                   el.play();
+                } else if (el && isVideoFullscreen) {
+                  el.pause();
+                  el.srcObject = null;
                 }
               }}
             />
@@ -280,18 +296,14 @@ const UserBox = memo(
 );
 
 const AudioSlider = () => {
-  const [volume, setVolume] = useState(1);
-  const { handleAdjustVolume } = useCallContext();
-
-  useEffect(() => {
-    handleAdjustVolume(volume);
-  }, [handleAdjustVolume, volume]);
+  const outputVolume = useStreamsStore((state) => state.outputVolume);
+  const { setOutputVolume } = useStreamsStoreActions();
 
   return (
-    <VolumeSwitcher volume={volume} setVolume={setVolume}>
+    <VolumeSwitcher volume={outputVolume} setVolume={setOutputVolume}>
       <div
         className={`
-        ${volume === 0 ? "bg-red-950 hover:bg-red-900" : "bg-green-950 hover:bg-green-900"}
+        ${outputVolume === 0 ? "bg-red-950 hover:bg-red-900" : "bg-green-950 hover:bg-green-900"}
         group p-2 max-w-fit h-fit rounded-full`}
       >
         <VolumeIcon />
@@ -301,7 +313,7 @@ const AudioSlider = () => {
 };
 
 const MicrophoneSwitch = ({ handleAudio }: { handleAudio: () => void }) => {
-  const isUserMicrophoneMuted = useCallStore(
+  const isUserMicrophoneMuted = useStreamsStore(
     (state) => state.isUserMicrophoneMuted
   );
   return (
@@ -321,7 +333,9 @@ const VideoButton = ({
 }: {
   handleShareVideo: () => void;
 }) => {
-  const isUserSharingVideo = useCallStore((state) => state.isUserSharingVideo);
+  const isUserSharingVideo = useStreamsStore(
+    (state) => state.isUserSharingVideo
+  );
   if (isUserSharingVideo !== false && isUserSharingVideo !== "video") {
     return null;
   } else
@@ -342,7 +356,9 @@ const SwitchVideoOrientationButton = ({
 }: {
   switchCameraOrientation: () => void;
 }) => {
-  const isUserSharingVideo = useCallStore((state) => state.isUserSharingVideo);
+  const isUserSharingVideo = useStreamsStore(
+    (state) => state.isUserSharingVideo
+  );
   if (isUserSharingVideo !== "video") {
     return null;
   } else
@@ -361,7 +377,9 @@ const ScreenShareButton = ({
 }: {
   handleScreenShare: () => void;
 }) => {
-  const isUserSharingVideo = useCallStore((state) => state.isUserSharingVideo);
+  const isUserSharingVideo = useStreamsStore(
+    (state) => state.isUserSharingVideo
+  );
 
   if (isUserSharingVideo === "video") {
     return null;

@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import { useThrottle } from "./useThrottle";
-import { useSocketContext } from "@/providers/SocketProvider";
+import { useAppStore } from "@/stores/useAppStore";
 
 export function useUserTyping(params, message: string) {
-  const { socket } = useSocketContext();
+  const socket = useAppStore((state) => state.socket);
 
   const handleTyping = useThrottle(() => {
     if (!socket) return;

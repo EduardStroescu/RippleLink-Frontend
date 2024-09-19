@@ -10,7 +10,7 @@ import {
 interface VolumeSwitcherProps {
   children: React.ReactNode;
   volume: number;
-  setVolume: React.Dispatch<React.SetStateAction<number>>;
+  setVolume: (newVolume: number) => void;
 }
 
 export const VolumeSwitcher: React.FC<VolumeSwitcherProps> = ({

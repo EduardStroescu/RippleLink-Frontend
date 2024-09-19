@@ -10,8 +10,7 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import chatApi from "@/api/modules/chat.api";
 import { getParsedPath } from "@/lib/utils";
 import { groupAvatar, placeholderAvatar } from "@/lib/const";
-import { useCallStore } from "@/stores/useCallStore";
-import { useSocketContext, useCallContext } from "@/providers";
+import { useCallStore, useCallStoreActions } from "@/stores/useCallStore";
 import { TypingIndicator } from "@/components/ui/TypingIndicator";
 import {
   AddUsersIcon,
@@ -39,6 +38,7 @@ import {
 } from "@/lib/hooks";
 import { useChatName } from "@/lib/hooks/useChatName";
 import { User, Message, Chat, Call } from "@/types";
+import { useAppStore } from "@/stores/useAppStore";
 
 export const Route = createFileRoute("/chat/$chatId")({
   beforeLoad: async ({ params: { chatId } }) => {
@@ -118,7 +118,7 @@ const ChatHeader = ({
   currentCall: Call | null;
 }) => {
   const params = useParams({ from: "/chat/$chatId" });
-  const { startCall } = useCallContext();
+  const { startCall } = useCallStoreActions();
 
   const {
     isEditingChatName,
@@ -204,7 +204,7 @@ const ChatContent = ({
   interlocutors: User[] | undefined;
 }) => {
   const { messagesQuery } = Route.useLoaderData();
-  const { socket } = useSocketContext();
+  const socket = useAppStore((state) => state.socket);
   const params = useParams({ from: "/chat/$chatId" });
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
