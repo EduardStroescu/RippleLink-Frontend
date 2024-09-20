@@ -39,11 +39,11 @@ export const UserSettingsOverlay: React.FC<UserSettingsOverlayProps> = ({
       router.navigate({ to: "/" });
       router.invalidate();
     },
-    onError: (err) => {
+    onError: (error: unknown) => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: err?.message,
+        description: error as string,
       });
     },
   });

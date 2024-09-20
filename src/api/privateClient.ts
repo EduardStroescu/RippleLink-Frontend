@@ -92,6 +92,11 @@ privateClient.interceptors.response.use(
         const refreshError = error as AxiosError;
         window.localStorage.removeItem("user");
         processQueue(null);
+
+        // Redirect to home page with the original URL
+        window.location.href =
+          "/?redirect=" + encodeURIComponent(window.location.href);
+
         return Promise.reject(
           refreshError?.response?.data || "Token refresh failed"
         );

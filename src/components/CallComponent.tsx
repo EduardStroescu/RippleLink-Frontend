@@ -273,7 +273,7 @@ const UserBox = memo(
                 ) {
                   el.srcObject = userStream?.stream;
                   el.play();
-                } else if (el && isVideoFullscreen) {
+                } else if (el && el.srcObject && isVideoFullscreen) {
                   el.pause();
                   el.srcObject = null;
                 }

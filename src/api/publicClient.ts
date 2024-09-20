@@ -23,13 +23,8 @@ publicClient.interceptors.request.use(
 );
 
 publicClient.interceptors.response.use(
-  (response) => {
-    if (response && response.data) return response.data;
-    return response;
-  },
-  (err) => {
-    throw err.response.data;
-  }
+  (response) => response.data,
+  (err) => Promise.reject(err?.response?.data?.message || "An error occurred")
 );
 
 export default publicClient;

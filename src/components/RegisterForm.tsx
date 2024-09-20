@@ -62,11 +62,11 @@ export function RegisterForm() {
         setUser(response);
         router.history.push(redirectUrl ? redirectUrl : "/chat");
       },
-      onError: (error) => {
+      onError: (error: unknown) => {
         toast({
           variant: "destructive",
           title: "Error",
-          description: error.message,
+          description: error as string,
         });
       },
     });

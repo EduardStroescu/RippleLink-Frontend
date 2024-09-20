@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserStore } from "@/stores/useUserStore";
 import chatApi from "@/api/modules/chat.api";
@@ -35,16 +35,15 @@ export const Route = createFileRoute("/chat/$chatId/details")({
 });
 
 function ChatDetails() {
-  // @ts-expect-error chatId exists as a param
-  const params = useParams({ chatId: "chatId" });
+  const { chatId } = Route.useParams();
   const user = useUserStore((state) => state.user);
   const queryClient = useQueryClient();
   const chatData = queryClient.getQueryData<Chat[] | []>(["chats"]);
   const sharedFilesData = Route.useLoaderData<Message[] | []>();
 
   const currentChat = useMemo(
-    () => chatData?.filter((chat) => chat._id === params.chatId)?.[0],
-    [chatData, params.chatId]
+    () => chatData?.filter((chat) => chat._id === chatId)?.[0],
+    [chatData, chatId]
   );
   const interlocutors = useMemo(
     () =>
@@ -64,7 +63,7 @@ function ChatDetails() {
         <Link
           to={"/chat/$chatId"}
           preload={false}
-          params={{ chatId: params.chatId }}
+          params={{ chatId: chatId }}
           className="group flex items-center gap-2 py-4"
         >
           <BackIcon /> <span className="text-xs">Back</span>

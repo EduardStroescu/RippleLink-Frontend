@@ -108,11 +108,11 @@ function CreateNewChat() {
         router.history.push(`/chat/${response._id}`);
         queryClient.removeQueries({ queryKey: ["chats"] });
       },
-      onError: (error) => {
+      onError: (error: unknown) => {
         toast({
           variant: "destructive",
           title: "Error",
-          description: error.message,
+          description: error as string,
         });
       },
     });

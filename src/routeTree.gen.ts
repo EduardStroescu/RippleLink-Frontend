@@ -140,17 +140,125 @@ declare module '@tanstack/react-router' {
 
 // Create and export the route tree
 
-export const routeTree = rootRoute.addChildren({
-  IndexRoute,
-  SplatRoute,
-  ChatRoute: ChatRoute.addChildren({
-    ChatChatIdRoute: ChatChatIdRoute.addChildren({ ChatChatIdDetailsRoute }),
-    ChatCreateChatRoute,
-    ChatSettingsRoute,
-  }),
-  LoginRoute,
-  RegisterRoute,
-})
+interface ChatChatIdRouteChildren {
+  ChatChatIdDetailsRoute: typeof ChatChatIdDetailsRoute
+}
+
+const ChatChatIdRouteChildren: ChatChatIdRouteChildren = {
+  ChatChatIdDetailsRoute: ChatChatIdDetailsRoute,
+}
+
+const ChatChatIdRouteWithChildren = ChatChatIdRoute._addFileChildren(
+  ChatChatIdRouteChildren,
+)
+
+interface ChatRouteChildren {
+  ChatChatIdRoute: typeof ChatChatIdRouteWithChildren
+  ChatCreateChatRoute: typeof ChatCreateChatRoute
+  ChatSettingsRoute: typeof ChatSettingsRoute
+}
+
+const ChatRouteChildren: ChatRouteChildren = {
+  ChatChatIdRoute: ChatChatIdRouteWithChildren,
+  ChatCreateChatRoute: ChatCreateChatRoute,
+  ChatSettingsRoute: ChatSettingsRoute,
+}
+
+const ChatRouteWithChildren = ChatRoute._addFileChildren(ChatRouteChildren)
+
+export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
+  '/$': typeof SplatRoute
+  '/chat': typeof ChatRouteWithChildren
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/chat/$chatId': typeof ChatChatIdRouteWithChildren
+  '/chat/create-chat': typeof ChatCreateChatRoute
+  '/chat/settings': typeof ChatSettingsRoute
+  '/chat/$chatId/details': typeof ChatChatIdDetailsRoute
+}
+
+export interface FileRoutesByTo {
+  '/': typeof IndexRoute
+  '/$': typeof SplatRoute
+  '/chat': typeof ChatRouteWithChildren
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/chat/$chatId': typeof ChatChatIdRouteWithChildren
+  '/chat/create-chat': typeof ChatCreateChatRoute
+  '/chat/settings': typeof ChatSettingsRoute
+  '/chat/$chatId/details': typeof ChatChatIdDetailsRoute
+}
+
+export interface FileRoutesById {
+  __root__: typeof rootRoute
+  '/': typeof IndexRoute
+  '/$': typeof SplatRoute
+  '/chat': typeof ChatRouteWithChildren
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/chat/$chatId': typeof ChatChatIdRouteWithChildren
+  '/chat/create-chat': typeof ChatCreateChatRoute
+  '/chat/settings': typeof ChatSettingsRoute
+  '/chat/$chatId/details': typeof ChatChatIdDetailsRoute
+}
+
+export interface FileRouteTypes {
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths:
+    | '/'
+    | '/$'
+    | '/chat'
+    | '/login'
+    | '/register'
+    | '/chat/$chatId'
+    | '/chat/create-chat'
+    | '/chat/settings'
+    | '/chat/$chatId/details'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/$'
+    | '/chat'
+    | '/login'
+    | '/register'
+    | '/chat/$chatId'
+    | '/chat/create-chat'
+    | '/chat/settings'
+    | '/chat/$chatId/details'
+  id:
+    | '__root__'
+    | '/'
+    | '/$'
+    | '/chat'
+    | '/login'
+    | '/register'
+    | '/chat/$chatId'
+    | '/chat/create-chat'
+    | '/chat/settings'
+    | '/chat/$chatId/details'
+  fileRoutesById: FileRoutesById
+}
+
+export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
+  SplatRoute: typeof SplatRoute
+  ChatRoute: typeof ChatRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
+}
+
+const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  SplatRoute: SplatRoute,
+  ChatRoute: ChatRouteWithChildren,
+  LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
+}
+
+export const routeTree = rootRoute
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()
 
 /* prettier-ignore-end */
 

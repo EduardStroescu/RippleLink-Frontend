@@ -105,7 +105,8 @@ export const useStreamsStore = create<StreamsStore>((set, get) => ({
         } else {
           toast({
             variant: "destructive",
-            title: "Error accessing media devices.",
+            title: "Error",
+            description: "Unable to access the media devices.",
           });
         }
       }
@@ -166,7 +167,11 @@ export const useStreamsStore = create<StreamsStore>((set, get) => ({
         }
       } catch (error) {
         if (error instanceof DOMException) {
-          toast({ variant: "destructive", title: error.message });
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: error.message,
+          });
         }
       }
     },
@@ -233,7 +238,11 @@ export const useStreamsStore = create<StreamsStore>((set, get) => ({
         }
       } catch (error) {
         if (error instanceof DOMException) {
-          toast({ variant: "destructive", title: error.message });
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: error.message,
+          });
         }
       }
     },

@@ -39,7 +39,8 @@ export function MediaDevicesInfo({
     } catch (err) {
       toast({
         variant: "destructive",
-        title: "Error finding devices.",
+        title: "Error",
+        description: "Cound not access the media devices.",
       });
     }
   };

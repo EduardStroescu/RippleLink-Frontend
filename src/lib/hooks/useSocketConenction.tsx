@@ -40,7 +40,7 @@ export function useSocketConnection() {
     const handleError = ({ message }) => {
       if (message === "Failed to end call") {
         queryClient.invalidateQueries({ queryKey: ["calls"] });
-      } else if (message !== "Failed to connect user") {
+      } else if (message !== "Failed to connect") {
         toast({ variant: "destructive", title: "Error", description: message });
       }
     };

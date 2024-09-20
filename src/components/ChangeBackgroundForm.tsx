@@ -89,11 +89,11 @@ export function ChangeBackgroundForm() {
           description: "Theme updated successfully",
         });
       },
-      onError: (error) => {
+      onError: (error: unknown) => {
         toast({
           variant: "destructive",
           title: "Error",
-          description: error.message,
+          description: error as string,
         });
       },
     });
