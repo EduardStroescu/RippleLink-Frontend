@@ -8,6 +8,8 @@ import { FullscreenImage } from "./ui/FullscreenImage";
 import { VideoComponent } from "./ui/VideoComponent";
 import { AudioComponent } from "./ui/AudioComponent";
 import { CustomChatInput } from "./ui/CustomChatInput";
+import { bytesToMegabytes } from "@/lib/utils";
+import { useToast } from "./ui";
 
 type CreateMessageFormProps = {
   handleSubmitMessage: (e: FormEvent<HTMLFormElement>) => void;
@@ -39,6 +41,7 @@ export const CreateMessageForm = ({
   const [shouldRenderPreview, setShouldRenderPreview] =
     useState(!!contentPreview);
   const formRef = useRef<HTMLFormElement>(null);
+  const { toast } = useToast();
 
   const handleGifSelect = (gif: string) => {
     setGif(gif);
@@ -58,6 +61,18 @@ export const CreateMessageForm = ({
     if (!e.target.files?.length) return;
     const fileReader = new FileReader();
     const file = e.target.files[0];
+    const fileSize = bytesToMegabytes(file.size);
+
+    // Check if the file size is greater than 10 MB
+    if (fileSize > 10) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "File size exceeds 10 MB",
+      });
+      return;
+    }
+
     fileReader.readAsDataURL(file);
 
     fileReader.onloadend = () => {
@@ -82,6 +97,18 @@ export const CreateMessageForm = ({
       e.preventDefault();
       const file = clipboardItem.getAsFile();
       if (!file) return;
+
+      const fileSize = bytesToMegabytes(file.size);
+      // Check if the file size is greater than 10 MB
+      if (fileSize > 10) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "File size exceeds 10 MB",
+        });
+        return;
+      }
+
       const fileReader = new FileReader();
       fileReader.readAsDataURL(file);
 
@@ -115,7 +142,7 @@ export const CreateMessageForm = ({
     <form ref={formRef} onSubmit={handleSubmitMessage}>
       {shouldRenderPreview && (
         <div
-          className={`${animationState} flex justify-between bg-black/40 p-6 border-t-slate-700 border-t-[1px]`}
+          className={`${animationState} flex justify-between gap-4 bg-black/40 p-6 border-t-slate-700 border-t-[1px]`}
         >
           <div className="relative max-w-[500px]">
             {displayMessagePreviewByType(messageType, contentPreview)}
@@ -195,6 +222,7 @@ const renderImage = (contentPreview: {
   <FullscreenImage
     src={contentPreview.content || ""}
     alt="User Pasted Image"
+    className="object-contain aspect-auto max-h-[15dvh] w-full"
     width={300}
   />
 );
@@ -202,7 +230,12 @@ const renderImage = (contentPreview: {
 const renderVideo = (contentPreview: {
   content: string | null;
   name: string | null;
-}) => <VideoComponent src={contentPreview.content || undefined} />;
+}) => (
+  <VideoComponent
+    src={contentPreview.content || undefined}
+    className="aspect-auto"
+  />
+);
 
 const renderAudio = (contentPreview: {
   content: string | null;

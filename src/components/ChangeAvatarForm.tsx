@@ -11,6 +11,7 @@ import { useToast } from "./ui/use-toast";
 import { AvatarUpdateSchema } from "@/lib/formSchemas/user.schemas";
 import { User } from "@/types/user";
 import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
+import { bytesToMegabytes } from "@/lib/utils";
 
 export function ChangeAvatarForm() {
   const user = useUserStore((state) => state.user);
@@ -30,6 +31,18 @@ export function ChangeAvatarForm() {
     if (!e.target.files?.length) return;
     const fileReader = new FileReader();
     const file = e.target.files[0];
+    const fileSize = bytesToMegabytes(file.size);
+
+    // Check if the file size is greater than 10 MB
+    if (fileSize > 10) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "File size exceeds 10 MB",
+      });
+      return;
+    }
+
     fileReader.readAsDataURL(file);
 
     fileReader.onloadend = () => {

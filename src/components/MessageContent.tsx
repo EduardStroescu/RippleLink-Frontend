@@ -41,7 +41,8 @@ const renderImage = (message: Message) => (
   <FullscreenImage
     src={message.content}
     alt={`Image sent by ${message.senderId.displayName}`}
-    width={400}
+    width={300}
+    className="w-[300px] lg:w-[400px]"
   />
 );
 

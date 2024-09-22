@@ -3,7 +3,7 @@ import { useUserStore } from "@/stores/useUserStore";
 import { Chat, FilterOption } from "@/types";
 
 export function useChatsFilters(chats: Chat[] | [] | undefined) {
-  const user = useUserStore((state) => state.user);
+  const currUser = useUserStore((state) => state.user);
   const [filteredChats, setFilteredChats] = useState<typeof chats>([]);
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export function useChatsFilters(chats: Chat[] | [] | undefined) {
         chats?.filter(
           (chat) =>
             chat.lastMessage?.read === false &&
-            chat.lastMessage.senderId._id !== user?._id
+            chat.lastMessage.senderId._id !== currUser?._id
         )
       );
     } else if (filter === "Groups") {
@@ -37,10 +37,12 @@ export function useChatsFilters(chats: Chat[] | [] | undefined) {
     if (e.target.value !== "") {
       setFilteredChats(() =>
         chats?.filter((chat) =>
-          chat.users.some((user) =>
-            user.displayName
-              .toLowerCase()
-              .includes(e.target.value.toLowerCase())
+          chat.users.some(
+            (user) =>
+              user._id !== currUser?._id &&
+              user.displayName
+                .toLowerCase()
+                .includes(e.target.value.toLowerCase())
           )
         )
       );

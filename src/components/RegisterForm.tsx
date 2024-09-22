@@ -11,6 +11,7 @@ import { RegisterSchema } from "@/lib/formSchemas/auth.schemas";
 import { AvatarCoin, useToast } from "@/components/ui";
 import { placeholderAvatar } from "@/lib/const";
 import { User } from "@/types/user";
+import { bytesToMegabytes } from "@/lib/utils";
 
 export function RegisterForm() {
   const { setUser } = useUserStoreActions();
@@ -76,6 +77,18 @@ export function RegisterForm() {
     if (!e.target.files?.length) return;
     const fileReader = new FileReader();
     const file = e.target.files[0];
+    const fileSize = bytesToMegabytes(file.size);
+
+    // Check if the file size is greater than 10 MB
+    if (fileSize > 10) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "File size exceeds 10 MB",
+      });
+      return;
+    }
+
     fileReader.readAsDataURL(file);
 
     fileReader.onloadend = () => {

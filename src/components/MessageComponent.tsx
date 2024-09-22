@@ -94,7 +94,7 @@ export const MessageComponent = memo(
             )}
             <div className="flex gap-1 items-center self-end">
               {!isOwnMessage && (
-                <p className="text-xs">{message?.senderId.displayName}</p>
+                <p className="text-xs">{message?.senderId?.displayName}</p>
               )}
               {canEditMessage(
                 isOwnMessage,

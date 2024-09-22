@@ -124,3 +124,7 @@ export const canEditMessage = (
     timeDifferenceInMinutes <= 15 && isOwnMessage && messageType === "text"
   );
 };
+
+export const bytesToMegabytes = (bytes: number) => {
+  return Number((bytes / (1024 * 1024)).toFixed(1));
+};

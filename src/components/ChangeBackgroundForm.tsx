@@ -1,7 +1,11 @@
 import { AvatarCoin } from "./ui/AvatarCoin";
 import { RgbaColor } from "react-colorful";
 import { ColorPicker } from "./ColorPicker";
-import { ObjectToRgbaString, rgbaStringToObject } from "@/lib/utils";
+import {
+  bytesToMegabytes,
+  ObjectToRgbaString,
+  rgbaStringToObject,
+} from "@/lib/utils";
 import { useAppStore, useAppStoreActions } from "@/stores/useAppStore";
 import { useShallow } from "zustand/react/shallow";
 import { useMutation } from "@tanstack/react-query";
@@ -29,6 +33,18 @@ export function ChangeBackgroundForm() {
     if (!e.target.files?.length) return;
     const fileReader = new FileReader();
     const file = e.target.files[0];
+    const fileSize = bytesToMegabytes(file.size);
+
+    // Check if the file size is greater than 10 MB
+    if (fileSize > 10) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "File size exceeds 10 MB",
+      });
+      return;
+    }
+
     fileReader.readAsDataURL(file);
 
     fileReader.onloadend = () => {
@@ -110,7 +126,7 @@ export function ChangeBackgroundForm() {
           Select Background
         </p>
         <AvatarCoin
-          source={appBackground || "/background.png"}
+          source={appBackground || "/background.jpg"}
           width={100}
           className="w-full aspect-square object-cover"
           alt="User Avatar"

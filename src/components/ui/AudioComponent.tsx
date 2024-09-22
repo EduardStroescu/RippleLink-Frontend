@@ -15,7 +15,7 @@ export function AudioComponent(
         />
       }
     >
-      <audio controls className="rounded-md" {...props} />
+      <audio controls className="max-w-full" {...props} />
     </MediaPreviewDialog>
   );
 }

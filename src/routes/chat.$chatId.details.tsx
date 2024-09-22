@@ -72,13 +72,13 @@ function ChatDetails() {
       <div className="overflow-y-auto py-2">
         {interlocutors && interlocutors?.length <= 1 ? (
           <UserDetailsHeader
-            avatarUrl={interlocutors?.[0].avatarUrl || placeholderAvatar}
-            name={interlocutors?.[0].displayName}
-            statusMessage={interlocutors?.[0].status?.statusMessage}
+            avatarUrl={interlocutors?.[0]?.avatarUrl || placeholderAvatar}
+            name={interlocutors?.[0]?.displayName}
+            statusMessage={interlocutors?.[0]?.status?.statusMessage}
           />
         ) : (
           <UserDetailsHeader
-            avatarUrl={interlocutors?.[0].avatarUrl || placeholderAvatar}
+            avatarUrl={interlocutors?.[0]?.avatarUrl || placeholderAvatar}
             name={
               currentChat?.name || `Group Chat: ${interlocutorsDisplayNames}`
             }

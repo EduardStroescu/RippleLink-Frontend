@@ -36,9 +36,9 @@ export function useCurrentChatDetails({
     [currentChat, user?._id]
   );
 
-  const shouldQueryInterlocutorStatus = interlocutors?.[0]._id && isDmChat;
+  const shouldQueryInterlocutorStatus = interlocutors?.[0]?._id && isDmChat;
   const { data: interlocutorStatus } = useQuery({
-    queryKey: ["interlocutorStatus", interlocutors?.[0]._id],
+    queryKey: ["interlocutorStatus", interlocutors?.[0]?._id],
     queryFn: () => chatApi.getInterlocutorStatus(interlocutors?.[0]._id),
     enabled: !!shouldQueryInterlocutorStatus,
   });
