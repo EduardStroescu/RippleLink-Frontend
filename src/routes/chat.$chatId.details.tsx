@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserStore } from "@/stores/useUserStore";
 import chatApi from "@/api/modules/chat.api";
-import { placeholderAvatar } from "@/lib/const";
+import { groupAvatar, placeholderAvatar } from "@/lib/const";
 import { Chat, Message } from "@/types";
 
 import { BackIcon, MediaComponent } from "@/components";
@@ -78,7 +78,7 @@ function ChatDetails() {
           />
         ) : (
           <UserDetailsHeader
-            avatarUrl={interlocutors?.[0]?.avatarUrl || placeholderAvatar}
+            avatarUrl={currentChat?.avatarUrl || groupAvatar}
             name={
               currentChat?.name || `Group Chat: ${interlocutorsDisplayNames}`
             }

@@ -76,7 +76,7 @@ export function CustomChatInput({
       element.setSelectionRange(message.length, message.length);
       element.focus();
     }
-  }, [message]);
+  }, []);
 
   return (
     <>

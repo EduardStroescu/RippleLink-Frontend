@@ -54,7 +54,10 @@ export function useChatName({
   const placeholderChatName = `Group Chat: ${interlocutorsDisplayNames}`;
 
   const handleInitChatName = useCallback(() => {
-    if (chatName === currentChat?.name || chatName === placeholderChatName)
+    if (
+      (chatName.length && chatName === currentChat?.name) ||
+      chatName === placeholderChatName
+    )
       return;
     if (!isDmChat && !isEditingChatName) {
       setChatName(currentChat?.name || placeholderChatName);
