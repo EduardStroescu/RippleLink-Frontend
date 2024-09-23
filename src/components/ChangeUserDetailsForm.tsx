@@ -7,11 +7,14 @@ import { useEffect } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
 import { useToast } from "./ui/use-toast";
+import { useLocalStorage } from "@/lib/hooks";
+import { User } from "@/types";
 
 export function ChangeUserDetailsForm() {
   const user = useUserStore((state) => state.user);
   const { setUser } = useUserStoreActions();
   const { toast } = useToast();
+  const { setItem } = useLocalStorage<User>("user");
 
   const updateUserMutation = useMutation({
     mutationFn: (formData: {
@@ -68,7 +71,12 @@ export function ChangeUserDetailsForm() {
 
     await updateUserMutation.mutateAsync(updateObj, {
       onSuccess: (response) => {
-        setUser((prevUser) => prevUser && { ...prevUser, response });
+        setUser((prevUser) => {
+          if (!prevUser) return prevUser;
+          const updatedUser = { ...prevUser, ...response };
+          setItem(updatedUser);
+          return updatedUser;
+        });
         toast({
           title: "Success",
           description: "User details updated successfully",
