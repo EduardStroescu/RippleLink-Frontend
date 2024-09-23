@@ -3,13 +3,15 @@ import { useAppStore, useAppStoreActions } from "@/stores/useAppStore";
 import { useUserStore, useUserStoreActions } from "@/stores/useUserStore";
 import { User } from "@/types/user";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { getItem } = useLocalStorage<User>("user");
   const { setUser } = useUserStoreActions();
+
   const user = useUserStore((state) => state.user);
+  const [backgroundLoaded, setBackgroundLoaded] = useState(false);
   const { appBackground, appTint, appGlow } = useAppStore(
     useShallow((state) => ({
       appBackground: state.appBackground,
@@ -19,6 +21,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
   const { setAppBackground, setAppTint, setAppGlow, resetAppStore } =
     useAppStoreActions();
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -44,11 +47,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
     }
   }, [resetAppStore, setAppBackground, setAppGlow, setAppTint, user?.settings]);
 
+  // Load the background image and trigger fade effect after it's loaded
+  useEffect(() => {
+    if (!appBackground) return;
+
+    const img = new Image();
+    img.src = appBackground;
+    img.onload = () => {
+      setBackgroundLoaded(true);
+    };
+  }, [appBackground]);
+
   return (
     <div
       style={{ backgroundImage: `url(${appBackground})` }}
-      className="flex flex-col h-[100dvh] bg-cover bg-center justify-center overflow-hidden"
+      className="relative flex flex-col h-[100dvh] bg-cover bg-center justify-center overflow-hidden"
     >
+      <div
+        className={`${backgroundLoaded && appBackground !== "/background.jpg" ? "opacity-0" : "opacity-100"} transition-opacity duration-1000
+          bg-[url('/background.jpg')] bg-cover bg-center absolute inset-0 z-1`}
+      />
       <main
         className="md:shadow-xl w-full md:w-[90%] bg-black/40 md:shadow-cyan-500/50 h-full md:h-[90%] self-center border-slate-700 sm:border-[1px] sm:rounded backdrop-blur"
         style={{

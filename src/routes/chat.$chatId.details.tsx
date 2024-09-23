@@ -99,7 +99,13 @@ function ChatDetails() {
                   <div className="flex flex-col w-full h-full max-h-[300px] items-center justify-center overflow-y-auto gap-1">
                     {interlocutors?.map((interlocutor) => (
                       <div key={interlocutor._id}>
-                        <p>{interlocutor.displayName}</p>
+                        <Link
+                          aria-label={`Navigate to or create chat with ${interlocutor.displayName}`}
+                          to={`/chat/create-chat?userIds=${interlocutor._id}`}
+                          className="hover:text-white"
+                        >
+                          {interlocutor.displayName}
+                        </Link>
                       </div>
                     ))}
                   </div>
