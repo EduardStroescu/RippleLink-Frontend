@@ -14,7 +14,7 @@ https://ripple-link.koyeb.app/api/docs - Backend API Documentation made with Swa
 
 Full-Stack live calls and messaging service using SocketIO, WebRTC and NestJS with MongoDB.
 
-## Overview
+## Description
 
 Used Tanstack Router in combination with Tanstack Query in order to preload and manage the content required for all routes. Real-time data comes through web sockets with SocketIO, and calls are made through a WebRTC mesh pattern with simple-peer(please check the notes from the bottom of the page regarding WebRTC). Any media uploaded by the users is sent to Cloudinary where it gets optimized and linked to the users stored on the backend.
 
@@ -24,17 +24,20 @@ In order not to keep asking the user to log in for every visit I've used the bro
 
 - Vite-React-SWC
 - [socket.io](https://socket.io/)
-- [simple-peer](https://github.com/feross/simple-peer)
-- [shadcn/ui](https://github.com/shadcn/ui)
-- [zustand](https://github.com/pmndrs/zustand)
-- [axios](https://github.com/axios/axios)
-- [tanstack/react-router](https://github.com/TanStack/router)
-- [tanstack/react-query](https://github.com/TanStack/query)
-- [zod](https://github.com/colinhacks/zod)
-- [react-hook-form](https://github.com/react-hook-form/react-hook-form)
-- [Tailwind](https://tailwindcss.com/)
-- [gif-picker-react](https://github.com/MrBartusek/gif-picker-react)
-- [emoji-picker-react](https://github.com/ealush/emoji-picker-react)
+- [simple-peer](https://github.com/feross/simple-peer) - WebRTC Calls
+- [shadcn/ui](https://github.com/shadcn/ui) - UI Components
+- [zustand](https://github.com/pmndrs/zustand) - State Management
+- [mutative](https://github.com/unadlib/mutative) - Immutable updates similar to Immer
+- [axios](https://github.com/axios/axios) - HTTP Requests
+- [tanstack/virtual](https://github.com/TanStack/virtual) - Virtual List
+- [tanstack/react-router](https://github.com/TanStack/router) - Routing
+- [tanstack/react-query](https://github.com/TanStack/query) - Data Fetching
+- [zod](https://github.com/colinhacks/zod) - Data Validation
+- [react-hook-form](https://github.com/react-hook-form/react-hook-form) - Form Validation
+- [Tailwind](https://tailwindcss.com/) - CSS Framework
+- [gif-picker-react](https://github.com/MrBartusek/gif-picker-react) - GIF Picker
+- [emoji-picker-react](https://github.com/ealush/emoji-picker-react) - Emoji Picker
+- [react-colorful](https://github.com/omgovich/react-colorful) - Color Picker
 - Typescript
 
 ```
