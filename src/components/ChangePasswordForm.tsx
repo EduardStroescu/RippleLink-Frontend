@@ -45,7 +45,7 @@ export function ChangePasswordForm() {
       onSuccess: () => {
         removeItem();
         setUser(null);
-        router.navigate({ to: "/" });
+        router.navigate({ to: "/login" });
         toast({
           title: "Success",
           description: "Password changed successfully",

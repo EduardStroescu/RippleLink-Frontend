@@ -8,7 +8,7 @@ export const Route = createFileRoute("/$")({
           Oops! This page is unavailable!
         </h2>
         <Link
-          to="/"
+          to="/chat"
           className="rounded-xl bg-cyan-500 p-3 text-xl hover:bg-cyan-600"
         >
           Return Home

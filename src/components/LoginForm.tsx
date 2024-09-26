@@ -60,7 +60,7 @@ export function LoginForm() {
   return (
     <form
       onSubmit={handleSubmit(handleLogin)}
-      className="flex flex-col gap-8 min-w-[320px] sm:min-w-[500px]"
+      className="flex flex-col gap-8 w-[calc(min(500px,100vw))] px-8 sm:px-0"
     >
       <div className="flex flex-col gap-1">
         {errors.email && (
@@ -71,7 +71,8 @@ export function LoginForm() {
           autoFocus
           type="email"
           placeholder="Email"
-          className="rounded p-1.5 bg-black shadow-custom-multi"
+          className="rounded p-1.5
+           transition-colors ease-in-out duration-700 text-center shadow-lg shadow-cyan-500/50 text-white bg-neutral-950 focus-within:bg-black hover:bg-black text-xl outline-none"
           autoComplete="email"
         />
       </div>
@@ -84,14 +85,15 @@ export function LoginForm() {
           type="password"
           placeholder="Password"
           autoComplete="password"
-          className="rounded p-1.5 bg-black shadow-custom-multi"
+          className="rounded p-1.5
+           transition-colors ease-in-out duration-700 text-center shadow-lg shadow-cyan-500/50 text-white bg-neutral-950 focus-within:bg-black hover:bg-black text-xl outline-none"
         />
       </div>
-      <div className="my-4 flex flex-col gap-2">
+      <div className="flex flex-col gap-4">
         <button
           type="submit"
           disabled={isSubmitting}
-          className="px-2 py-1 rounded border-4 border-double border-blue-800 bg-black transition-colors ease-in-out duration-700 hover:bg-slate-950 w-full max-w-[50%] place-self-center"
+          className="px-2 py-1 transition-colors ease-in-out duration-700 min-w-[140px] place-self-center text-center shadow-lg shadow-cyan-500/50 text-neutral-300 hover:text-white bg-cyan-800 hover:bg-cyan-600 hover:shadow-cyan-400/50 rounded text-xl"
         >
           {isSubmitting ? "Logging In..." : "Log In"}
         </button>

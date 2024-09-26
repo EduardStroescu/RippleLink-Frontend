@@ -50,9 +50,9 @@ export function DemoAccountLoginPanel() {
   };
 
   return (
-    <div className="shadow-xl shadow-cyan-500/50 border-[1px] border-slate-600 flex flex-col items-center justify-center gap-4 bg-cyan-900/60 px-6 py-4 rounded-lg">
-      <h3>- Demo Accounts -</h3>
-      <div className="flex gap-2">
+    <div className="shadow-xl shadow-cyan-500/50 border-[1px] border-slate-600 flex flex-col gap-4 bg-cyan-900/60 px-4 py-4 rounded-lg w-auto">
+      <h3 className="text-center">- Demo Accounts -</h3>
+      <div className="flex gap-2 flex-wrap justify-center">
         {users.map((userName) => (
           <button
             key={userName}

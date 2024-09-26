@@ -40,7 +40,7 @@ export const Route = createFileRoute("/chat")({
   beforeLoad: async ({ location }) => {
     if (!isAuthenticated()) {
       throw redirect({
-        to: "/",
+        to: "/login",
         search: {
           redirect: location.href,
         },
