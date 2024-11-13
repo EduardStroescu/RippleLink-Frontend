@@ -27,12 +27,14 @@ import {
   useStreamsStore,
   useStreamsStoreActions,
 } from "@/stores/useStreamsStore";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface VideoCallProps {
   currentCallDetails: Call | undefined;
 }
 
 export const CallComponent = memo(({ currentCallDetails }: VideoCallProps) => {
+  const queryClient = useQueryClient();
   const user = useUserStore((state) => state.user);
   const { streams, isUserMicrophoneMuted } = useStreamsStore(
     useShallow((state) => ({
@@ -65,6 +67,7 @@ export const CallComponent = memo(({ currentCallDetails }: VideoCallProps) => {
   const handleEndCall = () => {
     if (currentCallDetails) {
       endCall(currentCallDetails);
+      queryClient.invalidateQueries({ queryKey: ["calls"] });
     }
   };
 
