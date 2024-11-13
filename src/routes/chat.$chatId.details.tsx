@@ -16,6 +16,7 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui";
+import { getGroupChatNamePlaceholder } from "@/lib/utils";
 
 export const Route = createFileRoute("/chat/$chatId/details")({
   beforeLoad: async ({ params: { chatId } }) => {
@@ -52,10 +53,7 @@ function ChatDetails() {
     [currentChat, user?._id]
   );
 
-  const interlocutorsDisplayNames = interlocutors
-    ?.map((user) => user?.displayName)
-    .slice(0, 3)
-    .join(", ");
+  const placeholderChatName = getGroupChatNamePlaceholder(interlocutors);
 
   return (
     <aside className="relative w-full col-span-full xl:col-span-3 flex flex-col border-l-slate-700 border-l-[1px] overflow-hidden">
@@ -79,9 +77,7 @@ function ChatDetails() {
         ) : (
           <UserDetailsHeader
             avatarUrl={currentChat?.avatarUrl || groupAvatar}
-            name={
-              currentChat?.name || `Group Chat: ${interlocutorsDisplayNames}`
-            }
+            name={currentChat?.name || placeholderChatName}
           />
         )}
         <div className="w-full flex flex-col items-center mt-4 mb-2">

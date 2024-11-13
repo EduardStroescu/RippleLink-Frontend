@@ -1,23 +1,19 @@
 import React, { useEffect } from "react";
 import { CallIcon, CloseIcon } from "./Icons";
 import { AvatarCoin } from "./ui/AvatarCoin";
-import { placeholderAvatar } from "@/lib/const";
-import { Chat } from "@/types/chat";
+import { groupAvatar, placeholderAvatar } from "@/lib/const";
 import { useCallStore, useCallStoreActions } from "@/stores/useCallStore";
 import { useUserStore } from "@/stores/useUserStore";
 import { useRouter } from "@tanstack/react-router";
 import { Call } from "@/types/call";
 import { useThrottle, useCallSound } from "@/lib/hooks";
+import { getGroupChatNamePlaceholder } from "@/lib/utils";
 
 interface CallEventOverlayProps {
-  chats: Chat[] | [] | undefined;
   open?: boolean;
 }
 
-export const CallEventOverlay: React.FC<CallEventOverlayProps> = ({
-  chats,
-  open,
-}) => {
+export const CallEventOverlay: React.FC<CallEventOverlayProps> = ({ open }) => {
   const router = useRouter();
   const user = useUserStore((state) => state.user);
   const incomingCalls = useCallStore((state) => state.incomingCalls);
@@ -27,11 +23,25 @@ export const CallEventOverlay: React.FC<CallEventOverlayProps> = ({
 
   const getCurrentChatCaller = (call: Call) => {
     if (!call || !user?._id) return;
-    const currentChat = chats?.find((chat) => chat._id === call.chatId._id);
-    const caller = currentChat?.users?.find(
-      (chatUser) => chatUser._id !== user._id
-    );
-    return caller;
+    const chatType = call.chatId.type;
+    if (chatType === "group") {
+      const placeholderChatName = getGroupChatNamePlaceholder(
+        call.chatId.users
+      );
+
+      return {
+        avatarUrl: groupAvatar,
+        displayName:
+          call.chatId.name.trim().length > 0
+            ? call.chatId.name
+            : placeholderChatName,
+      };
+    } else {
+      const caller = call.chatId.users.find(
+        (chatUser) => chatUser._id !== user._id
+      );
+      return caller;
+    }
   };
 
   const handleCallAnswer = (call: Call) => {
@@ -68,7 +78,7 @@ export const CallEventOverlay: React.FC<CallEventOverlayProps> = ({
   return (
     <>
       {!!incomingCalls.length &&
-        incomingCalls.map((call) => {
+        incomingCalls.map((call: (typeof incomingCalls)[number]) => {
           const currentChatCaller = getCurrentChatCaller(call);
           return (
             <div

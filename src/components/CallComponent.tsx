@@ -20,7 +20,7 @@ import { useCallStore, useCallStoreActions } from "@/stores/useCallStore";
 import { useShallow } from "zustand/react/shallow";
 import { Call } from "@/types/call";
 import { VideoComponent, ResizableContainer } from "@/components/ui";
-import { User } from "@/types/user";
+import { PublicUser } from "@/types/user";
 import { MediaDevicesPicker } from "./MediaDevicesPicker";
 import { VolumeSwitcher } from "./VolumeSwitcher";
 import {
@@ -119,7 +119,7 @@ export const CallComponent = memo(({ currentCallDetails }: VideoCallProps) => {
     [streams]
   );
 
-  const handleToggleVideoPopUp = (userId: User["_id"]) => {
+  const handleToggleVideoPopUp = (userId: PublicUser["_id"]) => {
     toggleStreamPopUp(userId);
   };
 

@@ -128,3 +128,16 @@ export const canEditMessage = (
 export const bytesToMegabytes = (bytes: number) => {
   return Number((bytes / (1024 * 1024)).toFixed(1));
 };
+
+export const getGroupChatNamePlaceholder = (
+  chatUsers: Chat["users"] | undefined
+) => {
+  const interlocutorsDisplayNames = chatUsers
+    ?.map((user) => user?.displayName)
+    ?.slice(0, 3)
+    ?.join(", ");
+
+  const placeholderChatName = `Group Chat: ${interlocutorsDisplayNames?.length ? interlocutorsDisplayNames : ""}`;
+
+  return placeholderChatName;
+};

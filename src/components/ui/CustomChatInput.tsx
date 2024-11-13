@@ -76,6 +76,7 @@ export function CustomChatInput({
       element.setSelectionRange(message.length, message.length);
       element.focus();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

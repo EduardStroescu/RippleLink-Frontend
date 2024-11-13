@@ -96,7 +96,7 @@ function ChatWrapper() {
       >
         <Outlet />
       </aside>
-      <CallDialog content={<CallEventOverlay chats={chats} />} />
+      <CallDialog content={<CallEventOverlay />} />
       <DraggableVideos />
     </div>
   );

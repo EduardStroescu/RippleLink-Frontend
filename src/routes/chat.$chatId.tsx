@@ -37,7 +37,7 @@ import {
   useIsInterlocutorOnline,
 } from "@/lib/hooks";
 import { useChatName } from "@/lib/hooks/useChatName";
-import { User, Message, Chat, Call } from "@/types";
+import { Message, Chat, Call, PublicUser } from "@/types";
 import { useAppStore } from "@/stores/useAppStore";
 
 export const Route = createFileRoute("/chat/$chatId")({
@@ -113,7 +113,7 @@ const ChatHeader = ({
   currentCall,
 }: {
   isDmChat: boolean;
-  interlocutors: User[] | undefined;
+  interlocutors: PublicUser[] | undefined;
   currentChat: Chat | undefined;
   currentCall: Call | null;
 }) => {
@@ -201,7 +201,7 @@ const ChatHeader = ({
 const ChatContent = ({
   interlocutors,
 }: {
-  interlocutors: User[] | undefined;
+  interlocutors: PublicUser[] | undefined;
 }) => {
   const { messagesQuery } = Route.useLoaderData();
   const socket = useAppStore((state) => state.socket);

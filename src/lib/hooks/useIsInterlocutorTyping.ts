@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSocketSubscription } from "./useSocketSubscription";
-import { User } from "@/types";
+import { PublicUser } from "@/types";
 
 export function useIsInterlocutorTyping({
   interlocutors,
   params,
 }: {
-  interlocutors: User[] | undefined;
+  interlocutors: PublicUser[] | undefined;
   params;
 }) {
   const [interlocutorIsTyping, setInterlocutorIsTyping] =
@@ -22,7 +22,7 @@ export function useIsInterlocutorTyping({
       content,
     }: {
       content: {
-        user: { _id: User["_id"]; displayName: string };
+        user: { _id: PublicUser["_id"]; displayName: string };
         isTyping: boolean;
       };
     }) => {

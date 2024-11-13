@@ -7,8 +7,7 @@ type VideoProps = {
 } & HTMLProps<HTMLVideoElement>;
 
 export const VideoComponent = forwardRef<HTMLVideoElement, VideoProps>(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  ({ setOpen, className, ...props }, ref: Ref<HTMLVideoElement>) => {
+  ({ setOpen: _setOpen, className, ...props }, ref: Ref<HTMLVideoElement>) => {
     return (
       <video
         ref={ref}

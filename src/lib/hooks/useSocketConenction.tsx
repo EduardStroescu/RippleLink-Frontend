@@ -16,7 +16,7 @@ export function useSocketConnection() {
     if (!user || !user.access_token || socket !== null) return;
     const socketInstance = io(import.meta.env.VITE_BACKEND_URL, {
       query: {
-        _id: user?._id,
+        _id: user._id,
         displayName: user.displayName,
       },
       extraHeaders: {

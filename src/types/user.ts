@@ -17,3 +17,6 @@ export interface User {
   updatedAt?: string;
   createdAt?: string;
 }
+
+export interface PublicUser
+  extends Pick<User, "_id" | "displayName" | "avatarUrl" | "status"> {}

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams } from "@tanstack/react-router";
 import { useUserTyping } from "./useUserTyping";
-import { Message, User } from "@/types";
+import { Message, PublicUser } from "@/types";
 import { useSetMessagesCache } from "./useSetMessagesCache";
 import { create } from "mutative";
 import { v4 as uuidv4 } from "uuid";
@@ -48,7 +48,10 @@ export function useCreateMessage() {
         chatId: payload.room,
         content: payload.message,
         type: payload.type,
-        senderId: { _id: user?._id, displayName: user?.displayName } as User,
+        senderId: {
+          _id: user?._id,
+          displayName: user?.displayName,
+        } as PublicUser,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       } as Message;

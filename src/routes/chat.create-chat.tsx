@@ -5,7 +5,7 @@ import chatApi from "@/api/modules/chat.api";
 import userApi from "@/api/modules/user.api";
 import { checkIfChatExists } from "@/lib/utils";
 import { groupAvatar } from "@/lib/const";
-import { Chat, Message, User } from "@/types";
+import { Chat, Message, PublicUser } from "@/types";
 
 import { useToast } from "@/components/ui";
 import { CreateMessageForm, ChatHeaderDetails } from "@/components";
@@ -26,7 +26,7 @@ export const Route = createFileRoute("/chat/create-chat")({
     }
 
     const usersQuery = {
-      queries: userIdsArr.map((userId: User["_id"]) => ({
+      queries: userIdsArr.map((userId: PublicUser["_id"]) => ({
         queryKey: ["users", userId],
         queryFn: () => userApi.getUsersById(userId),
         enabled: !!userId && !!userIdsArr.length,
@@ -81,7 +81,7 @@ function CreateNewChat() {
       name?: string;
       messageType?: string;
     } = {
-      userIds: newChatUsers.map((user: User) => user._id),
+      userIds: newChatUsers.map((user: PublicUser) => user._id),
       lastMessage: message,
       type: newChatUsers.length > 1 ? "group" : "dm",
       name: chatName,
@@ -119,7 +119,7 @@ function CreateNewChat() {
   };
 
   const newChatUsersDisplayNames = newChatUsers
-    ?.map((user: User) => user?.displayName)
+    ?.map((user: PublicUser) => user?.displayName)
     .slice(0, 3);
   const defaultChatHeaderTitle =
     newChatUsersDisplayNames.every((dName) => typeof dName === "string") &&

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useCallStore, useCallStoreActions } from "@/stores/useCallStore";
 import { useShallow } from "zustand/react/shallow";
 import { useUserStore } from "@/stores/useUserStore";
@@ -14,7 +14,7 @@ export const useCurrentCallState = () => {
   const socket = useAppStore((state) => state.socket);
   const user = useUserStore((state) => state.user);
   const currentCall = useCallStore((state) => state.currentCall);
-  const connections = useConnectionsStore((state) => state.connections);
+  const peerConnections = useConnectionsStore((state) => state.connections);
   const { streams, selectedDevices, outputVolume } = useStreamsStore(
     useShallow((state) => ({
       streams: state.streams,
@@ -26,20 +26,19 @@ export const useCurrentCallState = () => {
   const { endCall } = useCallStoreActions();
   const { sendCallAnswers, sendCallOffers } = useConnectionsStoreActions();
 
-  const peerConnections = useMemo(() => connections, [connections]);
-  const userId = useMemo(() => user?._id, [user]);
+  const userId = user?._id;
   const audioTracksRef = useRef({});
   const { toast } = useToast();
 
   // Helper to get all users in the current call who have not yet connected
   const getOffersNotAnsweredTo = useCallback(() => {
+    const peerConnections = useConnectionsStore.getState().connections;
     return currentCall?.participants.filter(
       (participant) =>
         participant.userId._id !== userId &&
         !peerConnections[participant.userId._id] &&
         participant?.offers?.some((offer) => offer.to === userId)
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentCall?.participants, userId]);
 
   // Send answers to all users in current call who you are not connected to

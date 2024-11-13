@@ -1,6 +1,6 @@
 import privateClient from "../privateClient";
 import publicClient from "../publicClient";
-import { Settings, User, Status } from "@/types";
+import { Settings, User, Status, PublicUser } from "@/types";
 
 const userEndpoints = {
   login: "auth/login",
@@ -63,13 +63,15 @@ const userApi = {
     return await privateClient.get(userEndpoints.getUserInfo);
   },
 
-  getUsersById: async (userId: string): Promise<User> => {
+  getUsersById: async (userId: string): Promise<PublicUser> => {
     return await privateClient.get(
       userEndpoints.getUserById.replace(":id", userId)
     );
   },
 
-  getUsersByDisplayName: async (displayName: string): Promise<User[] | []> => {
+  getUsersByDisplayName: async (
+    displayName: string
+  ): Promise<PublicUser[] | []> => {
     return await privateClient.get(
       userEndpoints.getUserByDisplayName.replace(":displayName", displayName)
     );

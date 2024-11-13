@@ -1,8 +1,8 @@
-import { User } from "./user";
+import { PublicUser } from "./user";
 
 export interface Status {
   _id?: string;
-  userId?: User["_id"];
+  userId?: PublicUser["_id"];
   online?: boolean;
   statusMessage?: string;
   lastSeen?: string;

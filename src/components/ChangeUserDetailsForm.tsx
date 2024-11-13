@@ -32,6 +32,7 @@ export function ChangeUserDetailsForm() {
       setValue("firstName", user.firstName);
       setValue("lastName", user.lastName);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const {

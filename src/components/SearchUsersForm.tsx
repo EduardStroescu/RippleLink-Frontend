@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import userApi from "@/api/modules/user.api";
 import { placeholderAvatar } from "@/lib/const";
-import { User } from "@/types/user";
+import { PublicUser } from "@/types/user";
 import { Input, AvatarCoin } from "@/components/ui";
 import { CheckIcon } from "./Icons";
 
@@ -12,7 +12,7 @@ export const SearchUsersForm = ({
   existingChatUsers,
   setOpen,
 }: {
-  existingChatUsers?: Pick<User, "_id" | "displayName">[];
+  existingChatUsers?: Pick<PublicUser, "_id" | "displayName">[];
   setOpen?: Dispatch<React.SetStateAction<boolean>>;
 }) => {
   const router = useRouter();

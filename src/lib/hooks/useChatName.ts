@@ -3,7 +3,8 @@ import { useParams } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import chatApi from "@/api/modules/chat.api";
 import { useToast } from "@/components/ui";
-import { Chat, User } from "@/types";
+import { Chat, PublicUser } from "@/types";
+import { getGroupChatNamePlaceholder } from "../utils";
 
 export function useChatName({
   currentChat,
@@ -11,7 +12,7 @@ export function useChatName({
   isDmChat,
 }: {
   currentChat: Chat | undefined;
-  interlocutors: User[] | undefined;
+  interlocutors: PublicUser[] | undefined;
   isDmChat: boolean;
 }) {
   const params = useParams({ from: "/chat/$chatId" });
@@ -46,12 +47,7 @@ export function useChatName({
     setIsEditingChatName((state) => !state);
   };
 
-  const interlocutorsDisplayNames = interlocutors
-    ?.map((user) => user?.displayName)
-    ?.slice(0, 3)
-    ?.join(", ");
-
-  const placeholderChatName = `Group Chat: ${interlocutorsDisplayNames}`;
+  const placeholderChatName = getGroupChatNamePlaceholder(interlocutors);
 
   const handleInitChatName = useCallback(() => {
     if (
@@ -71,10 +67,10 @@ export function useChatName({
   ]);
 
   useEffect(() => {
-    if (currentChat?.name || interlocutorsDisplayNames) {
+    if (currentChat?.name || placeholderChatName) {
       handleInitChatName();
     }
-  }, [currentChat?.name, handleInitChatName, interlocutorsDisplayNames]);
+  }, [currentChat?.name, handleInitChatName, placeholderChatName]);
 
   return {
     isEditingChatName,

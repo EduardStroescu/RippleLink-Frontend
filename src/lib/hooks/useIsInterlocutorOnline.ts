@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSocketSubscription } from "./useSocketSubscription";
-import { User } from "@/types";
+import { PublicUser } from "@/types";
 
 export function useIsInterlocutorOnline({
   interlocutors,
   params,
 }: {
-  interlocutors: User[] | undefined;
+  interlocutors: PublicUser[] | undefined;
   params;
 }) {
   const [isInterlocutorOnline, setIsInterlocutorOnline] =
@@ -18,7 +18,11 @@ export function useIsInterlocutorOnline({
   }, [interlocutor?.status?.online, params.chatId]);
 
   const handleInterlocutorOnlineStatus = useCallback(
-    ({ content }: { content: { _id: User["_id"]; isOnline: boolean } }) => {
+    ({
+      content,
+    }: {
+      content: { _id: PublicUser["_id"]; isOnline: boolean };
+    }) => {
       if (interlocutor?._id === content._id) {
         setIsInterlocutorOnline(content.isOnline);
       }

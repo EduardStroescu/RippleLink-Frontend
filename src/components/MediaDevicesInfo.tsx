@@ -51,6 +51,7 @@ export function MediaDevicesInfo({
       setDevices(defaultDevices);
     };
     fetchDevices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function isDefaultDevice(device: MediaDeviceInfo) {

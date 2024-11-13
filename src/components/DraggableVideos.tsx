@@ -1,7 +1,7 @@
 import { useAppStore } from "@/stores/useAppStore";
 import { useCallStore } from "@/stores/useCallStore";
 import { useUserStore } from "@/stores/useUserStore";
-import { User } from "@/types/user";
+import { PublicUser } from "@/types/user";
 import { useCallback, useRef, useState, useEffect, useMemo } from "react";
 import { CloseIcon } from "./Icons";
 import { useLocation } from "@tanstack/react-router";
@@ -38,7 +38,7 @@ export function DraggableVideos() {
     [streams, user?._id]
   );
 
-  const [dragging, setDragging] = useState<User["_id"] | null>(null);
+  const [dragging, setDragging] = useState<PublicUser["_id"] | null>(null);
   const [positions, setPositions] = useState<PositionMap>({});
   const divRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const removeDivRef = useRef<HTMLDivElement | null>(null);

@@ -1,9 +1,9 @@
-import { User } from "./user";
+import { PublicUser } from "./user";
 
 export type Message = {
   _id: string;
   chatId: string;
-  senderId: User;
+  senderId: PublicUser;
   content: string;
   type: "text" | "image" | "file" | "video" | "audio";
   read: boolean;

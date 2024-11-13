@@ -1,7 +1,7 @@
 import { Socket } from "socket.io-client";
 import { Call } from "./call";
 import { Chat } from "./chat";
-import { User } from "./user";
+import { PublicUser, User } from "./user";
 import Peer from "simple-peer";
 
 export interface UserStore {
@@ -47,9 +47,9 @@ export interface StreamsStore {
   outputVolume: number;
 
   actions: {
-    addStream: (participantId: User["_id"], stream: MediaStream) => void;
-    removeStream: (participantId: User["_id"]) => void;
-    toggleStreamPopUp: (participantId: User["_id"]) => void;
+    addStream: (participantId: PublicUser["_id"], stream: MediaStream) => void;
+    removeStream: (participantId: PublicUser["_id"]) => void;
+    toggleStreamPopUp: (participantId: PublicUser["_id"]) => void;
     setIsUserSharingVideo: (
       newState: StreamsStore["isUserSharingVideo"]
     ) => void;
@@ -79,8 +79,11 @@ export interface ConnectionsStore {
   connections: { [key: string]: Peer.Instance };
 
   actions: {
-    addConnection: (participantId: User["_id"], peer: Peer.Instance) => void;
-    removeConnection: (participantId: User["_id"]) => void;
+    addConnection: (
+      participantId: PublicUser["_id"],
+      peer: Peer.Instance
+    ) => void;
+    removeConnection: (participantId: PublicUser["_id"]) => void;
     resetConnections: () => void;
     sendCallOffers: (
       participant: Call["participants"][number],
