@@ -2,7 +2,7 @@ import {
   VirtualItem,
   Virtualizer as TanStackVirtualizer,
 } from "@tanstack/react-virtual";
-import { forwardRef } from "react";
+import { forwardRef, UIEvent, useRef } from "react";
 
 interface VirtualizerProps {
   virtualizer: TanStackVirtualizer<HTMLDivElement, Element>;
@@ -12,6 +12,28 @@ interface VirtualizerProps {
 export const Virtualizer = forwardRef<HTMLDivElement, VirtualizerProps>(
   ({ virtualizer, children }, ref) => {
     const items = virtualizer.getVirtualItems();
+    const scrollTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const handleDisablePointerEventsOnScroll = (e: UIEvent<HTMLDivElement>) => {
+      const container = e.currentTarget;
+
+      // Disable pointer events on all iframes within the container
+      container.querySelectorAll("iframe").forEach((iframe) => {
+        iframe.style.pointerEvents = "none";
+      });
+
+      // Clear the timeout to debounce
+      if (scrollTimeout.current) {
+        clearTimeout(scrollTimeout.current);
+      }
+
+      // Set a timeout to re-enable pointer events
+      scrollTimeout.current = setTimeout(() => {
+        container.querySelectorAll("iframe").forEach((iframe) => {
+          iframe.style.pointerEvents = "auto";
+        });
+      }, 100);
+    };
 
     return (
       <div
@@ -20,6 +42,7 @@ export const Virtualizer = forwardRef<HTMLDivElement, VirtualizerProps>(
         style={{
           transform: "scaleY(-1)",
         }}
+        onScroll={handleDisablePointerEventsOnScroll}
       >
         <div
           style={{
