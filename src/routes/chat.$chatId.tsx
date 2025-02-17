@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { memo, useMemo } from "react";
 import {
   createFileRoute,
   Link,
@@ -80,8 +80,9 @@ function ChatId() {
     chatsQuery,
   });
   const { data: callData } = useQuery(callsQuery);
-  const currentCallDetails = callData?.find(
-    (call) => call.chatId._id === params.chatId
+  const currentCallDetails = useMemo(
+    () => callData?.find((call) => call.chatId._id === params.chatId),
+    [callData, params.chatId]
   );
 
   return (
@@ -198,64 +199,62 @@ const ChatHeader = ({
   );
 };
 
-const ChatContent = ({
-  interlocutors,
-}: {
-  interlocutors: PublicUser[] | undefined;
-}) => {
-  const { messagesQuery } = Route.useLoaderData();
-  const socket = useAppStore((state) => state.socket);
-  const params = useParams({ from: "/chat/$chatId" });
+const ChatContent = memo(
+  ({ interlocutors }: { interlocutors: PublicUser[] | undefined }) => {
+    const { messagesQuery } = Route.useLoaderData();
+    const socket = useAppStore((state) => state.socket);
+    const params = useParams({ from: "/chat/$chatId" });
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteQuery(messagesQuery);
-  const messages = useMemo(() => data?.messages || [], [data?.messages]);
+    const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+      useInfiniteQuery(messagesQuery);
+    const messages = useMemo(() => data?.messages || [], [data?.messages]);
 
-  useMessageEvents();
-  const { scrollParentRef, virtualizer, getMessageContent } = useVirtualizer({
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
-    messages,
-  });
-  const { interlocutorIsTyping } = useIsInterlocutorTyping({
-    interlocutors,
-    params,
-  });
-  useMessageReadStatus(messages);
+    useMessageEvents();
+    const { scrollParentRef, virtualizer, getMessageContent } = useVirtualizer({
+      hasNextPage,
+      isFetchingNextPage,
+      fetchNextPage,
+      messages,
+    });
+    const { interlocutorIsTyping } = useIsInterlocutorTyping({
+      interlocutors,
+      params,
+    });
+    useMessageReadStatus(messages);
 
-  const handleDelete = (messageId?: string) => {
-    if (!socket || !messageId) return;
-    socket.emit("deleteMessage", { room: params.chatId, messageId });
-  };
+    const handleDelete = (messageId?: string) => {
+      if (!socket || !messageId) return;
+      socket.emit("deleteMessage", { room: params.chatId, messageId });
+    };
 
-  return (
-    <>
-      <Virtualizer virtualizer={virtualizer} ref={scrollParentRef}>
-        {({ virtualItem }) => (
-          <React.Fragment key={virtualItem.key}>
-            {virtualItem.index !== 0 ? (
-              <MessageComponent
-                virtualizer={virtualizer}
-                virtualItem={virtualItem}
-                message={getMessageContent(virtualItem.index)}
-                handleDelete={handleDelete}
-                idx={virtualItem.index}
-                canDeleteMessage={virtualItem.index !== messages.length}
-              />
-            ) : (
-              <TypingIndicator
-                virtualItem={virtualItem}
-                interlocutorIsTyping={interlocutorIsTyping}
-              />
-            )}
-          </React.Fragment>
-        )}
-      </Virtualizer>
-      <MessagesLoadingIndicator shouldDisplay={isFetchingNextPage} />
-    </>
-  );
-};
+    return (
+      <>
+        <Virtualizer virtualizer={virtualizer} ref={scrollParentRef}>
+          {({ virtualItem }) => (
+            <React.Fragment key={virtualItem.key}>
+              {virtualItem.index !== 0 ? (
+                <MessageComponent
+                  virtualizer={virtualizer}
+                  virtualItem={virtualItem}
+                  message={getMessageContent(virtualItem.index)}
+                  handleDelete={handleDelete}
+                  idx={virtualItem.index}
+                  canDeleteMessage={virtualItem.index !== messages.length}
+                />
+              ) : (
+                <TypingIndicator
+                  virtualItem={virtualItem}
+                  interlocutorIsTyping={interlocutorIsTyping}
+                />
+              )}
+            </React.Fragment>
+          )}
+        </Virtualizer>
+        <MessagesLoadingIndicator shouldDisplay={isFetchingNextPage} />
+      </>
+    );
+  }
+);
 
 const CreateMessage = () => {
   const {

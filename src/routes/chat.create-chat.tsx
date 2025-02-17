@@ -118,7 +118,7 @@ function CreateNewChat() {
     });
   };
 
-  const newChatUsersDisplayNames = newChatUsers
+  const newChatUsersDisplayNames: PublicUser["displayName"][] = newChatUsers
     ?.map((user: PublicUser) => user?.displayName)
     .slice(0, 3);
   const defaultChatHeaderTitle =

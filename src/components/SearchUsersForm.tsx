@@ -1,4 +1,4 @@
-import { Dispatch, useEffect, useMemo, useState } from "react";
+import { Dispatch, useMemo, useState } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 
@@ -19,7 +19,7 @@ export const SearchUsersForm = ({
   const [displayName, setDisplayName] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<
     { _id: string; displayName: string }[]
-  >([]);
+  >(existingChatUsers || []);
 
   const { data: users } = useQuery({
     enabled: displayName.length > 0,
@@ -37,13 +37,6 @@ export const SearchUsersForm = ({
       ),
     [users, existingChatUsers]
   );
-
-  useEffect(() => {
-    if (existingChatUsers) {
-      setSelectedUsers(existingChatUsers);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleUserClick = (user: { _id: string; displayName: string }) => {
     setSelectedUsers((prev) => {

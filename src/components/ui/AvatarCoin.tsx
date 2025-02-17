@@ -13,10 +13,8 @@ export function AvatarCoin({
   className?: string;
   shouldInvalidate?: boolean;
 }) {
-  function invalidateInterval() {
-    return new Date().getHours();
-  }
-  const src = shouldInvalidate ? `${source}?v=${invalidateInterval()}` : source;
+  const invalidateInterval = new Date().getHours();
+  const src = shouldInvalidate ? `${source}?v=${invalidateInterval}` : source;
   return (
     <img
       src={src}

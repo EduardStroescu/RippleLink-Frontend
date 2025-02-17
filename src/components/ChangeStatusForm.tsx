@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { SendIcon } from "./Icons";
 import { CustomChatInput } from "./ui/CustomChatInput";
 import userApi from "@/api/modules/user.api";
@@ -13,15 +13,10 @@ export function ChangeStatusForm() {
   const user = useUserStore((state) => state.user);
   const { setUser } = useUserStoreActions();
   const { setItem } = useLocalStorage<User>("user");
-  const [statusMessage, setStatusMessage] = useState<string>("");
+  const [statusMessage, setStatusMessage] = useState<string>(
+    user?.status?.statusMessage || ""
+  );
   const formRef = useRef<HTMLFormElement>(null);
-
-  useEffect(() => {
-    if (user?.status?.statusMessage) {
-      setStatusMessage(user?.status?.statusMessage);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleKeyDown = () => {
     if (formRef.current) {

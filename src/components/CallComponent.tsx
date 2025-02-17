@@ -67,21 +67,24 @@ export const CallComponent = memo(({ currentCallDetails }: VideoCallProps) => {
   const handleEndCall = () => {
     if (currentCallDetails) {
       endCall(currentCallDetails);
-      queryClient.invalidateQueries({ queryKey: ["calls"] });
+      // Invalidate the cache after 1 second in case the call state is stale
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["calls"] });
+      }, 1000);
     }
   };
 
-  const handleVideoClick = (
-    userId: string,
-    fullscreenVideoRef: React.RefObject<HTMLVideoElement>
-  ) => {
-    setTimeout(() => {
-      if (fullscreenVideoRef.current) {
-        fullscreenVideoRef.current.srcObject = streams[userId].stream;
-        fullscreenVideoRef.current.play();
-      }
-    }, 0);
-  };
+  const handleVideoClick = useCallback(
+    (userId: string, fullscreenVideoRef: React.RefObject<HTMLVideoElement>) => {
+      setTimeout(() => {
+        if (fullscreenVideoRef.current) {
+          fullscreenVideoRef.current.srcObject = streams[userId].stream;
+          fullscreenVideoRef.current.play();
+        }
+      }, 0);
+    },
+    [streams]
+  );
 
   const isUserInOngoingCall = currentCallDetails?.participants?.some(
     (participant) => participant?.userId?._id === user?._id

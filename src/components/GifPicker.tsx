@@ -1,5 +1,5 @@
 import React from "react";
-import Picker, { Theme } from "gif-picker-react";
+import Picker, { TenorImage, Theme } from "gif-picker-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui";
 
 interface GifPickerProps {
@@ -8,7 +8,7 @@ interface GifPickerProps {
 }
 
 export const GifPicker: React.FC<GifPickerProps> = ({ children, getValue }) => {
-  const onGifClick = (selectedGif) => {
+  const onGifClick = (selectedGif: TenorImage) => {
     if (getValue) getValue(selectedGif.url);
   };
   return (

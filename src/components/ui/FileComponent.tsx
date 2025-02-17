@@ -6,7 +6,7 @@ export function FileComponent({
   fileName,
   className,
   ...props
-}: { fileName: string; className?: string } & PropsWithoutRef<
+}: { fileName?: string; className?: string } & PropsWithoutRef<
   JSX.IntrinsicElements["a"]
 >) {
   return (
@@ -20,9 +20,7 @@ export function FileComponent({
       <FileIcon />
       <div className="w-full text-xs flex flex-col justify-center">
         <p className="text-center">File Name:</p>
-        <p className="text-cyan-500 truncate">
-          {fileName.split("/").pop() || "File"}
-        </p>
+        <p className="text-cyan-500 truncate">{fileName || "N/A"}</p>
       </div>
     </a>
   );

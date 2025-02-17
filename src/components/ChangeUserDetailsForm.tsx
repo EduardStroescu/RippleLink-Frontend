@@ -3,7 +3,6 @@ import { UpdateAccountSchema } from "@/lib/formSchemas/user.schemas";
 import { useUserStore, useUserStoreActions } from "@/stores/useUserStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
 import { useToast } from "./ui/use-toast";
@@ -25,29 +24,18 @@ export function ChangeUserDetailsForm() {
     }) => userApi.accountUpdate(formData),
   });
 
-  useEffect(() => {
-    if (user) {
-      setValue("email", user.email);
-      setValue("displayName", user.displayName);
-      setValue("firstName", user.firstName);
-      setValue("lastName", user.lastName);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const {
     handleSubmit,
     register,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<z.infer<typeof UpdateAccountSchema>>({
     mode: "onSubmit",
     resolver: zodResolver(UpdateAccountSchema),
     defaultValues: {
-      email: "",
-      displayName: "",
-      firstName: "",
-      lastName: "",
+      email: user?.email || "",
+      displayName: user?.displayName || "",
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
     },
   });
 

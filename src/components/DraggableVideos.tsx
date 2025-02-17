@@ -2,7 +2,7 @@ import { useAppStore } from "@/stores/useAppStore";
 import { useCallStore } from "@/stores/useCallStore";
 import { useUserStore } from "@/stores/useUserStore";
 import { PublicUser } from "@/types/user";
-import { useCallback, useRef, useState, useEffect, useMemo } from "react";
+import { useCallback, useRef, useState, useEffect, useMemo, memo } from "react";
 import { CloseIcon } from "./Icons";
 import { useLocation } from "@tanstack/react-router";
 import {
@@ -19,7 +19,7 @@ interface PositionMap {
   [key: string]: Position;
 }
 
-export function DraggableVideos() {
+export const DraggableVideos = memo(() => {
   const location = useLocation();
   const appGlow = useAppStore((state) => state.appGlow);
   const user = useUserStore((state) => state.user);
@@ -274,4 +274,4 @@ export function DraggableVideos() {
       )}
     </>
   );
-}
+});

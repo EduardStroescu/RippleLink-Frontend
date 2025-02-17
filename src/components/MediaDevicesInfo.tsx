@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useToast } from "./ui";
 import { useStreamsStore } from "@/stores/useStreamsStore";
 
@@ -15,7 +15,7 @@ export function MediaDevicesInfo({
     outputDevices: MediaDeviceInfo[];
   }>();
 
-  const getUserDevices = async () => {
+  const getUserDevices = useCallback(async () => {
     try {
       const allDevices = await navigator.mediaDevices.enumerateDevices();
       const defaultDevices = allDevices
@@ -43,7 +43,7 @@ export function MediaDevicesInfo({
         description: "Cound not access the media devices.",
       });
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     const fetchDevices = async () => {
@@ -51,8 +51,7 @@ export function MediaDevicesInfo({
       setDevices(defaultDevices);
     };
     fetchDevices();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [getUserDevices]);
 
   function isDefaultDevice(device: MediaDeviceInfo) {
     // Normalize the kind to match the selectedDevices keys

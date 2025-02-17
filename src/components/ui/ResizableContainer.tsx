@@ -13,15 +13,12 @@ export const ResizableContainer: React.FC<ResizableContainerProps> = ({
   const [dragging, setDragging] = useState<boolean>(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const startDrag = useCallback(
-    (
-      e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>
-    ) => {
-      e.preventDefault();
-      setDragging(true);
-    },
-    []
-  );
+  const startDrag = (
+    e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>
+  ) => {
+    e.preventDefault();
+    setDragging(true);
+  };
 
   const onDrag = useCallback(
     (e: MouseEvent | TouchEvent) => {

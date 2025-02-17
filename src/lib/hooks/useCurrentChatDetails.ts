@@ -23,7 +23,10 @@ export function useCurrentChatDetails({
   const setChatsCache = useSetChatsCache();
 
   const { data: chatData } = useQuery(chatsQuery);
-  const currentChat = chatData?.find((chat) => chat._id === params.chatId);
+  const currentChat = useMemo(
+    () => chatData?.find((chat) => chat._id === params.chatId),
+    [chatData, params.chatId]
+  );
 
   const isDmChat = useMemo(
     () => currentChat?.type === "dm",
@@ -70,9 +73,12 @@ export function useCurrentChatDetails({
     updateInterlocutorStatus(interlocutorStatus);
   }, [interlocutorStatus, updateInterlocutorStatus]);
 
-  return {
-    isDmChat,
-    interlocutors,
-    currentChat,
-  };
+  return useMemo(
+    () => ({
+      isDmChat,
+      interlocutors,
+      currentChat,
+    }),
+    [currentChat, interlocutors, isDmChat]
+  );
 }

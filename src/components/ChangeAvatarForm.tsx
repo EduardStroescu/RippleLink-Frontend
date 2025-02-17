@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AvatarCoin } from "./ui/AvatarCoin";
 import { placeholderAvatar } from "@/lib/const";
 import { useUserStore, useUserStoreActions } from "@/stores/useUserStore";
@@ -16,16 +16,9 @@ import { bytesToMegabytes } from "@/lib/utils";
 export function ChangeAvatarForm() {
   const user = useUserStore((state) => state.user);
   const { setUser } = useUserStoreActions();
-  const [avatar, setAvatar] = useState<string | null>(null);
+  const [avatar, setAvatar] = useState<string | null>(user?.avatarUrl || null);
   const { toast } = useToast();
   const { setItem } = useLocalStorage<User>("user");
-
-  useEffect(() => {
-    if (user?.avatarUrl) {
-      setAvatar(user.avatarUrl);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;

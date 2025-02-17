@@ -66,6 +66,7 @@ const renderEmbedVideo = (content: string) => (
 
 const renderAudio = (content: string) => <AudioComponent src={content} />;
 
-const renderFile = (content: string) => (
-  <FileComponent href={content} download fileName={content} />
-);
+const renderFile = (content: string) => {
+  const fileName = content.split("/").pop();
+  return <FileComponent href={content} download fileName={fileName} />;
+};

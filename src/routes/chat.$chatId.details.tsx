@@ -115,7 +115,7 @@ function ChatDetails() {
               <AccordionContent className="mt-1">
                 <div className="flex flex-wrap gap-2 w-full h-full max-h-[500px] items-center justify-center overflow-y-auto">
                   {sharedFilesData?.length ? (
-                    sharedFilesData?.map((file) => (
+                    sharedFilesData?.map((file: Message) => (
                       <div
                         key={file._id}
                         className="max-h-[100px] max-w-[100px] overflow-hidden"
@@ -186,13 +186,16 @@ const renderMediaContent = (content: string) => (
   <MediaComponent file={content} />
 );
 
-const renderFile = (content: string) => (
-  <div className="group">
-    <FileComponent
-      href={content}
-      download
-      fileName={content}
-      className="max-w-none min-w-0 w-full h-full max-h-[95px] m-0"
-    />
-  </div>
-);
+const renderFile = (content: string) => {
+  const fileName = content.split("/").pop();
+  return (
+    <div className="group">
+      <FileComponent
+        href={content}
+        download
+        fileName={fileName}
+        className="max-w-none min-w-0 w-full h-full max-h-[95px] m-0"
+      />
+    </div>
+  );
+};
