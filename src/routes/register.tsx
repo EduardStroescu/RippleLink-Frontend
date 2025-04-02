@@ -1,8 +1,24 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { RegisterForm, BackIcon } from "@/components";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+
+import { RegisterForm } from "@/components/forms/RegisterForm";
+import { BackIcon } from "@/components/Icons";
+import { useUserStore } from "@/stores/useUserStore";
 
 export const Route = createFileRoute("/register")({
-  component: () => (
+  beforeLoad: () => {
+    const user = useUserStore.getState().user;
+    if (user) {
+      throw redirect({
+        to: "/chat",
+        replace: true,
+      });
+    }
+  },
+  component: RegisterPage,
+});
+
+function RegisterPage() {
+  return (
     <div className="w-full h-full flex flex-col justify-normal md:justify-evenly items-center text-white overflow-y-auto overflow-x-hidden py-10 px-4">
       <div className="flex flex-col gap-5 items-center">
         <div className="flex flex-col items-center justify-center gap-4">
@@ -15,5 +31,5 @@ export const Route = createFileRoute("/register")({
         <RegisterForm />
       </div>
     </div>
-  ),
-});
+  );
+}

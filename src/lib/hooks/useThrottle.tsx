@@ -1,6 +1,5 @@
 import { useCallback, useRef } from "react";
 
-// Define a type for functions that can be throttled
 type ThrottleFunction<T extends unknown[]> = (...args: T) => void;
 
 function throttle<T extends unknown[]>(

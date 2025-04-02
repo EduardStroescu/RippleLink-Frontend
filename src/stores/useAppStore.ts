@@ -1,7 +1,8 @@
-import { AppStore } from "@/types/storeInterfaces";
 import { create } from "zustand";
 
-export const useAppStore = create<AppStore>()((set) => ({
+import { AppStore } from "@/types/storeInterfaces";
+
+export const useAppStore = create<AppStore>()((set, get) => ({
   socket: null,
   appBackground: "/background.jpg",
   appTint: "rgba(0,0,0,0.4)",
@@ -9,6 +10,19 @@ export const useAppStore = create<AppStore>()((set) => ({
 
   actions: {
     setSocket: (newSocket) => set(() => ({ socket: newSocket })),
+    getSocket: async (retries = 10, delay = 200) => {
+      const socket = get().socket;
+      if (socket) return socket;
+
+      if (!socket) {
+        for (let i = 0; i < retries; i++) {
+          const socket = get().socket;
+          if (socket) return socket;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+      }
+      return null;
+    },
     setAppBackground: (newBackground) =>
       set(() => ({ appBackground: newBackground })),
     setAppTint: (newTint) => set(() => ({ appTint: newTint })),

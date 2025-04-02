@@ -1,5 +1,6 @@
-import { useAppStore } from "@/stores/useAppStore";
 import { useEffect, useRef } from "react";
+
+import { useAppStore } from "@/stores/useAppStore";
 
 export function useSocketSubscription<T>(
   event: string,

@@ -1,10 +1,11 @@
-import { useUserStore } from "@/stores/useUserStore";
 import axios, {
-  InternalAxiosRequestConfig,
-  AxiosRequestHeaders,
   AxiosError,
+  AxiosRequestHeaders,
+  InternalAxiosRequestConfig,
 } from "axios";
 import queryString from "query-string";
+
+import { useUserStore } from "@/stores/useUserStore";
 
 const baseURL = import.meta.env.VITE_BACKEND_URL + "/api/";
 
@@ -79,8 +80,7 @@ privateClient.interceptors.response.use(
             refresh_token: refreshToken,
           });
 
-          useUserStore.setState({ user: response.data });
-          window.localStorage.setItem("user", JSON.stringify(response.data));
+          useUserStore.getState().actions.setUser(response.data);
           isRefreshing = false;
 
           processQueue(response.data.access_token);
@@ -90,7 +90,8 @@ privateClient.interceptors.response.use(
         }
       } catch (error) {
         const refreshError = error as AxiosError;
-        window.localStorage.removeItem("user");
+
+        useUserStore.getState().actions.removeUser();
         processQueue(null);
 
         // Redirect to home page with the original URL

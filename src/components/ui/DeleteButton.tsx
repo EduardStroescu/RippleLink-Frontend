@@ -1,14 +1,14 @@
 import { TrashIcon } from "@/components/Icons";
 
+type DeleteButtonProps = JSX.IntrinsicElements["button"];
+
 export function DeleteButton({
   onClick,
   className,
-}: {
-  onClick: () => void;
-  className?: string;
-}) {
+  ...props
+}: DeleteButtonProps) {
   return (
-    <button className={className} onClick={onClick}>
+    <button className={className} onClick={onClick} {...props}>
       <TrashIcon />
     </button>
   );

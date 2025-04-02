@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/Popover";
 
 interface FileUploadOverlayProps {
   content?: React.ReactElement<{

@@ -1,22 +1,24 @@
 import { useEffect } from "react";
-import { useThrottle } from "./useThrottle";
-import { useAppStore } from "@/stores/useAppStore";
+import { Socket } from "socket.io-client";
 
-export function useUserTyping(params, message: string) {
+import { useThrottle } from "@/lib/hooks/useThrottle";
+import { useAppStore } from "@/stores/useAppStore";
+import { Chat } from "@/types/chat";
+
+export function useUserTyping(chatId: Chat["_id"], message: string) {
   const socket = useAppStore((state) => state.socket);
 
-  const handleTyping = useThrottle(() => {
-    if (!socket) return;
-    socket.emit("typing", { room: params.chatId, isTyping: true });
+  const handleTyping = useThrottle((socket: Socket) => {
+    socket.emit("typing", { chatId, isTyping: true });
   }, 2000);
 
   useEffect(() => {
     if (!socket) return;
 
     if (!message) {
-      socket.emit("typing", { room: params.chatId, isTyping: false });
+      socket.emit("typing", { chatId, isTyping: false });
     } else {
-      handleTyping();
+      handleTyping(socket);
     }
-  }, [socket, message, handleTyping, params.chatId]);
+  }, [socket, message, handleTyping, chatId]);
 }

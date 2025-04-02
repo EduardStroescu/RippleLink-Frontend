@@ -1,26 +1,38 @@
-import { useEffect } from "react";
-import { useSetMessagesCache } from "./useSetMessagesCache";
-import { create } from "mutative";
-import { useUserStore } from "@/stores/useUserStore";
 import { useParams } from "@tanstack/react-router";
-import { Message } from "@/types";
+import { create } from "mutative";
+import { useEffect } from "react";
+
+import { useSetTanstackCache } from "@/lib/hooks/useSetTanstackCache";
 import { useAppStore } from "@/stores/useAppStore";
+import { useUserStore } from "@/stores/useUserStore";
+import { Message } from "@/types/message";
 
 export function useMessageReadStatus(messages: Message[] | []) {
   const socket = useAppStore((state) => state.socket);
   const user = useUserStore((state) => state.user);
-  const params = useParams({ from: "/chat/$chatId" });
+  const chatId = useParams({
+    from: "/chat/$chatId",
+    select: (params) => params.chatId,
+  });
 
-  const setMessagesCache = useSetMessagesCache(params.chatId);
+  const setMessagesCache = useSetTanstackCache<{
+    pages: { messages: Message[]; nextCursor: string | null }[];
+    pageParams;
+  }>(["messages", chatId]);
 
   useEffect(() => {
-    if (!socket || !user?._id) return;
+    if (!socket || !user?._id || !user?.displayName || !chatId) return;
 
     const interlocutorMessages = messages
       ? messages?.filter((message) => message?.senderId?._id !== user._id)
       : [];
 
-    if (interlocutorMessages.length > 0 && !interlocutorMessages?.[0]?.read) {
+    if (
+      interlocutorMessages.length > 0 &&
+      !interlocutorMessages?.[0]?.readBy.some(
+        (member) => member.userId._id === user._id
+      )
+    ) {
       // Update messages to set read status
       setMessagesCache((prevData) => {
         if (!prevData) return prevData;
@@ -30,14 +42,24 @@ export function useMessageReadStatus(messages: Message[] | []) {
           draft.pages.forEach((page) => {
             page.messages.forEach((message) => {
               if (message.senderId._id !== user._id) {
-                message.read = true;
+                message.readBy.push({
+                  userId: { _id: user._id, displayName: user.displayName },
+                  timestamp: new Date().toISOString(),
+                });
               }
             });
           });
         });
       });
-
-      socket.emit("readMessages", { room: params.chatId });
+      console.log("readingMessages");
+      socket.emit("readMessages", { chatId });
     }
-  }, [socket, messages, user?._id, params.chatId, setMessagesCache]);
+  }, [
+    chatId,
+    messages,
+    setMessagesCache,
+    socket,
+    user?._id,
+    user?.displayName,
+  ]);
 }

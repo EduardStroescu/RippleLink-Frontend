@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
+
 import { useUserStore } from "@/stores/useUserStore";
 
 export const Route = createFileRoute("/")({
@@ -8,14 +8,10 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const user = useUserStore((state) => state.user);
-  const router = useRouter();
 
-  useEffect(() => {
-    if (user) {
-      router.history.push("/chat");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  if (user) {
+    return <Navigate to="/chat" replace />;
+  }
 
   return (
     <div className="flex flex-col justify-normal md:justify-evenly items-center h-full text-white py-10 px-4 overflow-hidden overflow-y-auto">

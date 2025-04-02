@@ -1,5 +1,9 @@
-import privateClient from "../privateClient";
-import { Chat, Message, Call, Status } from "@/types";
+import privateClient from "@/api/privateClient";
+import { Call } from "@/types/call";
+import { Chat } from "@/types/chat";
+import { Message } from "@/types/message";
+import { Status } from "@/types/status";
+import { PublicUser } from "@/types/user";
 
 const chatEndpoints = {
   getAllChats: "chats/all",
@@ -13,23 +17,19 @@ const chatEndpoints = {
   deleteChat: "chats/:chatId",
 };
 
-const chatApi = {
-  getAllChats: async (): Promise<Chat[] | []> => {
-    return await privateClient.get(chatEndpoints.getAllChats);
-  },
+export const chatApi = {
+  getAllChats: async (): Promise<Chat[] | []> =>
+    await privateClient.get(chatEndpoints.getAllChats),
 
-  getAllCalls: async (): Promise<Call[] | []> => {
-    return await privateClient.get(chatEndpoints.getAllCalls);
-  },
+  getAllCalls: async (): Promise<Call[] | []> =>
+    await privateClient.get(chatEndpoints.getAllCalls),
 
-  getChatById: async (chatId: string): Promise<Chat[] | []> => {
-    return await privateClient.get(
+  getChatById: async (chatId: string): Promise<Chat[] | []> =>
+    await privateClient.get(
       chatEndpoints.getChatById.replace(":chatId", chatId)
-    );
-  },
-
+    ),
   getMessagesByChatId: async (
-    chatId: string,
+    chatId: Chat["_id"],
     cursor: string | null
   ): Promise<{ messages: Message[] | []; nextCursor: string | null }> => {
     if (cursor) {
@@ -46,45 +46,35 @@ const chatApi = {
   },
 
   createChat: async (chatData: {
-    userIds: string[];
-    lastMessage: string;
-    type?: string;
-    name?: string;
-    messageType?: string;
-  }): Promise<Chat> => {
-    return await privateClient.post(chatEndpoints.createChat, chatData);
-  },
+    userIds: PublicUser["_id"][];
+    lastMessage: { content: Message["content"]; type: Message["type"] };
+    type: Chat["type"];
+    name?: Chat["name"];
+  }): Promise<Chat> =>
+    await privateClient.post(chatEndpoints.createChat, chatData),
 
-  getSharedFilesByChatId: async (chatId: string): Promise<Message[] | []> => {
-    return await privateClient.get(
+  getSharedFilesByChatId: async (chatId: string): Promise<Message[] | []> =>
+    await privateClient.get(
       chatEndpoints.getSharedFilesByChatId.replace(":chatId", chatId)
-    );
-  },
+    ),
 
   updateChat: async (
-    chatId: string,
-    chatData: { name?: string }
-  ): Promise<Chat> => {
-    return await privateClient.patch(
+    chatId: Chat["_id"],
+    chatData: { name?: Chat["name"] }
+  ): Promise<Chat> =>
+    await privateClient.patch(
       chatEndpoints.updateChat.replace(":chatId", chatId),
       chatData
-    );
-  },
+    ),
 
-  deleteChat: async (chatId: string): Promise<{ success: string }> => {
-    return await privateClient.delete(
+  deleteChat: async (chatId: string): Promise<{ success: string }> =>
+    await privateClient.delete(
       chatEndpoints.deleteChat.replace(":chatId", chatId)
-    );
-  },
+    ),
 
-  getInterlocutorStatus: async (
-    userId?: string
-  ): Promise<Status | undefined> => {
-    if (!userId) return;
+  getInterlocutorStatus: async (userId: PublicUser["_id"]): Promise<Status> => {
     return await privateClient.get(
       chatEndpoints.getInterlocutorStatus.replace(":userId", userId)
     );
   },
 };
-
-export default chatApi;

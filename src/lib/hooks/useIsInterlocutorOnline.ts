@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
-import { useSocketSubscription } from "./useSocketSubscription";
-import { PublicUser } from "@/types";
+
+import { useSocketSubscription } from "@/lib/hooks/useSocketSubscription";
+import { Chat } from "@/types/chat";
+import { PublicUser } from "@/types/user";
+
+type ChatId = Chat["_id"];
 
 export function useIsInterlocutorOnline({
   interlocutors,
-  params,
+  chatId,
 }: {
   interlocutors: PublicUser[] | undefined;
-  params;
+  chatId: ChatId;
 }) {
   const [isInterlocutorOnline, setIsInterlocutorOnline] =
     useState<boolean>(false);
@@ -15,7 +19,7 @@ export function useIsInterlocutorOnline({
 
   useEffect(() => {
     setIsInterlocutorOnline(interlocutor?.status?.online || false);
-  }, [interlocutor?.status?.online, params.chatId]);
+  }, [interlocutor?.status?.online, chatId]);
 
   const handleInterlocutorOnlineStatus = useCallback(
     ({

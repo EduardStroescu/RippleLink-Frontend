@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 
-type Args = {
+type UseIsAtBottomArgs = {
   scrollParent: HTMLDivElement | null;
 };
 
-type Return = {
+type ReturnType = {
   isAtBottom: boolean;
   setIsAtBottom: (isAtBottom: boolean) => void;
 };
 
-export function useIsAtBottom({ scrollParent }: Args): Return {
+export function useIsAtBottom({ scrollParent }: UseIsAtBottomArgs): ReturnType {
   const [isAtBottom, setIsAtBottom] = useState(false);
 
   const handleIsAtBottom = useCallback(() => {

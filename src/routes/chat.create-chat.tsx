@@ -1,21 +1,30 @@
-import { FormEvent, useEffect, useState } from "react";
-import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
-import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
-import chatApi from "@/api/modules/chat.api";
-import userApi from "@/api/modules/user.api";
-import { checkIfChatExists } from "@/lib/utils";
-import { groupAvatar } from "@/lib/const";
-import { Chat, Message, PublicUser } from "@/types";
+import { useQueries, UseQueryResult } from "@tanstack/react-query";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 
-import { useToast } from "@/components/ui";
-import { CreateMessageForm, ChatHeaderDetails } from "@/components";
+import { userApi } from "@/api/modules/user.api";
+import { ChatHeaderDetails } from "@/components/chatId/ChatHeaderDetails";
+import { CreateMessageForm } from "@/components/forms/CreateMessageForm";
+import { groupAvatar } from "@/lib/const";
+import { useCreateChat } from "@/lib/hooks/useCreateChat";
+import { checkIfChatExists } from "@/lib/utils";
+import { useUserStore } from "@/stores/useUserStore";
+import { Chat } from "@/types/chat";
+import { PublicUser } from "@/types/user";
+
+const MAX_DISPLAY_NAMES_FOR_GROUPS = 3;
 
 export const Route = createFileRoute("/chat/create-chat")({
   beforeLoad: async ({ search, context: { queryClient } }) => {
+    const user = useUserStore.getState().user;
     const { userIds } = search as typeof search & { userIds: string };
-    const chatsData = queryClient.getQueryData<Chat[] | []>(["chats"]);
+    const chatsData = queryClient.getQueryData<Chat[] | []>([
+      "chats",
+      user?._id,
+    ]);
     const userIdsArr = userIds.split(",");
 
+    // Check for existing chat with selected users and redirect to it if found
     if (chatsData) {
       const existingChat = checkIfChatExists(chatsData, userIdsArr);
       if (existingChat) {
@@ -31,9 +40,9 @@ export const Route = createFileRoute("/chat/create-chat")({
         queryFn: () => userApi.getUsersById(userId),
         enabled: !!userId && !!userIdsArr.length,
       })),
-      combine: (results) => {
+      combine: (results: UseQueryResult<PublicUser, Error>[]) => {
         return {
-          data: results.map((result) => result.data),
+          newChatUsers: results.map((result) => result.data),
         };
       },
     };
@@ -47,89 +56,34 @@ export const Route = createFileRoute("/chat/create-chat")({
 
 function CreateNewChat() {
   const usersQuery = Route.useLoaderData();
-  const { data: newChatUsers } = useQueries(usersQuery);
-  const queryClient = useQueryClient();
-
-  const [message, setMessage] = useState<Message["content"]>("");
-  const [gif, setGif] = useState<string | null>(null);
-  const [contentPreview, setContentPreview] = useState<{
-    content: string | null;
-    name: string | null;
-  } | null>(null);
+  const { newChatUsers } = useQueries(usersQuery);
   const [isEditingChatName, setIsEditingChatName] = useState(false);
-  const [chatName, setChatName] = useState("");
-  const [messageType, setMessageType] = useState<Message["type"]>("text");
-  const { toast } = useToast();
 
-  const createChatMutation = useMutation({
-    mutationFn: async (values: {
-      userIds: string[];
-      lastMessage: string;
-      type?: string;
-      name?: string;
-      messageType?: string;
-    }) => await chatApi.createChat(values),
-  });
-  const router = useRouter();
-
-  const handleSubmitMessage = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const values: {
-      userIds: string[];
-      lastMessage: string;
-      type?: string;
-      name?: string;
-      messageType?: string;
-    } = {
-      userIds: newChatUsers.map((user: PublicUser) => user._id),
-      lastMessage: message,
-      type: newChatUsers.length > 1 ? "group" : "dm",
-      name: chatName,
-      messageType: messageType,
-    };
-
-    chatName === defaultChatHeaderTitle && delete values.name;
-
-    if (gif) {
-      values.lastMessage = gif;
-      values.messageType = "text";
-      setGif(null);
-    } else if (contentPreview?.content && messageType !== "text") {
-      values.lastMessage = contentPreview.content;
-      values.messageType = messageType;
-    } else {
-      if (message.length === 0) return;
-
-      values.lastMessage = message;
-    }
-
-    await createChatMutation.mutateAsync(values, {
-      onSuccess: (response) => {
-        router.history.push(`/chat/${response._id}`);
-        queryClient.removeQueries({ queryKey: ["chats"] });
-      },
-      onError: (error: unknown) => {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: error as string,
-        });
-      },
-    });
-  };
-
-  const newChatUsersDisplayNames: PublicUser["displayName"][] = newChatUsers
-    ?.map((user: PublicUser) => user?.displayName)
-    .slice(0, 3);
+  const newChatUsersDisplayNames = newChatUsers
+    ?.map((user: PublicUser | undefined) => user?.displayName)
+    .slice(0, MAX_DISPLAY_NAMES_FOR_GROUPS);
   const defaultChatHeaderTitle =
     newChatUsersDisplayNames.every((dName) => typeof dName === "string") &&
-    `Group Chat: ${newChatUsersDisplayNames.join(", ")} ${newChatUsers.length > 3 ? `(+ ${newChatUsers.length - 3})` : ""}`.trim();
+    `Group Chat: ${newChatUsersDisplayNames.join(", ")} ${newChatUsers.length > MAX_DISPLAY_NAMES_FOR_GROUPS ? `(+ ${newChatUsers.length - MAX_DISPLAY_NAMES_FOR_GROUPS})` : ""}`.trim();
+
+  const {
+    handleSubmitMessage,
+    message,
+    setMessage,
+    contentPreview,
+    setContentPreview,
+    messageType,
+    setMessageType,
+    chatName,
+    setChatName,
+    setGif,
+  } = useCreateChat({ newChatUsers, defaultChatHeaderTitle });
 
   useEffect(() => {
     if (!isEditingChatName && !chatName.length && defaultChatHeaderTitle) {
       setChatName(defaultChatHeaderTitle);
     }
-  }, [chatName, defaultChatHeaderTitle, isEditingChatName]);
+  }, [chatName, defaultChatHeaderTitle, isEditingChatName, setChatName]);
 
   const handleResetInput = () => {
     if (defaultChatHeaderTitle) {

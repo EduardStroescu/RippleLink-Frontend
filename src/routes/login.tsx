@@ -1,8 +1,25 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { LoginForm, BackIcon, DemoAccountLoginPanel } from "@/components";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+
+import { DemoAccountLoginPanel } from "@/components/DemoAccountLoginPanel";
+import { LoginForm } from "@/components/forms/LoginForm";
+import { BackIcon } from "@/components/Icons";
+import { useUserStore } from "@/stores/useUserStore";
 
 export const Route = createFileRoute("/login")({
-  component: () => (
+  beforeLoad: () => {
+    const user = useUserStore.getState().user;
+    if (user) {
+      throw redirect({
+        to: "/chat",
+        replace: true,
+      });
+    }
+  },
+  component: LoginPage,
+});
+
+function LoginPage() {
+  return (
     <div className="w-full h-full flex flex-col justify-evenly items-center text-white overflow-y-auto overflow-x-hidden py-10 px-4">
       <div className="flex flex-col gap-8 items-center">
         <div className="flex flex-col items-center justify-center gap-4">
@@ -16,5 +33,5 @@ export const Route = createFileRoute("/login")({
         <DemoAccountLoginPanel />
       </div>
     </div>
-  ),
-});
+  );
+}

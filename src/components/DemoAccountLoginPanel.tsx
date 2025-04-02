@@ -1,18 +1,15 @@
-import userApi from "@/api/modules/user.api";
 import { useMutation } from "@tanstack/react-query";
-import { useToast } from "./ui/use-toast";
-import { useUserStoreActions } from "@/stores/useUserStore";
 import { useRouter, useRouterState } from "@tanstack/react-router";
-import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
-import { User } from "@/types/user";
+
+import { userApi } from "@/api/modules/user.api";
+import { toast } from "@/components/ui/use-toast";
+import { useUserStoreActions } from "@/stores/useUserStore";
 
 const users = ["One", "Two", "Three"];
 
 export function DemoAccountLoginPanel() {
   const { setUser } = useUserStoreActions();
-  const { setItem } = useLocalStorage<User>("user");
   const router = useRouter();
-  const { toast } = useToast();
   const redirectUrl = useRouterState({
     select: (state) => state.location.search.redirect,
   });
@@ -34,7 +31,6 @@ export function DemoAccountLoginPanel() {
       { email, password },
       {
         onSuccess: (response) => {
-          setItem(response);
           setUser(response);
           router.history.push(redirectUrl ? redirectUrl : "/chat");
         },

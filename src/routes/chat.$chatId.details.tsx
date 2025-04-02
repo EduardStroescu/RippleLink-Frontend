@@ -1,22 +1,24 @@
-import { useMemo } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useUserStore } from "@/stores/useUserStore";
-import chatApi from "@/api/modules/chat.api";
-import { groupAvatar, placeholderAvatar } from "@/lib/const";
-import { Chat, Message } from "@/types";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo } from "react";
 
-import { BackIcon, MediaComponent } from "@/components";
+import { chatApi } from "@/api/modules/chat.api";
+import { MediaComponent } from "@/components/chatId/MediaComponent";
+import { BackIcon } from "@/components/Icons";
 import {
-  AvatarCoin,
-  FileComponent,
-  FullscreenImage,
   Accordion,
+  AccordionContent,
   AccordionItem,
   AccordionTrigger,
-  AccordionContent,
-} from "@/components/ui";
+} from "@/components/ui/Accordion";
+import { AvatarCoin } from "@/components/ui/AvatarCoin";
+import { FileComponent } from "@/components/ui/FileComponent";
+import { FullscreenImage } from "@/components/ui/FullscreenImage";
+import { groupAvatar, placeholderAvatar } from "@/lib/const";
 import { getGroupChatNamePlaceholder } from "@/lib/utils";
+import { useUserStore } from "@/stores/useUserStore";
+import { Chat } from "@/types/chat";
+import { FileMessage } from "@/types/message";
 
 export const Route = createFileRoute("/chat/$chatId/details")({
   beforeLoad: async ({ params: { chatId } }) => {
@@ -30,7 +32,9 @@ export const Route = createFileRoute("/chat/$chatId/details")({
     return { sharedFilesQuery };
   },
   loader: async ({ context: { queryClient, sharedFilesQuery } }) => {
-    return await queryClient.ensureQueryData(sharedFilesQuery);
+    const sharedFiles = await queryClient.ensureQueryData(sharedFilesQuery);
+
+    return sharedFiles;
   },
   component: () => <ChatDetails />,
 });
@@ -39,8 +43,8 @@ function ChatDetails() {
   const { chatId } = Route.useParams();
   const user = useUserStore((state) => state.user);
   const queryClient = useQueryClient();
-  const chatData = queryClient.getQueryData<Chat[] | []>(["chats"]);
-  const sharedFilesData = Route.useLoaderData<Message[] | []>();
+  const chatData = queryClient.getQueryData<Chat[] | []>(["chats", user?._id]);
+  const sharedFilesData = Route.useLoaderData<FileMessage[] | []>();
 
   const currentChat = useMemo(
     () => chatData?.filter((chat) => chat._id === chatId)?.[0],
@@ -56,17 +60,17 @@ function ChatDetails() {
   const placeholderChatName = getGroupChatNamePlaceholder(interlocutors);
 
   return (
-    <aside className="relative w-full col-span-full xl:col-span-3 flex flex-col border-l-slate-700 border-l-[1px] overflow-hidden">
-      <div className="flex w-full py-2 px-4 items-center">
+    <aside className="animate-in fade-in duration-500 ease-in relative w-full col-span-full xl:col-span-3 flex flex-col border-l-slate-700 border-l-[1px] overflow-hidden">
+      <nav className="flex w-full py-2 px-4 items-center">
         <Link
           to={"/chat/$chatId"}
           preload={false}
-          params={{ chatId: chatId }}
+          params={{ chatId }}
           className="group flex items-center gap-2 py-4"
         >
           <BackIcon /> <span className="text-xs">Back</span>
         </Link>
-      </div>
+      </nav>
       <div className="overflow-y-auto py-2">
         {interlocutors && interlocutors?.length <= 1 ? (
           <UserDetailsHeader
@@ -92,19 +96,24 @@ function ChatDetails() {
                   Users In Chat
                 </AccordionTrigger>
                 <AccordionContent className="mt-1">
-                  <div className="flex flex-col w-full h-full max-h-[300px] items-center justify-center overflow-y-auto gap-1">
+                  <ul className="flex flex-col w-full h-full max-h-[300px] items-center justify-center overflow-y-auto gap-1">
                     {interlocutors?.map((interlocutor) => (
-                      <div key={interlocutor._id}>
-                        <Link
-                          aria-label={`Navigate to or create chat with ${interlocutor.displayName}`}
-                          to={`/chat/create-chat?userIds=${interlocutor._id}`}
-                          className="hover:text-white"
-                        >
-                          {interlocutor.displayName}
-                        </Link>
-                      </div>
+                      <Link
+                        key={interlocutor._id}
+                        as="li"
+                        aria-label={`Navigate to or create chat with ${interlocutor.displayName}`}
+                        to={`/chat/create-chat?userIds=${interlocutor._id}`}
+                        className="hover:text-white flex items-center"
+                      >
+                        <AvatarCoin
+                          width={30}
+                          source={interlocutor?.avatarUrl || placeholderAvatar}
+                          alt={interlocutor.displayName}
+                        />
+                        {interlocutor.displayName}
+                      </Link>
                     ))}
-                  </div>
+                  </ul>
                 </AccordionContent>
               </AccordionItem>
             )}
@@ -113,20 +122,22 @@ function ChatDetails() {
                 Shared Files
               </AccordionTrigger>
               <AccordionContent className="mt-1">
-                <div className="flex flex-wrap gap-2 w-full h-full max-h-[500px] items-center justify-center overflow-y-auto">
+                <ul className="flex flex-wrap gap-1 w-full h-full max-h-[500px] items-center justify-center overflow-y-auto">
                   {sharedFilesData?.length ? (
-                    sharedFilesData?.map((file: Message) => (
-                      <div
-                        key={file._id}
-                        className="max-h-[100px] max-w-[100px] overflow-hidden"
-                      >
-                        {displayFileByType(file)}
-                      </div>
-                    ))
+                    sharedFilesData.map((file: FileMessage) =>
+                      file.content?.map((content) => (
+                        <li
+                          key={content.fileId}
+                          className="max-h-[100px] max-w-[100px] overflow-hidden"
+                        >
+                          <FileListItem file={file} content={content} />
+                        </li>
+                      ))
+                    )
                   ) : (
-                    <p className="self-center text-lg">No files shared yet</p>
+                    <li className="self-center text-lg">No files shared yet</li>
                   )}
-                </div>
+                </ul>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -159,43 +170,62 @@ function UserDetailsHeader({
   );
 }
 
-const displayFileByType = (message: Message) => {
-  switch (message.type) {
-    case "image":
-      return renderImage(message);
-    case "file":
-      return renderFile(message.content);
-    case "video":
-      return renderMediaContent(message.content);
-    case "audio":
-      return renderMediaContent(message.content);
-    default:
-      return renderImage(message);
-  }
-};
-
-const renderImage = (message: Message) => (
-  <FullscreenImage
-    src={message.content}
-    alt={`Image sent by ${message.senderId.displayName}`}
-    className="aspect-square"
-  />
-);
-
-const renderMediaContent = (content: string) => (
-  <MediaComponent file={content} />
-);
-
-const renderFile = (content: string) => {
-  const fileName = content.split("/").pop();
-  return (
-    <div className="group">
+const renderers = {
+  image: (
+    senderName: FileMessage["senderId"]["displayName"],
+    file: FileMessage["content"][number]
+  ) => (
+    <FullscreenImage
+      src={file.content}
+      alt={`Image sent by ${senderName}`}
+      title={`Image sent by ${senderName}`}
+      aria-label={`Image sent by ${senderName}`}
+      className="aspect-square"
+    />
+  ),
+  media: (
+    senderName: FileMessage["senderId"]["displayName"],
+    file: FileMessage["content"][number]
+  ) => (
+    <MediaComponent
+      file={file.content}
+      aria-label={`File sent by ${senderName}`}
+    />
+  ),
+  file: (
+    senderName: FileMessage["senderId"]["displayName"],
+    file: FileMessage["content"][number]
+  ) => {
+    const fileName = file.content?.split("/").pop();
+    return (
       <FileComponent
-        href={content}
+        title={`File sent by ${senderName}`}
+        aria-label={`File sent by ${senderName}`}
+        href={file.content}
         download
         fileName={fileName}
-        className="max-w-none min-w-0 w-full h-full max-h-[95px] m-0"
+        className="max-w-none min-w-0 w-full h-full max-h-[95px]"
       />
-    </div>
-  );
+    );
+  },
 };
+
+function FileListItem({
+  file,
+  content,
+}: {
+  file: FileMessage;
+  content: FileMessage["content"][number];
+}) {
+  if (!file || !content) return null;
+
+  if (content.type === "image") {
+    return renderers.image(file.senderId.displayName, content);
+  } else if (content.type === "file") {
+    return renderers.file(file.senderId.displayName, content);
+  } else if (content.type === "video" || content.type === "audio") {
+    return renderers.media(file.senderId.displayName, content);
+  }
+
+  return renderers.file(file.senderId.displayName, content);
+}

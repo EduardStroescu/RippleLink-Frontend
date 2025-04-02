@@ -1,8 +1,15 @@
-import { useUserStore } from "@/stores/useUserStore";
 import clsx, { ClassValue } from "clsx";
 import { RgbaColor } from "react-colorful";
 import { twMerge } from "tailwind-merge";
-import { User, Chat } from "@/types";
+
+import { toast } from "@/components/ui/use-toast";
+import { CHUNK_SIZE } from "@/lib/const";
+import { ContentPreview } from "@/lib/hooks/useCreateMessage";
+import { isAuthenticatedSchema } from "@/lib/zodSchemas/isAuthenticated.schema";
+import { useAppStore } from "@/stores/useAppStore";
+import { useUserStore } from "@/stores/useUserStore";
+import { Chat } from "@/types/chat";
+import { FileMessage, Message } from "@/types/message";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -10,19 +17,19 @@ export function cn(...inputs: ClassValue[]) {
 
 export function isAuthenticated(): boolean {
   try {
-    const authData = window.localStorage.getItem("user");
-    if (authData) {
-      const parsedData: User = JSON.parse(authData);
-      // Check if the parsed data contains the access_token property
+    const authData = useUserStore.getState().user;
+    const user = isAuthenticatedSchema.parse(authData);
+    if (user) {
+      // Check if the parsed data contains the access_token and refresh_token properties
       return (
-        parsedData &&
-        typeof parsedData.access_token === "string" &&
-        parsedData.access_token.trim() !== ""
+        user.access_token.trim() !== "" && user.refresh_token.trim() !== ""
       );
     }
-  } catch (error) {
-    console.error("Error parsing localStorage item:", error);
+  } catch (_) {
+    /* empty */
   }
+  useUserStore.getState().actions.removeUser();
+  window.localStorage.removeItem("user");
   return false;
 }
 
@@ -38,13 +45,61 @@ export function getParsedPath(path: string) {
   }
 }
 
-export const adaptTimezone = (date?: string, timezone?: string) => {
-  if (!date) return "";
+export const getLocalDate = (date: string | undefined, timezone: string) => {
+  if (!date) return { date: "", time: "" };
   if (!timezone) throw new Error("Timezone is required");
 
   const utcDate = new Date(date);
-  const localDate = utcDate.toLocaleString(timezone).split(",")[1];
-  return localDate;
+  const localDate = utcDate.toLocaleString(timezone);
+  return {
+    date: localDate.split(",")[0].trim(),
+    time: localDate.split(",")[1].trim().slice(0, 5),
+  };
+};
+
+export const getLastMessageDate = (
+  date: string | undefined,
+  timezone: string
+) => {
+  if (!date) return "";
+  if (!timezone) throw new Error("Timezone is required");
+
+  const currentDate = new Date();
+  const localDate = new Date(date);
+
+  // Check if the date is today
+  const isToday = currentDate.toDateString() === localDate.toDateString();
+
+  if (isToday) {
+    // Return just the time (HH:mm) if it's today
+    return getLocalDate(date, timezone).time;
+  }
+
+  // Check if the date is in the current week
+  const startOfWeek = new Date(currentDate);
+  startOfWeek.setDate(currentDate.getDate() - currentDate.getDay()); // Start of the current week (Sunday)
+
+  const isSameWeek = localDate >= startOfWeek && localDate <= currentDate;
+
+  if (isSameWeek) {
+    // If it's the same week, return the day name, except for yesterday
+    const daysAgo = Math.floor(
+      (currentDate.getTime() - localDate.getTime()) / (1000 * 3600 * 24)
+    );
+
+    if (daysAgo === 1) {
+      return "Yesterday";
+    }
+
+    // Return the day name (e.g., "Monday")
+    return localDate.toLocaleDateString("en-US", {
+      weekday: "long",
+      timeZone: "Europe/Bucharest",
+    });
+  }
+
+  // If it's not in the current week, return the dd/ww/yy format
+  return getLocalDate(date, timezone).date;
 };
 
 export function rgbaStringToObject(rgbaString: string | undefined) {
@@ -108,20 +163,22 @@ export function sleep(ms: number) {
 
 export const canEditMessage = (
   isOwnMessage: boolean,
-  createdAt?: string,
-  messageType?: string
+  message: Message
 ): boolean => {
-  if (!createdAt) return false;
+  if (!message.createdAt) return false;
 
-  const messageCreatedAt = new Date(createdAt).getTime();
+  const messageCreatedAt = new Date(message.createdAt).getTime();
   const now = Date.now();
 
   // Calculate the difference in milliseconds and convert it to minutes
   const timeDifferenceInMinutes = (now - messageCreatedAt) / (1000 * 60);
 
+  const isTextMessage = message.type === "text";
+  const isGif = isTextMessage && isImageUrl(message.content);
+
   // Return true if the message is still within the allowed edit interval
   return (
-    timeDifferenceInMinutes <= 15 && isOwnMessage && messageType === "text"
+    timeDifferenceInMinutes <= 15 && isOwnMessage && isTextMessage && !isGif
   );
 };
 
@@ -140,4 +197,114 @@ export const getGroupChatNamePlaceholder = (
   const placeholderChatName = `Group Chat: ${interlocutorsDisplayNames?.length ? interlocutorsDisplayNames : ""}`;
 
   return placeholderChatName;
+};
+
+export const getUserDevices = async () => {
+  try {
+    const allDevices = await navigator.mediaDevices.enumerateDevices();
+    const defaultDevices = allDevices
+      .filter((device) => device.label.includes("Default"))
+      .map((device) => ({
+        deviceId: device.deviceId,
+        kind: device.kind,
+        groupId: device.groupId,
+        label: device.label.replace("Default - ", ""),
+      })) as MediaDeviceInfo[];
+
+    const inputDevices = allDevices.filter(
+      (device) =>
+        device.kind === "audioinput" && !device.label.includes("Default")
+    );
+    const outputDevices = allDevices.filter(
+      (device) =>
+        device.kind === "audiooutput" && !device.label.includes("Default")
+    );
+    return { defaultDevices, outputDevices, inputDevices };
+  } catch (err) {
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: "Cound not access the media devices.",
+    });
+  }
+};
+
+export const getLastMessagesOfDay = (messages: Message[]) => {
+  if (!messages.length) return [];
+  const lastMessagesOfDay: number[] = [];
+  let currMessageDate = new Date(messages[0].createdAt).toDateString();
+
+  // Iterate over the messages and compare their dates
+  for (let i = 1; i < messages.length; i++) {
+    const currentMessage = messages[i];
+    const previousMessage = messages[i - 1];
+
+    currMessageDate = new Date(currentMessage.createdAt).toDateString();
+    const previousMessageDate = new Date(
+      previousMessage.createdAt
+    ).toDateString();
+
+    // If the current message's date is different from the previous message's date,
+    // the previous message is the last message of the day
+    if (currMessageDate !== previousMessageDate) {
+      lastMessagesOfDay.push(i); // Store the index of the last message of the day (1-based)
+    }
+  }
+
+  // The last message of the last day is always the last message in the list
+  lastMessagesOfDay.push(messages.length); // Add the last message as the last one of the final day
+
+  return lastMessagesOfDay;
+};
+
+export const lerp = (start: number, end: number, alpha: number): number => {
+  return start + (end - start) * alpha;
+};
+
+/*
+  Chunks files and uploads them to the server in parallel
+*/
+export const chunkFilesAndUpload = async (
+  message: FileMessage,
+  files: ContentPreview,
+  MAX_RETRIES: number = 3
+) => {
+  const socket = await useAppStore.getState().actions.getSocket();
+  if (!socket) return;
+
+  await Promise.all(
+    files.flatMap((file, idx) => {
+      const { fileBlob, name } = file;
+      const totalChunks = Math.ceil(fileBlob.size / CHUNK_SIZE);
+      const fileId = message.content[idx].fileId;
+
+      return Array.from({ length: totalChunks }, (_, index) => {
+        const chunk = fileBlob.slice(
+          index * CHUNK_SIZE,
+          (index + 1) * CHUNK_SIZE
+        );
+
+        // Recursive retry function
+        const sendChunk = async (attempt = 0): Promise<void> => {
+          return new Promise((resolve) => {
+            socket.emit(
+              "sendChunkedFile",
+              { message, fileId, name, chunk, index, totalChunks },
+              (response: { success: boolean }) => {
+                if (response.success) {
+                  resolve(); // Successfully uploaded chunk
+                } else if (attempt < MAX_RETRIES) {
+                  setTimeout(() => resolve(sendChunk(attempt + 1)), 1000);
+                } else {
+                  resolve(); // Resolve even if failed to prevent blocking other uploads
+                }
+              }
+            );
+          });
+        };
+
+        return sendChunk(); // Start upload
+      });
+    })
+  );
 };

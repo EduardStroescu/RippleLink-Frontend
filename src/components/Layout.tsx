@@ -1,15 +1,12 @@
-import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
-import { useAppStore, useAppStoreActions } from "@/stores/useAppStore";
-import { useUserStore, useUserStoreActions } from "@/stores/useUserStore";
-import { User } from "@/types/user";
-import { useNavigate } from "@tanstack/react-router";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 
-export function Layout({ children }: { children: React.ReactNode }) {
-  const { getItem } = useLocalStorage<User>("user");
-  const { setUser } = useUserStoreActions();
+import { CallNotification } from "@/components/call/CallNotification";
+import { useAppStore, useAppStoreActions } from "@/stores/useAppStore";
+import { useUserStore } from "@/stores/useUserStore";
 
+export function Layout({ children }: { children: React.ReactNode }) {
   const user = useUserStore((state) => state.user);
   const [backgroundLoaded, setBackgroundLoaded] = useState(false);
   const { appBackground, appTint, appGlow } = useAppStore(
@@ -22,20 +19,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { setAppBackground, setAppTint, setAppGlow, resetAppStore } =
     useAppStoreActions();
 
+  const { pathname } = useLocation();
   const navigate = useNavigate();
 
+  // Auth middleware to redirect to login page if the user is not authenticated
   useEffect(() => {
-    if (user) return;
+    if (pathname === "/" || pathname === "/login" || pathname === "/register") {
+      return;
+    }
 
-    const savedUser = getItem(); // Get the user from localStorage
-    if (savedUser) {
-      setUser(savedUser as User);
-      navigate({ to: "/chat", replace: true });
-    } else {
+    if (!user) {
       navigate({ to: "/", replace: true });
     }
-  }, [getItem, navigate, setUser, user]);
+  }, [navigate, user, pathname]);
 
+  // Sync app colors with user settings
   useEffect(() => {
     if (user?.settings) {
       user.settings?.backgroundImage &&
@@ -76,6 +74,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       >
         {children}
       </main>
+      <CallNotification />
     </div>
   );
 }

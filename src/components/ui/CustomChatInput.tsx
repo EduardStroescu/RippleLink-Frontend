@@ -1,11 +1,12 @@
 import { memo, useEffect, useRef } from "react";
-import { EmojiPicker } from "../EmojiPicker";
-import { EmojiIcon } from "../Icons";
+
+import { EmojiIcon } from "@/components/Icons";
+import { EmojiPicker } from "@/components/pickers/EmojiPicker";
 
 interface CustomChatInputProps {
   emojiClassName?: string;
   disabled?: boolean;
-  message: string | undefined;
+  message: string;
   setMessage: (message: string) => void;
   handleKeyDown: () => void;
   handlePaste?: (e: React.ClipboardEvent<HTMLTextAreaElement>) => void;
@@ -81,6 +82,7 @@ export const CustomChatInput = memo(
           <EmojiIcon className={emojiClassName} />
         </EmojiPicker>
         <textarea
+          autoFocus
           name="message"
           disabled={disabled}
           ref={chatInputRef}
@@ -97,3 +99,5 @@ export const CustomChatInput = memo(
     );
   }
 );
+
+CustomChatInput.displayName = "CustomChatInput";

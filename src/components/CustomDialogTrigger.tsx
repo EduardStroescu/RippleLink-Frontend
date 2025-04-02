@@ -1,4 +1,6 @@
+import clsx from "clsx";
 import React, { useState } from "react";
+
 import {
   Dialog,
   DialogContent,
@@ -7,7 +9,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/Dialog";
-import clsx from "clsx";
 
 interface CustomDialogTriggerProps {
   header?: string;

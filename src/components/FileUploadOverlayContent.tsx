@@ -1,5 +1,5 @@
-import { Message } from "@/types/message";
-import { AudioIcon, FileIcon, ImageIcon, VideoIcon } from "./Icons";
+import { AudioIcon, FileIcon, ImageIcon, VideoIcon } from "@/components/Icons";
+import { FileType } from "@/lib/hooks/useCreateMessage";
 
 export function FileUploadOverlayContent({
   setOpen,
@@ -8,7 +8,7 @@ export function FileUploadOverlayContent({
   setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
   handleInsertFileByType: (
     e: React.ChangeEvent<HTMLInputElement>,
-    fileType: Message["type"],
+    fileType: FileType,
     setOpen: React.Dispatch<React.SetStateAction<boolean>>
   ) => void;
 }) {
@@ -40,13 +40,14 @@ export function FileUploadOverlayContent({
       fileType: "file",
     },
   ];
+
   return (
     <div className="flex flex-col gap-4 py-3 px-4 bg-black/60 backdrop-blur rounded border-slate-600 border-[1px]">
       {fileUploadTypes.map((type) => {
         return (
           <div key={type.id}>
             <label
-              className="flex gap-2 cursor-pointer items-center group text-sm"
+              className="flex gap-2 cursor-pointer items-center group group/file text-sm"
               htmlFor={type.id}
             >
               {type.icon}
@@ -57,12 +58,9 @@ export function FileUploadOverlayContent({
               id={type.id}
               accept={`${type.fileType}/*`}
               className="hidden"
+              multiple
               onChange={(e) =>
-                handleInsertFileByType(
-                  e,
-                  type.fileType as Message["type"],
-                  setOpen
-                )
+                handleInsertFileByType(e, type.fileType as FileType, setOpen)
               }
             />
           </div>

@@ -1,8 +1,9 @@
-import { Socket } from "socket.io-client";
-import { Call } from "./call";
-import { Chat } from "./chat";
-import { PublicUser, User } from "./user";
 import Peer from "simple-peer";
+import { Socket } from "socket.io-client";
+
+import { Call } from "@/types/call";
+import { Chat } from "@/types/chat";
+import { PublicUser, User } from "@/types/user";
 
 export interface UserStore {
   user: User | null;
@@ -14,6 +15,7 @@ export interface UserStore {
         | ((prevUser: UserStore["user"]) => UserStore["user"])
         | null
     ) => void;
+    removeUser: () => void;
   };
 }
 
@@ -25,6 +27,7 @@ export interface AppStore {
 
   actions: {
     setSocket: (newSocket: Socket | null) => void;
+    getSocket: (retries?: number, delay?: number) => Promise<Socket | null>;
     setAppBackground: (newBackground: AppStore["appBackground"]) => void;
     setAppTint: (newTint: AppStore["appTint"]) => void;
     setAppGlow: (newGlow: AppStore["appGlow"]) => void;
@@ -99,19 +102,17 @@ export interface ConnectionsStore {
 export interface CallStore {
   currentCall: Call | null;
   incomingCalls: Call[] | [];
-  recentlyEndedCalls: Call[] | [];
   joiningCall: Call["chatId"]["_id"] | null;
 
   actions: {
     setCurrentCall: (call: Call | null) => void;
     addIncomingCall: (call: Call) => void;
     removeIncomingCall: (chatId: Call["chatId"]["_id"]) => void;
-    addRecentlyEndedCall: (call: Call) => void;
-    removeRecentlyEndedCall: (chatId: Call["chatId"]["_id"]) => void;
     resetIncomingCalls: () => void;
     setJoiningCall: (chatId: Call["chatId"]["_id"] | null) => void;
     startCall: (chat: Chat, videoEnabled?: boolean) => Promise<void>;
     answerCall: (callDetails: Call, videoEnabled?: boolean) => Promise<void>;
     endCall: (call: Call) => void;
+    rejectCall: (call: Call) => void;
   };
 }

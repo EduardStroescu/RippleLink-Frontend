@@ -1,4 +1,3 @@
-import { Chat } from "./chat";
 import { Settings } from "./settings";
 import { Status } from "./status";
 
@@ -10,9 +9,9 @@ export interface User {
   displayName: string;
   avatarUrl?: string;
   access_token?: string;
-  refreshToken?: string;
+  refresh_token?: string;
   status?: Status;
-  chats?: Chat[] | [];
+  chats?: string[] | [];
   settings?: Settings;
   updatedAt?: string;
   createdAt?: string;

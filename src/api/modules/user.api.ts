@@ -1,6 +1,8 @@
-import privateClient from "../privateClient";
-import publicClient from "../publicClient";
-import { Settings, User, Status, PublicUser } from "@/types";
+import privateClient from "@/api/privateClient";
+import publicClient from "@/api/publicClient";
+import { Settings } from "@/types/settings";
+import { Status } from "@/types/status";
+import { PublicUser, User } from "@/types/user";
 
 const userEndpoints = {
   login: "auth/login",
@@ -17,20 +19,18 @@ const userEndpoints = {
   logout: "auth/logout",
 };
 
-const userApi = {
+export const userApi = {
   login: async ({
     password,
     email,
   }: {
     password: string;
-    email: string;
-  }): Promise<User> => {
-    return await publicClient.post(userEndpoints.login, {
+    email: User["email"];
+  }): Promise<User> =>
+    await publicClient.post(userEndpoints.login, {
       password,
       email,
-    });
-  },
-
+    }),
   register: async ({
     avatarUrl,
     email,
@@ -40,15 +40,15 @@ const userApi = {
     firstName,
     lastName,
   }: {
-    avatarUrl: string;
-    email: string;
+    avatarUrl: User["avatarUrl"];
+    email: User["email"];
     password: string;
     confirmPassword: string;
-    displayName?: string;
-    firstName: string;
-    lastName: string;
-  }): Promise<User> => {
-    return await publicClient.post(userEndpoints.register, {
+    displayName?: User["displayName"];
+    firstName: User["firstName"];
+    lastName: User["lastName"];
+  }): Promise<User> =>
+    await publicClient.post(userEndpoints.register, {
       avatarUrl,
       email,
       password,
@@ -56,27 +56,17 @@ const userApi = {
       displayName,
       firstName,
       lastName,
-    });
-  },
-
-  getInfo: async (): Promise<User> => {
-    return await privateClient.get(userEndpoints.getUserInfo);
-  },
-
-  getUsersById: async (userId: string): Promise<PublicUser> => {
-    return await privateClient.get(
-      userEndpoints.getUserById.replace(":id", userId)
-    );
-  },
-
+    }),
+  getInfo: async (): Promise<User> =>
+    await privateClient.get(userEndpoints.getUserInfo),
+  getUsersById: async (userId: PublicUser["_id"]): Promise<PublicUser> =>
+    await privateClient.get(userEndpoints.getUserById.replace(":id", userId)),
   getUsersByDisplayName: async (
-    displayName: string
-  ): Promise<PublicUser[] | []> => {
-    return await privateClient.get(
+    displayName: PublicUser["displayName"]
+  ): Promise<PublicUser[] | []> =>
+    await privateClient.get(
       userEndpoints.getUserByDisplayName.replace(":displayName", displayName)
-    );
-  },
-
+    ),
   changePassword: async ({
     currentPassword,
     newPassword,
@@ -85,64 +75,54 @@ const userApi = {
     currentPassword: string;
     newPassword: string;
     confirmNewPassword: string;
-  }) => {
-    return await privateClient.patch(userEndpoints.changePassword, {
+  }) =>
+    await privateClient.patch(userEndpoints.changePassword, {
       currentPassword,
       newPassword,
       confirmNewPassword,
-    });
-  },
-
+    }),
   avatarUpdate: async ({
     avatar,
   }: {
     avatar: string;
-  }): Promise<{ avatarUrl: string }> => {
-    return await privateClient.patch(userEndpoints.avatarUpdate, {
+  }): Promise<{ avatarUrl: User["avatarUrl"] }> =>
+    await privateClient.patch(userEndpoints.avatarUpdate, {
       avatar,
-    });
-  },
-
+    }),
   accountUpdate: async ({
     email,
     displayName,
     firstName,
     lastName,
   }: {
-    email?: string;
-    displayName?: string;
-    firstName?: string;
-    lastName?: string;
-  }): Promise<User> => {
-    return await privateClient.patch(userEndpoints.accountUpdate, {
+    email?: User["email"];
+    displayName?: User["displayName"];
+    firstName?: User["firstName"];
+    lastName?: User["lastName"];
+  }): Promise<User> =>
+    await privateClient.patch(userEndpoints.accountUpdate, {
       email,
       displayName,
       firstName,
       lastName,
-    });
-  },
-
-  logout: async (): Promise<{ success: string }> => {
-    return await privateClient.get(userEndpoints.logout);
-  },
-
+    }),
+  logout: async (): Promise<{ success: string }> =>
+    await privateClient.get(userEndpoints.logout),
   deleteAccount: async ({
     currentPassword,
     confirmCurrentPassword,
   }: {
     currentPassword: string;
     confirmCurrentPassword: string;
-  }): Promise<{ success: string }> => {
-    return await privateClient.request({
+  }): Promise<{ success: string }> =>
+    await privateClient.request({
       method: "DELETE",
       url: userEndpoints.deleteAccount,
       data: {
         currentPassword,
         confirmCurrentPassword,
       },
-    });
-  },
-
+    }),
   updateSettings: async ({
     backgroundImage,
     glowColor,
@@ -153,24 +133,19 @@ const userApi = {
     glowColor?: string;
     tintColor?: string;
     receiveNotifications?: boolean;
-  }): Promise<Settings> => {
-    return await privateClient.patch(userEndpoints.settingsUpdate, {
+  }): Promise<Settings> =>
+    await privateClient.patch(userEndpoints.settingsUpdate, {
       backgroundImage,
       glowColor,
       tintColor,
       receiveNotifications,
-    });
-  },
-
+    }),
   statusUpdate: async ({
     statusMessage,
   }: {
-    statusMessage: string;
-  }): Promise<Status> => {
-    return await privateClient.patch(userEndpoints.statusUpdate, {
+    statusMessage: Status["statusMessage"];
+  }): Promise<Status> =>
+    await privateClient.patch(userEndpoints.statusUpdate, {
       statusMessage,
-    });
-  },
+    }),
 };
-
-export default userApi;

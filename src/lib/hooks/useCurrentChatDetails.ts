@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
-import { useUserStore } from "@/stores/useUserStore";
-import chatApi from "@/api/modules/chat.api";
-import { useSetChatsCache } from "./useSetChatsCache";
 import { create } from "mutative";
-import { Chat, Status } from "@/types";
+import { useCallback, useEffect, useMemo } from "react";
+
+import { chatApi } from "@/api/modules/chat.api";
+import { useSetTanstackCache } from "@/lib/hooks/useSetTanstackCache";
+import { useUserStore } from "@/stores/useUserStore";
+import { Chat } from "@/types/chat";
+import { Status } from "@/types/status";
 
 interface useCurrentChatDetailsProps {
   chatsQuery: {
@@ -19,31 +21,36 @@ export function useCurrentChatDetails({
   chatsQuery,
 }: useCurrentChatDetailsProps) {
   const user = useUserStore((state) => state.user);
-  const params = useParams({ from: "/chat/$chatId" });
-  const setChatsCache = useSetChatsCache();
+  const chatId = useParams({
+    from: "/chat/$chatId",
+    select: (params) => params.chatId,
+  });
+  const setChatsCache = useSetTanstackCache<Chat[]>(["chats", user?._id]);
 
   const { data: chatData } = useQuery(chatsQuery);
   const currentChat = useMemo(
-    () => chatData?.find((chat) => chat._id === params.chatId),
-    [chatData, params.chatId]
+    () => chatData?.find((chat) => chat._id === chatId),
+    [chatData, chatId]
   );
 
   const isDmChat = useMemo(
-    () => currentChat?.type === "dm",
+    () => currentChat?.type !== "group",
     [currentChat?.type]
   );
   const interlocutors = useMemo(
     () =>
-      currentChat &&
-      currentChat?.users?.filter((person) => person._id !== user?._id),
+      currentChat && user?._id
+        ? currentChat.users.filter((person) => person._id !== user._id)
+        : [],
     [currentChat, user?._id]
   );
+  const currInterlocutor = interlocutors[0];
 
-  const shouldQueryInterlocutorStatus = interlocutors?.[0]?._id && isDmChat;
+  const shouldQueryInterlocutorStatus = !!currInterlocutor?._id && isDmChat;
   const { data: interlocutorStatus } = useQuery({
-    queryKey: ["interlocutorStatus", interlocutors?.[0]?._id],
-    queryFn: () => chatApi.getInterlocutorStatus(interlocutors?.[0]._id),
-    enabled: !!shouldQueryInterlocutorStatus,
+    queryKey: ["interlocutorStatus", currInterlocutor?._id],
+    queryFn: () => chatApi.getInterlocutorStatus(currInterlocutor?._id),
+    enabled: shouldQueryInterlocutorStatus,
   });
 
   const updateInterlocutorStatus = useCallback(
@@ -52,10 +59,8 @@ export function useCurrentChatDetails({
         if (!prev) return prev;
 
         return create(prev, (draft) => {
-          const chatIndex = draft.findIndex(
-            (chat) => chat._id === params.chatId
-          );
-          if (chatIndex === -1) return;
+          const chatIndex = draft.findIndex((chat) => chat._id === chatId);
+          if (chatIndex === -1) return draft;
           const chatUsers = draft[chatIndex].users;
           const interlocutorIndex = chatUsers.findIndex(
             (user) => user._id === interlocutorStatus.userId
@@ -65,20 +70,17 @@ export function useCurrentChatDetails({
         });
       });
     },
-    [params.chatId, setChatsCache]
+    [chatId, setChatsCache]
   );
 
   useEffect(() => {
     if (!interlocutorStatus) return;
     updateInterlocutorStatus(interlocutorStatus);
-  }, [interlocutorStatus, updateInterlocutorStatus]);
+  }, [currInterlocutor, interlocutorStatus, updateInterlocutorStatus]);
 
-  return useMemo(
-    () => ({
-      isDmChat,
-      interlocutors,
-      currentChat,
-    }),
-    [currentChat, interlocutors, isDmChat]
-  );
+  return {
+    isDmChat,
+    interlocutors,
+    currentChat,
+  };
 }
