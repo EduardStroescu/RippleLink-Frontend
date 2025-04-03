@@ -5,7 +5,11 @@ type BaseMessage = {
   chatId: string;
   senderId: PublicUser;
   readBy: {
-    userId: { _id: User["_id"]; displayName: User["displayName"] };
+    userId: {
+      _id: User["_id"];
+      displayName: User["displayName"];
+      avatarUrl: User["avatarUrl"];
+    };
     timestamp: string;
   }[];
   createdAt: string;

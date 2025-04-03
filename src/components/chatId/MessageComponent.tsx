@@ -4,7 +4,8 @@ import { memo, useState } from "react";
 import { DateTag } from "@/components/chatId/DateTag";
 import { MessageContent } from "@/components/chatId/MessageContent";
 import { MessageEditor } from "@/components/chatId/MessageEditor";
-import { CheckIcon, EditIcon } from "@/components/Icons";
+import { MessageReadIndicator } from "@/components/chatId/MessageReadIndicator";
+import { EditIcon } from "@/components/Icons";
 import { DeleteButton } from "@/components/ui/DeleteButton";
 import { canEditMessage, getLocalDate } from "@/lib/utils";
 import { useUserStore } from "@/stores/useUserStore";
@@ -18,6 +19,7 @@ interface MessageComponentProps {
   virtualItemStart: VirtualItem["start"];
   virtualizer: Virtualizer<HTMLDivElement, Element>;
   canDeleteMessage: boolean;
+  interlocutorsNumber: number;
 }
 
 export const MessageComponent = memo(
@@ -29,6 +31,7 @@ export const MessageComponent = memo(
     virtualItemStart,
     virtualizer,
     canDeleteMessage,
+    interlocutorsNumber,
   }: MessageComponentProps) => {
     const user = useUserStore((state) => state.user);
     const [isEditing, setIsEditing] = useState(false);
@@ -38,7 +41,8 @@ export const MessageComponent = memo(
     const membersWhoHaveReadMessage = message.readBy.filter(
       (member) => member.userId._id !== user?._id
     ).length;
-    const isMessageReadByEveryone = membersWhoHaveReadMessage > 0;
+    const isMessageReadByEveryone =
+      isOwnMessage && membersWhoHaveReadMessage > 0;
     const ableToEditMessage = canEditMessage(isOwnMessage, message);
     const ableToDeleteMessage = isOwnMessage && canDeleteMessage;
 
@@ -94,9 +98,12 @@ export const MessageComponent = memo(
                     <p className="text-xs">{message.senderId.displayName}</p>
                   )}
                   <p className="text-xs">{messageCreatedAt}</p>
-                  {/*  TODO: FINISH THIS */}
                   {isMessageReadByEveryone && (
-                    <CheckIcon width="10px" height="10px" />
+                    <MessageReadIndicator
+                      message={message}
+                      portalInto={virtualizer.scrollElement?.parentElement}
+                      interlocutorsNumber={interlocutorsNumber}
+                    />
                   )}
                 </div>
               </div>

@@ -52,15 +52,16 @@ function ChatDetails() {
   );
   const interlocutors = useMemo(
     () =>
-      currentChat &&
-      currentChat?.users?.filter((person) => person._id !== user?._id),
+      currentChat
+        ? currentChat?.users?.filter((person) => person._id !== user?._id)
+        : [],
     [currentChat, user?._id]
   );
 
   const placeholderChatName = getGroupChatNamePlaceholder(interlocutors);
 
   return (
-    <aside className="animate-in fade-in duration-500 ease-in relative w-full col-span-full xl:col-span-3 flex flex-col border-l-slate-700 border-l-[1px] overflow-hidden">
+    <aside className="animate-in fade-in duration-300 ease-in relative w-full col-span-full xl:col-span-3 flex flex-col border-l-slate-700 border-l-[1px] overflow-hidden">
       <nav className="flex w-full py-2 px-4 items-center">
         <Link
           to={"/chat/$chatId"}
@@ -72,11 +73,11 @@ function ChatDetails() {
         </Link>
       </nav>
       <div className="overflow-y-auto py-2">
-        {interlocutors && interlocutors?.length <= 1 ? (
+        {interlocutors.length <= 1 ? (
           <UserDetailsHeader
-            avatarUrl={interlocutors?.[0]?.avatarUrl || placeholderAvatar}
-            name={interlocutors?.[0]?.displayName}
-            statusMessage={interlocutors?.[0]?.status?.statusMessage}
+            avatarUrl={interlocutors[0]?.avatarUrl || placeholderAvatar}
+            name={interlocutors[0]?.displayName || "User"}
+            statusMessage={interlocutors[0]?.status?.statusMessage}
           />
         ) : (
           <UserDetailsHeader
@@ -90,14 +91,14 @@ function ChatDetails() {
             collapsible
             className="w-4/5 flex flex-col gap-2"
           >
-            {interlocutors && interlocutors?.length > 1 && (
+            {interlocutors.length > 1 && (
               <AccordionItem value="item-1">
                 <AccordionTrigger className="text-center bg-green-500/60 text-white rounded-t p-2">
                   Users In Chat
                 </AccordionTrigger>
                 <AccordionContent className="mt-1">
                   <ul className="flex flex-col w-full h-full max-h-[300px] items-center justify-center overflow-y-auto gap-1">
-                    {interlocutors?.map((interlocutor) => (
+                    {interlocutors.map((interlocutor) => (
                       <Link
                         key={interlocutor._id}
                         as="li"
@@ -123,7 +124,7 @@ function ChatDetails() {
               </AccordionTrigger>
               <AccordionContent className="mt-1">
                 <ul className="flex flex-wrap gap-1 w-full h-full max-h-[500px] items-center justify-center overflow-y-auto">
-                  {sharedFilesData?.length ? (
+                  {sharedFilesData.length ? (
                     sharedFilesData.map((file: FileMessage) =>
                       file.content?.map((content) => (
                         <li

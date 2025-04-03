@@ -55,6 +55,7 @@ export function ChatHeaderDetails({
         source={avatarUrl || placeholderAvatar}
         shouldInvalidate
         width={50}
+        className="min-h-[50px]"
         alt={`${name || "Chat"}'s avatar`}
       />
       <div className="overflow-hidden w-full">

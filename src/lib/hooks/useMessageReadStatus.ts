@@ -43,7 +43,11 @@ export function useMessageReadStatus(messages: Message[] | []) {
             page.messages.forEach((message) => {
               if (message.senderId._id !== user._id) {
                 message.readBy.push({
-                  userId: { _id: user._id, displayName: user.displayName },
+                  userId: {
+                    _id: user._id,
+                    displayName: user.displayName,
+                    avatarUrl: undefined,
+                  },
                   timestamp: new Date().toISOString(),
                 });
               }
@@ -51,7 +55,7 @@ export function useMessageReadStatus(messages: Message[] | []) {
           });
         });
       });
-      console.log("readingMessages");
+
       socket.emit("readMessages", { chatId });
     }
   }, [

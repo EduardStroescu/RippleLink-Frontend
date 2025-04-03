@@ -51,8 +51,7 @@ export const Route = createFileRoute("/chat/$chatId")({
         pageParams: (string | null)[];
       }) => {
         // Reverse pages and combine messages
-        const reversedPages = [...data.pages];
-        const combinedMessages = reversedPages.flatMap((page) =>
+        const combinedMessages = data.pages.flatMap((page) =>
           [...page.messages].reverse()
         );
 

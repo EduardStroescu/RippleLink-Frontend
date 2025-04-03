@@ -59,12 +59,13 @@ export const ChatsListSection = memo(
               {chat.type === "dm" ? (
                 <ChatListItem
                   linkTo={chat._id}
-                  avatarUrl={interlocutors[0].avatarUrl || placeholderAvatar}
+                  avatarUrl={interlocutors[0]?.avatarUrl || placeholderAvatar}
                   name={interlocutors[0].displayName || "User"}
                   lastMessage={chat.lastMessage}
                   displayLastMessageReceipt={
+                    !!user?._id &&
                     chat.lastMessage.senderId._id !== user?._id &&
-                    !chat.lastMessage?.readBy.some(
+                    !chat.lastMessage.readBy.some(
                       (member) => member.userId._id === user?._id
                     )
                   }
@@ -77,8 +78,9 @@ export const ChatsListSection = memo(
                   name={chat.name || `Group Chat: ${interlocutorsDisplayNames}`}
                   lastMessage={chat.lastMessage}
                   displayLastMessageReceipt={
+                    !!user?._id &&
                     chat.lastMessage.senderId._id !== user?._id &&
-                    !chat.lastMessage?.readBy.some(
+                    !chat.lastMessage.readBy.some(
                       (member) => member.userId._id === user?._id
                     )
                   }

@@ -18,7 +18,7 @@ import { PublicUser } from "@/types/user";
 const Route = getRouteApi("/chat/$chatId");
 
 export const ChatContent = memo(
-  ({ interlocutors }: { interlocutors: PublicUser[] | undefined }) => {
+  ({ interlocutors }: { interlocutors: PublicUser[] }) => {
     const { messagesQuery } = Route.useLoaderData();
     const { chatId } = Route.useParams();
     const { getSocket } = useAppStoreActions();
@@ -67,6 +67,7 @@ export const ChatContent = memo(
                 handleDelete={handleDelete}
                 idx={virtualItem.index}
                 canDeleteMessage={virtualItem.index !== messages.length}
+                interlocutorsNumber={interlocutors.length}
               />
             ) : (
               <TypingIndicator

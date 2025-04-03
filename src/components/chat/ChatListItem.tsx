@@ -42,25 +42,20 @@ export const ChatListItem = ({
         <div className="flex gap-1 items-center">
           <p className="truncate">{name || "User"}</p>
           {displayLastMessageReceipt && (
-            <div
-              className="
-              text-xs font-bold text-slate-400 translate-y-0.5
-              inline-flex items-center rounded-full px-2.5 py-0.5 focus:outline-none bg-slate-950
-              "
-            >
-              <span className="animate-pulse">Unread</span>
+            <div className="inline-flex items-center rounded-full px-2.5 py-0.5 focus:outline-none bg-slate-950">
+              <span className="animate-pulse text-xs font-bold text-slate-400">
+                Unread
+              </span>
             </div>
           )}
         </div>
         <p className="font-normal text-gray-400 truncate">
-          {lastMessage?.type === "file"
-            ? lastMessage?.type
-            : lastMessage?.content}
+          {lastMessage.type === "file" ? lastMessage.type : lastMessage.content}
         </p>
       </div>
       <div className="flex gap-2 items-center border-b-[1px] border-slate-700 h-full">
         <p className="text-xs font-normal pr-2 group-hover:pr-0">
-          {getLastMessageDate(lastMessage.updatedAt, "ro-RO")}
+          {getLastMessageDate(lastMessage.createdAt, "ro-RO")}
         </p>
         <DeleteButton
           title="Delete Chat"
