@@ -51,7 +51,8 @@ export const UserBox = memo(
                 ref={fullscreenVideoRef}
                 muted={true}
                 controls={false}
-                className="w-[min(70dvw,130dvh)]"
+                contentClassName="max-h-[80dvh]"
+                className="w-[min(70dvw,130dvh)] max-w-fit"
               />
             }
           >

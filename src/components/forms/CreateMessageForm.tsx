@@ -242,10 +242,13 @@ export const CreateMessageForm = memo(
               ))}
             </div>
             <button
+              autoFocus
               type="submit"
               aria-label="Send File(s)"
               title="Send File(s)"
-              className="rounded-full h-fit self-center group"
+              className="rounded-full h-fit self-center group
+              ring-offset-black/60 focus:outline-none focus:ring-1 focus:ring-white focus:ring-offset-2
+              "
             >
               <SendIcon />
             </button>
@@ -278,7 +281,7 @@ export const CreateMessageForm = memo(
               aria-label="Send Message"
               title="Send Message"
               type="submit"
-              className="rounded-full group"
+              className="rounded-full group ring-offset-black/60 focus:outline-none focus:ring-1 focus:ring-white focus:ring-offset-2"
             >
               <SendIcon />
             </button>

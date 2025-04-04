@@ -133,7 +133,7 @@ export const CallComponent = memo(
     const shouldDisplayCallLoading =
       (currentCall && !isUserInOngoingCall) || !!joiningCall;
     const shouldDisplayPlaceholderUserBox =
-      !currentCallDetails?.participants?.length && user;
+      !currentCallDetails?.participants?.length && !!user;
     const activeCallParticipants = currentCallDetails?.participants.filter(
       (participant) => participant.status === "inCall"
     );
@@ -151,12 +151,12 @@ export const CallComponent = memo(
                   avatar={participant.userId?.avatarUrl}
                   muted={true}
                   isSharingVideo={isParticipantSharingVideo(
-                    participant?.userId?._id
+                    participant?.userId._id
                   )}
                   userStream={streams[participant.userId._id]}
                   handleVideoClick={handleVideoClick}
                   handleToggleVideoPopUp={
-                    participant?.userId?._id !== user?._id
+                    participant.userId._id !== user?._id
                       ? toggleStreamPopUp
                       : undefined
                   }

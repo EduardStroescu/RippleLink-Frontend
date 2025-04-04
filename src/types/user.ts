@@ -11,7 +11,7 @@ export interface User {
   access_token?: string;
   refresh_token?: string;
   status?: Status;
-  chats?: string[] | [];
+  chats?: string[];
   settings?: Settings;
   updatedAt?: string;
   createdAt?: string;

@@ -12,7 +12,7 @@ import { useUserStore } from "@/stores/useUserStore";
 import { Chat } from "@/types/chat";
 
 export const ChatsListSection = memo(
-  ({ filteredChats }: { filteredChats: [] | Chat[] | undefined }) => {
+  ({ filteredChats }: { filteredChats: Chat[] }) => {
     const router = useRouter();
     const user = useUserStore((state) => state.user);
 
@@ -45,12 +45,12 @@ export const ChatsListSection = memo(
 
     return (
       <div className="flex flex-col h-full overflow-y-auto overflow-x-hidden">
-        {filteredChats?.map((chat: Chat) => {
+        {filteredChats.map((chat: Chat) => {
           const interlocutors = chat.users.filter(
             (participant) => participant._id !== user?._id
           );
           const interlocutorsDisplayNames = interlocutors
-            ?.map((user) => user?.displayName)
+            .map((user) => user?.displayName)
             .slice(0, 3)
             .join(", ");
 

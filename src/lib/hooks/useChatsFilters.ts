@@ -4,7 +4,7 @@ import { useUserStore } from "@/stores/useUserStore";
 import { Chat } from "@/types/chat";
 import { FilterOption } from "@/types/filterOptions";
 
-export function useChatsFilters(chats: Chat[] | [] | undefined) {
+export function useChatsFilters(chats: Chat[] | undefined) {
   const currUser = useUserStore((state) => state.user);
   const sortedChats = useMemo(
     () =>
@@ -12,10 +12,10 @@ export function useChatsFilters(chats: Chat[] | [] | undefined) {
         const dateA = new Date(a.updatedAt).getTime();
         const dateB = new Date(b.updatedAt).getTime();
         return dateB - dateA;
-      }),
+      }) || [],
     [chats]
   );
-  const [filteredChats, setFilteredChats] = useState<typeof chats>([]);
+  const [filteredChats, setFilteredChats] = useState<typeof sortedChats>([]);
 
   useEffect(() => {
     if (sortedChats) {
@@ -27,7 +27,7 @@ export function useChatsFilters(chats: Chat[] | [] | undefined) {
     (filter: FilterOption) => {
       if (filter === "Unread") {
         setFilteredChats(() =>
-          sortedChats?.filter(
+          sortedChats.filter(
             (chat) =>
               chat.lastMessage.senderId._id !== currUser?._id &&
               !chat.lastMessage.readBy.some(
@@ -50,7 +50,7 @@ export function useChatsFilters(chats: Chat[] | [] | undefined) {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.value !== "") {
         setFilteredChats(() =>
-          sortedChats?.filter((chat) =>
+          sortedChats.filter((chat) =>
             chat.users.some(
               (user) =>
                 user._id !== currUser?._id &&

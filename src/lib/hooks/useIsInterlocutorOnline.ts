@@ -10,12 +10,12 @@ export function useIsInterlocutorOnline({
   interlocutors,
   chatId,
 }: {
-  interlocutors: PublicUser[] | undefined;
+  interlocutors: PublicUser[];
   chatId: ChatId;
 }) {
   const [isInterlocutorOnline, setIsInterlocutorOnline] =
     useState<boolean>(false);
-  const interlocutor = interlocutors?.[0];
+  const interlocutor = interlocutors[0];
 
   useEffect(() => {
     setIsInterlocutorOnline(interlocutor?.status?.online || false);

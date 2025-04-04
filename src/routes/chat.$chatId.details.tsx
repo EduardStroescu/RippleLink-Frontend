@@ -1,4 +1,4 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 
@@ -17,7 +17,6 @@ import { FullscreenImage } from "@/components/ui/FullscreenImage";
 import { groupAvatar, placeholderAvatar } from "@/lib/const";
 import { getGroupChatNamePlaceholder } from "@/lib/utils";
 import { useUserStore } from "@/stores/useUserStore";
-import { Chat } from "@/types/chat";
 import { FileMessage } from "@/types/message";
 
 export const Route = createFileRoute("/chat/$chatId/details")({
@@ -31,10 +30,12 @@ export const Route = createFileRoute("/chat/$chatId/details")({
 
     return { sharedFilesQuery };
   },
-  loader: async ({ context: { queryClient, sharedFilesQuery } }) => {
+  loader: async ({
+    context: { queryClient, sharedFilesQuery, chatsQuery },
+  }) => {
     const sharedFiles = await queryClient.ensureQueryData(sharedFilesQuery);
 
-    return sharedFiles;
+    return { sharedFiles, chatsQuery };
   },
   component: () => <ChatDetails />,
 });
@@ -42,9 +43,8 @@ export const Route = createFileRoute("/chat/$chatId/details")({
 function ChatDetails() {
   const { chatId } = Route.useParams();
   const user = useUserStore((state) => state.user);
-  const queryClient = useQueryClient();
-  const chatData = queryClient.getQueryData<Chat[] | []>(["chats", user?._id]);
-  const sharedFilesData = Route.useLoaderData<FileMessage[] | []>();
+  const { sharedFiles: sharedFilesData, chatsQuery } = Route.useLoaderData();
+  const { data: chatData } = useQuery(chatsQuery);
 
   const currentChat = useMemo(
     () => chatData?.filter((chat) => chat._id === chatId)?.[0],
@@ -52,8 +52,8 @@ function ChatDetails() {
   );
   const interlocutors = useMemo(
     () =>
-      currentChat
-        ? currentChat?.users?.filter((person) => person._id !== user?._id)
+      currentChat && user?._id
+        ? currentChat.users.filter((person) => person._id !== user._id)
         : [],
     [currentChat, user?._id]
   );
@@ -76,7 +76,7 @@ function ChatDetails() {
         {interlocutors.length <= 1 ? (
           <UserDetailsHeader
             avatarUrl={interlocutors[0]?.avatarUrl || placeholderAvatar}
-            name={interlocutors[0]?.displayName || "User"}
+            name={interlocutors[0].displayName || "User"}
             statusMessage={interlocutors[0]?.status?.statusMessage}
           />
         ) : (
@@ -126,7 +126,7 @@ function ChatDetails() {
                 <ul className="flex flex-wrap gap-1 w-full h-full max-h-[500px] items-center justify-center overflow-y-auto">
                   {sharedFilesData.length ? (
                     sharedFilesData.map((file: FileMessage) =>
-                      file.content?.map((content) => (
+                      file.content.map((content) => (
                         <li
                           key={content.fileId}
                           className="max-h-[100px] max-w-[100px] overflow-hidden"

@@ -32,7 +32,8 @@ export function MediaDevicesInfo({
     else if (device.kind === "videoinput") normalizedKind = "videoInput";
 
     // Check if the device is selected in selectedDevices
-    const selectedDevice = selectedDevices[normalizedKind];
+    const selectedDevice =
+      selectedDevices[normalizedKind as keyof typeof selectedDevices];
 
     // If selectedDevices are set, prioritize them
     if (selectedDevice) {

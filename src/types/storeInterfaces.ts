@@ -101,7 +101,7 @@ export interface ConnectionsStore {
 
 export interface CallStore {
   currentCall: Call | null;
-  incomingCalls: Call[] | [];
+  incomingCalls: Call[];
   joiningCall: Call["chatId"]["_id"] | null;
 
   actions: {

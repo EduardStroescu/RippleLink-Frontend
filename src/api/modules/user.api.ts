@@ -63,7 +63,7 @@ export const userApi = {
     await privateClient.get(userEndpoints.getUserById.replace(":id", userId)),
   getUsersByDisplayName: async (
     displayName: PublicUser["displayName"]
-  ): Promise<PublicUser[] | []> =>
+  ): Promise<PublicUser[]> =>
     await privateClient.get(
       userEndpoints.getUserByDisplayName.replace(":displayName", displayName)
     ),

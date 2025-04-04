@@ -58,7 +58,7 @@ export const CustomChatInput = memo(
       if (element) {
         element.style.height = "auto";
         const maxHeight = window.innerHeight / 4; // Set max height to 1/4 of the viewport height
-        element.style.height = `${Math.min(element.scrollHeight, maxHeight)}px`;
+        element.style.height = `${Math.min(Math.max(40, element.scrollHeight), maxHeight)}px`;
         element.style.overflowY =
           element.scrollHeight > maxHeight ? "scroll" : "hidden";
       }

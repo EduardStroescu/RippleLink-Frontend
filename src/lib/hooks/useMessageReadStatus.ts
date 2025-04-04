@@ -7,7 +7,7 @@ import { useAppStore } from "@/stores/useAppStore";
 import { useUserStore } from "@/stores/useUserStore";
 import { Message } from "@/types/message";
 
-export function useMessageReadStatus(messages: Message[] | []) {
+export function useMessageReadStatus(messages: Message[]) {
   const socket = useAppStore((state) => state.socket);
   const user = useUserStore((state) => state.user);
   const chatId = useParams({
@@ -23,13 +23,13 @@ export function useMessageReadStatus(messages: Message[] | []) {
   useEffect(() => {
     if (!socket || !user?._id || !user?.displayName || !chatId) return;
 
-    const interlocutorMessages = messages
-      ? messages?.filter((message) => message?.senderId?._id !== user._id)
-      : [];
+    const interlocutorMessages = messages.filter(
+      (message) => message.senderId._id !== user._id
+    );
 
     if (
       interlocutorMessages.length > 0 &&
-      !interlocutorMessages?.[0]?.readBy.some(
+      !interlocutorMessages[0].readBy.some(
         (member) => member.userId._id === user._id
       )
     ) {

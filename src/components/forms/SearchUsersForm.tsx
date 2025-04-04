@@ -35,7 +35,7 @@ export const SearchUsersForm = ({
           !existingChatUsers?.some(
             (existingUser) => existingUser._id === user._id
           )
-      ),
+      ) || [],
     [users, existingChatUsers]
   );
 
@@ -84,12 +84,13 @@ export const SearchUsersForm = ({
         placeholder="Search Users"
         className="w-full bg-black/60 py-1 px-2"
         autoComplete="off"
+        autoFocus
       />
       <div
         className="flex flex-col items-start gap-2 min-h-[180px] max-h-[200px]
         sm:min-h-[240px] sm:max-h-[240px] overflow-y-auto"
       >
-        {filteredUsers?.map((user) => (
+        {filteredUsers.map((user) => (
           <button
             key={user._id}
             className="flex flex-row gap-2 items-center hover:bg-slate-950 w-full rounded"

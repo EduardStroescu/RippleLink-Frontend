@@ -18,10 +18,7 @@ export const Route = createFileRoute("/chat/create-chat")({
   beforeLoad: async ({ search, context: { queryClient } }) => {
     const user = useUserStore.getState().user;
     const { userIds } = search as typeof search & { userIds: string };
-    const chatsData = queryClient.getQueryData<Chat[] | []>([
-      "chats",
-      user?._id,
-    ]);
+    const chatsData = queryClient.getQueryData<Chat[]>(["chats", user?._id]);
     const userIdsArr = userIds.split(",");
 
     // Check for existing chat with selected users and redirect to it if found
@@ -48,7 +45,10 @@ export const Route = createFileRoute("/chat/create-chat")({
     };
     return { usersQuery };
   },
-  loader: async ({ context: { usersQuery } }) => {
+  loader: async ({ context: { usersQuery, queryClient } }) => {
+    await Promise.allSettled(
+      usersQuery.queries.map((query) => queryClient.ensureQueryData(query))
+    );
     return usersQuery;
   },
   component: CreateNewChat,

@@ -1,7 +1,7 @@
 import privateClient from "@/api/privateClient";
 import { Call } from "@/types/call";
 import { Chat } from "@/types/chat";
-import { Message } from "@/types/message";
+import { FileMessage, Message } from "@/types/message";
 import { Status } from "@/types/status";
 import { PublicUser } from "@/types/user";
 
@@ -18,20 +18,20 @@ const chatEndpoints = {
 };
 
 export const chatApi = {
-  getAllChats: async (): Promise<Chat[] | []> =>
+  getAllChats: async (): Promise<Chat[]> =>
     await privateClient.get(chatEndpoints.getAllChats),
 
-  getAllCalls: async (): Promise<Call[] | []> =>
+  getAllCalls: async (): Promise<Call[]> =>
     await privateClient.get(chatEndpoints.getAllCalls),
 
-  getChatById: async (chatId: string): Promise<Chat[] | []> =>
+  getChatById: async (chatId: string): Promise<Chat[]> =>
     await privateClient.get(
       chatEndpoints.getChatById.replace(":chatId", chatId)
     ),
   getMessagesByChatId: async (
     chatId: Chat["_id"],
     cursor: string | null
-  ): Promise<{ messages: Message[] | []; nextCursor: string | null }> => {
+  ): Promise<{ messages: Message[]; nextCursor: string | null }> => {
     if (cursor) {
       return await privateClient.get(
         chatEndpoints.getMessagesByChatId.replace(":chatId", chatId) +
@@ -53,7 +53,7 @@ export const chatApi = {
   }): Promise<Chat> =>
     await privateClient.post(chatEndpoints.createChat, chatData),
 
-  getSharedFilesByChatId: async (chatId: string): Promise<Message[] | []> =>
+  getSharedFilesByChatId: async (chatId: string): Promise<FileMessage[]> =>
     await privateClient.get(
       chatEndpoints.getSharedFilesByChatId.replace(":chatId", chatId)
     ),

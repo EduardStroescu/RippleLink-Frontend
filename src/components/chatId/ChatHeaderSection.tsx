@@ -27,7 +27,7 @@ export const ChatHeaderSection = memo(
     isAbleToCall,
   }: {
     isDmChat: boolean;
-    interlocutors: PublicUser[] | undefined;
+    interlocutors: PublicUser[];
     currentChat: Chat | undefined;
     isAbleToCall: boolean;
   }) => {
@@ -55,9 +55,9 @@ export const ChatHeaderSection = memo(
       <div className="flex justify-between p-2 items-center">
         {isDmChat ? (
           <ChatHeaderDetails
-            avatarUrl={interlocutors?.[0]?.avatarUrl || placeholderAvatar}
-            name={interlocutors?.[0]?.displayName || "User"}
-            lastSeen={interlocutors?.[0]?.status?.lastSeen}
+            avatarUrl={interlocutors[0]?.avatarUrl || placeholderAvatar}
+            name={interlocutors[0]?.displayName || "User"}
+            lastSeen={interlocutors[0]?.status?.lastSeen}
             isInterlocutorOnline={isInterlocutorOnline}
           />
         ) : (
@@ -85,14 +85,10 @@ export const ChatHeaderSection = memo(
             header="Create Group Chat"
             content={
               <SearchUsersForm
-                existingChatUsers={
-                  interlocutors && [
-                    ...interlocutors.map((person) => ({
-                      _id: person._id,
-                      displayName: person.displayName,
-                    })),
-                  ]
-                }
+                existingChatUsers={interlocutors.map((person) => ({
+                  _id: person._id,
+                  displayName: person.displayName,
+                }))}
               />
             }
             className="group"

@@ -18,7 +18,7 @@ export function FullscreenImage({
   const ImageContent = () => (
     <img
       src={src}
-      className="w-full h-full object-contain rounded-md"
+      className="w-full h-full object-contain rounded-md max-w-fit max-h-[80dvh]"
       {...props}
     />
   );

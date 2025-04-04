@@ -14,14 +14,14 @@ export function useChatName({
   isDmChat,
 }: {
   currentChat: Chat | undefined;
-  interlocutors: PublicUser[] | undefined;
+  interlocutors: PublicUser[];
   isDmChat: boolean;
 }) {
   const chatId = useParams({
     from: "/chat/$chatId",
     select: (params) => params.chatId,
   });
-  const [chatName, setChatName] = useState("");
+  const [chatName, setChatName] = useState(() => currentChat?.name || "");
   const [isEditingChatName, setIsEditingChatName] = useState(false);
 
   const updateChatNameMutation = useMutation({
@@ -47,18 +47,18 @@ export function useChatName({
   }, [currentChat?.name, placeholderChatName]);
 
   const handleEditChatName = async () => {
-    if (chatName && chatName !== currentChat?.name) {
+    if (
+      !!chatName.length &&
+      chatName !== currentChat?.name &&
+      chatName !== placeholderChatName
+    ) {
       await updateChatNameMutation.mutateAsync();
     }
     setIsEditingChatName((state) => !state);
   };
 
   const handleInitChatName = useCallback(() => {
-    if (
-      (chatName.length && chatName === currentChat?.name) ||
-      chatName === placeholderChatName
-    )
-      return;
+    if (!!chatName.length && chatName === currentChat?.name) return;
     if (!isDmChat && !isEditingChatName) {
       setChatName(currentChat?.name || placeholderChatName);
     }

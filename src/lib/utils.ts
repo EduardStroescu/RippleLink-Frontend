@@ -15,7 +15,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function isAuthenticated(): boolean {
+export function isAuthenticated() {
   try {
     const authData = useUserStore.getState().user;
     const user = isAuthenticatedSchema.parse(authData);
@@ -142,7 +142,7 @@ export function checkIfChatExists(
 ) {
   const currentUser = useUserStore.getState().user;
 
-  return chatsData?.find((chat) => {
+  return chatsData.find((chat) => {
     // Get all user IDs in the current chat, excluding the current user
     const chatUserIds = chat.users
       .filter((user) => user._id !== currentUser?._id)
@@ -186,19 +186,20 @@ export const bytesToMegabytes = (bytes: number) => {
   return Number((bytes / (1024 * 1024)).toFixed(1));
 };
 
-export const getGroupChatNamePlaceholder = (
-  chatUsers: Chat["users"] | undefined
-) => {
+export const getGroupChatNamePlaceholder = (chatUsers: Chat["users"]) => {
   const interlocutorsDisplayNames = chatUsers
-    ?.map((user) => user?.displayName)
-    ?.slice(0, 3)
-    ?.join(", ");
+    .map((user) => user.displayName)
+    .slice(0, 3)
+    .join(", ");
 
   const placeholderChatName = `Group Chat: ${interlocutorsDisplayNames?.length ? interlocutorsDisplayNames : ""}`;
 
   return placeholderChatName;
 };
 
+/**
+ * Returns the user's media devices. Split into default devices, output devices, and input devices.
+ */
 export const getUserDevices = async () => {
   try {
     const allDevices = await navigator.mediaDevices.enumerateDevices();
@@ -229,6 +230,9 @@ export const getUserDevices = async () => {
   }
 };
 
+/**
+ * Returns whether the message is the first message of the day. In order to display the date tag.
+ */
 export const getLastMessagesOfDay = (messages: Message[]) => {
   if (!messages.length) return [];
   const lastMessagesOfDay: number[] = [];
@@ -261,7 +265,7 @@ export const lerp = (start: number, end: number, alpha: number): number => {
   return start + (end - start) * alpha;
 };
 
-/*
+/**
   Chunks files and uploads them to the server in parallel
 */
 export const chunkFilesAndUpload = async (

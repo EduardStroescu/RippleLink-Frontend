@@ -12,7 +12,7 @@ import { Status } from "@/types/status";
 interface useCurrentChatDetailsProps {
   chatsQuery: {
     queryKey: string[];
-    queryFn: () => Promise<Chat[] | []>;
+    queryFn: () => Promise<Chat[]>;
     placeholderData: never[];
   };
 }

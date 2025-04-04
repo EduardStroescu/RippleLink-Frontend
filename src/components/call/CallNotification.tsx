@@ -81,7 +81,7 @@ export const CallNotification = memo(() => {
         const currentChatCaller = getCurrentChatCaller(call);
         return (
           <Toast
-            key={call?.chatId?._id}
+            key={call.chatId._id}
             onOpenChange={() => handleOpenChange(call)}
             className="bg-black/70 rounded-xl p-2 px-3 flex items-center gap-2 overflow-hidden
             data-[state=open]:sm:slide-in-from-top-full
