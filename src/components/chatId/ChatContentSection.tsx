@@ -17,71 +17,69 @@ import { PublicUser } from "@/types/user";
 
 const Route = getRouteApi("/chat/$chatId");
 
-export const ChatContent = memo(
-  ({ interlocutors }: { interlocutors: PublicUser[] }) => {
-    const { messagesQuery } = Route.useLoaderData();
-    const { chatId } = Route.useParams();
-    const { getSocket } = useAppStoreActions();
+export const ChatContent = memo(function ChatContent({
+  interlocutors,
+}: {
+  interlocutors: PublicUser[];
+}) {
+  const { messagesQuery } = Route.useLoaderData();
+  const { chatId } = Route.useParams();
+  const { socketEmit } = useAppStoreActions();
 
-    const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
-      useInfiniteQuery(messagesQuery);
-    const messages = data?.messages as Message[];
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery(messagesQuery);
+  const messages = data?.messages as Message[];
 
-    useMessageEvents();
-    const { scrollParentRef, virtualizer, getRowContent } =
-      useVirtualizer<Message>({
-        hasNextPage,
-        isFetchingNextPage,
-        fetchNextPage,
-        data: messages,
-      });
-    const { interlocutorIsTyping } = useIsInterlocutorTyping({
-      interlocutors,
+  useMessageEvents();
+  const { scrollParentRef, virtualizer, getRowContent } =
+    useVirtualizer<Message>({
+      hasNextPage,
+      isFetchingNextPage,
+      fetchNextPage,
+      data: messages,
     });
-    useMessageReadStatus(messages);
+  const { interlocutorIsTyping } = useIsInterlocutorTyping({
+    interlocutors,
+  });
+  useMessageReadStatus(messages);
 
-    const handleDelete = useCallback(
-      async (messageId: string) => {
-        const socket = await getSocket();
-        if (!socket) return;
-        socket.emit("deleteMessage", { chatId, messageId });
-      },
-      [chatId, getSocket]
-    );
-    const firstMessagesOfDay = useMemo(
-      () => getLastMessagesOfDay(messages),
-      [messages]
-    );
+  const handleDelete = useCallback(
+    (messageId: string) => {
+      socketEmit("deleteMessage", { chatId, messageId });
+    },
+    [chatId, socketEmit]
+  );
+  const firstMessagesOfDay = useMemo(
+    () => getLastMessagesOfDay(messages),
+    [messages]
+  );
 
-    return (
-      <>
-        <Virtualizer virtualizer={virtualizer} ref={scrollParentRef}>
-          {({ virtualItem }) =>
-            virtualItem.index !== 0 ? (
-              <MessageComponent
-                key={virtualItem.key}
-                isNewDay={firstMessagesOfDay.includes(virtualItem.index)}
-                virtualizer={virtualizer}
-                virtualItemStart={virtualItem.start}
-                message={getRowContent(virtualItem.index)}
-                handleDelete={handleDelete}
-                idx={virtualItem.index}
-                canDeleteMessage={virtualItem.index !== messages.length}
-                interlocutorsNumber={interlocutors.length}
-              />
-            ) : (
-              <TypingIndicator
-                key={virtualItem.key}
-                virtualItem={virtualItem}
-                interlocutorIsTyping={interlocutorIsTyping}
-              />
-            )
-          }
-        </Virtualizer>
-        <MessagesLoadingIndicator shouldDisplay={isFetchingNextPage} />
-      </>
-    );
-  }
-);
-
-ChatContent.displayName = "ChatContent";
+  return (
+    <>
+      <Virtualizer virtualizer={virtualizer} ref={scrollParentRef}>
+        {({ virtualItem }) =>
+          virtualItem.index !== 0 ? (
+            <MessageComponent
+              key={virtualItem.key}
+              isNewDay={firstMessagesOfDay.includes(virtualItem.index)}
+              virtualizer={virtualizer}
+              virtualItemStart={virtualItem.start}
+              message={getRowContent(virtualItem.index)}
+              handleDelete={handleDelete}
+              idx={virtualItem.index}
+              canDeleteMessage={virtualItem.index !== messages.length}
+              interlocutorsNumber={interlocutors.length}
+            />
+          ) : (
+            <TypingIndicator
+              key={virtualItem.key}
+              virtualItem={virtualItem}
+              interlocutorIsTyping={interlocutorIsTyping}
+            />
+          )
+        }
+      </Virtualizer>
+      <MessagesLoadingIndicator shouldDisplay={isFetchingNextPage} />
+    </>
+  );
+});

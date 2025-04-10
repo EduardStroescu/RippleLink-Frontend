@@ -3,13 +3,14 @@ import { create } from "mutative";
 import { useEffect } from "react";
 
 import { useSetTanstackCache } from "@/lib/hooks/useSetTanstackCache";
+import { useWindowVisibility } from "@/lib/hooks/useWindowVisibility";
 import { useAppStore } from "@/stores/useAppStore";
 import { useUserStore } from "@/stores/useUserStore";
 import { Message } from "@/types/message";
 
 export function useMessageReadStatus(messages: Message[]) {
-  const socket = useAppStore((state) => state.socket);
   const user = useUserStore((state) => state.user);
+  const isWindowActive = useWindowVisibility();
   const chatId = useParams({
     from: "/chat/$chatId",
     select: (params) => params.chatId,
@@ -17,11 +18,12 @@ export function useMessageReadStatus(messages: Message[]) {
 
   const setMessagesCache = useSetTanstackCache<{
     pages: { messages: Message[]; nextCursor: string | null }[];
-    pageParams;
+    pageParams: (string | null)[];
   }>(["messages", chatId]);
 
+  // Send read receipts for all the messages in the current chat. Only if the window is focused/active
   useEffect(() => {
-    if (!socket || !user?._id || !user?.displayName || !chatId) return;
+    if (!user?._id || !user?.displayName || !chatId || !isWindowActive) return;
 
     const interlocutorMessages = messages.filter(
       (message) => message.senderId._id !== user._id
@@ -56,14 +58,14 @@ export function useMessageReadStatus(messages: Message[]) {
         });
       });
 
-      socket.emit("readMessages", { chatId });
+      useAppStore.getState().actions.socketEmit("readMessages", { chatId });
     }
   }, [
     chatId,
     messages,
     setMessagesCache,
-    socket,
     user?._id,
     user?.displayName,
+    isWindowActive,
   ]);
 }

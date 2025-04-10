@@ -8,7 +8,7 @@ import { ConnectionsStore } from "@/types/storeInterfaces";
 
 const getStreamsStoreActions = () => useStreamsStore.getState().actions;
 const getStreams = () => useStreamsStore.getState().streams;
-const getSocket = () => useAppStore.getState().actions.getSocket();
+const socketEmit = useAppStore.getState().actions.socketEmit;
 const getUserId = () => useUserStore.getState().user?._id;
 
 export const useConnectionsStore = create<ConnectionsStore>((set, get) => ({
@@ -30,8 +30,7 @@ export const useConnectionsStore = create<ConnectionsStore>((set, get) => ({
     resetConnections: () => set({ connections: {} }),
     sendCallOffers: async (participant, currentCall) => {
       const userId = getUserId();
-      const socket = await getSocket();
-      if (!userId || !socket) return;
+      if (!userId) return;
 
       const streams = getStreams();
       const { addStream, removeStream } = getStreamsStoreActions();
@@ -51,14 +50,14 @@ export const useConnectionsStore = create<ConnectionsStore>((set, get) => ({
 
       peer.on("signal", (data) => {
         if (data.type === "candidate") {
-          socket.emit("saveIceCandidates", {
+          socketEmit("saveIceCandidates", {
             iceCandidates: JSON.stringify(data),
             chatId: currentCall.chatId._id,
             candidatesType: "offer",
             to: participant.userId._id,
           });
         } else {
-          socket.emit("sendCallEvent", {
+          socketEmit("sendCallEvent", {
             chatId: currentCall.chatId._id,
             offer: JSON.stringify(data),
             participantId: participant.userId._id,
@@ -91,8 +90,7 @@ export const useConnectionsStore = create<ConnectionsStore>((set, get) => ({
     },
     sendCallAnswers: async (participant, currentCall) => {
       const userId = getUserId();
-      const socket = await getSocket();
-      if (!userId || !socket) return;
+      if (!userId) return;
 
       const streams = getStreams();
       const { addStream, removeStream } = getStreamsStoreActions();
@@ -112,14 +110,14 @@ export const useConnectionsStore = create<ConnectionsStore>((set, get) => ({
       });
 
       peer.on("signal", (data) => {
-        socket.emit("sendCallEvent", {
+        socketEmit("sendCallEvent", {
           chatId: currentCall.chatId._id,
           answer: JSON.stringify(data),
           participantId: participant.userId._id,
           saveToDb: data.type === "answer",
         });
         if (data.type === "candidate") {
-          socket.emit("saveIceCandidates", {
+          socketEmit("saveIceCandidates", {
             iceCandidates: JSON.stringify(data),
             chatId: currentCall.chatId._id,
             candidatesType: "answer",

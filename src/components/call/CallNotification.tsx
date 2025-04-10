@@ -12,7 +12,7 @@ import { useCallStore, useCallStoreActions } from "@/stores/useCallStore";
 import { useUserStore } from "@/stores/useUserStore";
 import { Call } from "@/types/call";
 
-export const CallNotification = memo(() => {
+export const CallNotification = memo(function CallNotification() {
   const router = useRouter();
   const user = useUserStore((state) => state.user);
   const incomingCalls = useCallStore((state) => state.incomingCalls);
@@ -108,6 +108,8 @@ export const CallNotification = memo(() => {
               </button>
               <button
                 onClick={() => handleRejectCall(call)}
+                title="Reject Call"
+                aria-label="Reject Call"
                 className="group p-2 bg-red-950 rounded-full hover:bg-red-900"
               >
                 <CloseIcon className="w-[15px] h-[15px]" />
@@ -120,5 +122,3 @@ export const CallNotification = memo(() => {
     </ToastProvider>
   );
 });
-
-CallNotification.displayName = "CallNotification";

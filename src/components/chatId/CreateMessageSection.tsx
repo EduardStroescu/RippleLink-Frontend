@@ -3,7 +3,7 @@ import { memo } from "react";
 import { CreateMessageForm } from "@/components/forms/CreateMessageForm";
 import { useCreateMessage } from "@/lib/hooks/useCreateMessage";
 
-export const CreateMessageSection = memo(() => {
+export const CreateMessageSection = memo(function CreateMessageSection() {
   const {
     handleSubmitMessage,
     message,
@@ -28,5 +28,3 @@ export const CreateMessageSection = memo(() => {
     />
   );
 });
-
-CreateMessageSection.displayName = "CreateMessageSection";

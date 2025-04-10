@@ -78,7 +78,11 @@ const renderers = {
 /**
  Main component to handle message types
 */
-export const MessageContent = memo(({ message }: { message?: Message }) => {
+export const MessageContent = memo(function MessageContent({
+  message,
+}: {
+  message?: Message;
+}) {
   if (!message) return null;
 
   // Determine type of content and render accordingly
@@ -113,5 +117,3 @@ export const MessageContent = memo(({ message }: { message?: Message }) => {
     }
   }
 });
-
-MessageContent.displayName = "MessageContent";

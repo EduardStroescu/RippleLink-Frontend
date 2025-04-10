@@ -21,16 +21,17 @@ export const VolumeSwitcher: React.FC<VolumeSwitcherProps> = ({
   return (
     <div className="flex items-center">
       <Popover>
-        <PopoverTrigger className="text-[25px] cursor-pointer">
+        <PopoverTrigger
+          title={"Adjust Volume. Current is " + volume * 100 + "%"}
+          aria-label={"Adjust Volume. Current is " + volume}
+          className="text-[25px] cursor-pointer"
+        >
           {children}
         </PopoverTrigger>
         <PopoverContent
           align="center"
           sideOffset={25}
-          className="
-          h-[150px] w-fit
-          py-2 px-4 bg-black/60 backdrop-blur rounded border-slate-600 border-[1px]
-        "
+          className="h-[150px] w-fit py-2 px-4 bg-black/60 backdrop-blur rounded border-slate-600 border-[1px]"
         >
           <Slider
             min={0}

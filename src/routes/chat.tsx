@@ -50,44 +50,62 @@ export const Route = createFileRoute("/chat")({
     ]);
     return { chatsQuery, callsQuery };
   },
-  loader: ({ context: { chatsQuery } }) => {
+  loader: ({ context: { chatsQuery, callsQuery } }) => {
     return {
       chatsQuery,
+      callsQuery,
     };
   },
   component: () => <ChatWrapper />,
 });
 
+function ChatEffects() {
+  const { callsQuery } = Route.useLoaderData();
+
+  useSocketConnection();
+  useChatEvents();
+  useCallEvents(callsQuery);
+  useCurrentCallState();
+
+  return null;
+}
+
 function ChatWrapper() {
   const location = useLocation();
   const parsedPath = getParsedPath(location.pathname);
+
+  return (
+    <>
+      <ChatEffects />
+      <div className="relative grid grid-flow-col grid-cols-1 md:grid-cols-7 xl:grid-cols-8 w-full h-full">
+        <aside
+          className={`${parsedPath === "/chat" ? "flex" : "hidden"} md:flex flex-col flex-1 max-w-full col-span-3 lg:col-span-3 xl:col-span-2 overflow-hidden`}
+        >
+          <ChatHeaderSection />
+          <ChatSection />
+        </aside>
+        <aside
+          className={`${parsedPath === "/chat" ? "hidden" : "flex"} md:flex flex-col border-l-[1px] border-slate-700 col-span-6 overflow-hidden`}
+        >
+          <Outlet />
+        </aside>
+        <DraggableVideos />
+      </div>
+    </>
+  );
+}
+
+function ChatSection() {
   const { chatsQuery } = Route.useLoaderData();
-  useSocketConnection();
 
   const { data: chats } = useQuery(chatsQuery);
   const { filteredChats, handleFilter, handleSearch } = useChatsFilters(chats);
-  useChatEvents();
-  useCallEvents();
-  useCurrentCallState();
 
   return (
-    <div className="relative grid grid-flow-col grid-cols-1 md:grid-cols-7 xl:grid-cols-8 w-full h-full">
-      <aside
-        className={`${parsedPath === "/chat" ? "flex" : "hidden"} md:flex flex-col flex-1 max-w-full col-span-3 lg:col-span-3 xl:col-span-2 overflow-hidden`}
-      >
-        <ChatHeaderSection />
-        <div className="flex flex-col overflow-hidden">
-          <ChatSearchSection handleSearch={handleSearch} />
-          <ChatFilterSection handleFilter={handleFilter} />
-          <ChatsListSection filteredChats={filteredChats} />
-        </div>
-      </aside>
-      <aside
-        className={`${parsedPath === "/chat" ? "hidden" : "flex"} md:flex flex-col border-l-[1px] border-slate-700 col-span-6 overflow-hidden`}
-      >
-        <Outlet />
-      </aside>
-      <DraggableVideos />
+    <div className="flex flex-col overflow-hidden">
+      <ChatSearchSection handleSearch={handleSearch} />
+      <ChatFilterSection handleFilter={handleFilter} />
+      <ChatsListSection filteredChats={filteredChats} />
     </div>
   );
 }

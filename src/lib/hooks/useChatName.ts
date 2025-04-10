@@ -50,7 +50,7 @@ export function useChatName({
     if (
       !!chatName.length &&
       chatName !== currentChat?.name &&
-      chatName !== placeholderChatName
+      currentChat?.name !== placeholderChatName
     ) {
       await updateChatNameMutation.mutateAsync();
     }

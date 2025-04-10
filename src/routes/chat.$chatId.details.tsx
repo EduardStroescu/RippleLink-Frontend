@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
 
 import { chatApi } from "@/api/modules/chat.api";
 import { MediaComponent } from "@/components/chatId/MediaComponent";
@@ -15,8 +14,8 @@ import { AvatarCoin } from "@/components/ui/AvatarCoin";
 import { FileComponent } from "@/components/ui/FileComponent";
 import { FullscreenImage } from "@/components/ui/FullscreenImage";
 import { groupAvatar, placeholderAvatar } from "@/lib/const";
+import { useCurrentChatDetails } from "@/lib/hooks/useCurrentChatDetails";
 import { getGroupChatNamePlaceholder } from "@/lib/utils";
-import { useUserStore } from "@/stores/useUserStore";
 import { FileMessage } from "@/types/message";
 
 export const Route = createFileRoute("/chat/$chatId/details")({
@@ -42,26 +41,25 @@ export const Route = createFileRoute("/chat/$chatId/details")({
 
 function ChatDetails() {
   const { chatId } = Route.useParams();
-  const user = useUserStore((state) => state.user);
   const { sharedFiles: sharedFilesData, chatsQuery } = Route.useLoaderData();
-  const { data: chatData } = useQuery(chatsQuery);
 
-  const currentChat = useMemo(
-    () => chatData?.filter((chat) => chat._id === chatId)?.[0],
-    [chatData, chatId]
-  );
-  const interlocutors = useMemo(
-    () =>
-      currentChat && user?._id
-        ? currentChat.users.filter((person) => person._id !== user._id)
-        : [],
-    [currentChat, user?._id]
-  );
+  const { isDmChat, currentChat, interlocutors } = useCurrentChatDetails({
+    chatsQuery,
+  });
 
-  const placeholderChatName = getGroupChatNamePlaceholder(interlocutors);
+  const shouldQueryInterlocutorStatus = !!interlocutors[0]?._id && isDmChat;
+  const { data: interlocutorStatus } = useQuery({
+    queryKey: ["interlocutorStatus", interlocutors[0]?._id],
+    queryFn: () => chatApi.getInterlocutorStatus(interlocutors[0]._id),
+    enabled: shouldQueryInterlocutorStatus,
+  });
+
+  const placeholderChatName = isDmChat
+    ? undefined
+    : getGroupChatNamePlaceholder(interlocutors);
 
   return (
-    <aside className="animate-in fade-in duration-300 ease-in relative w-full col-span-full xl:col-span-3 flex flex-col border-l-slate-700 border-l-[1px] overflow-hidden">
+    <aside className="relative w-full col-span-full xl:col-span-3 flex flex-col border-l-slate-700 border-l-[1px] overflow-hidden">
       <nav className="flex w-full py-2 px-4 items-center">
         <Link
           to={"/chat/$chatId"}
@@ -73,16 +71,16 @@ function ChatDetails() {
         </Link>
       </nav>
       <div className="overflow-y-auto py-2">
-        {interlocutors.length <= 1 ? (
+        {isDmChat ? (
           <UserDetailsHeader
             avatarUrl={interlocutors[0]?.avatarUrl || placeholderAvatar}
             name={interlocutors[0].displayName || "User"}
-            statusMessage={interlocutors[0]?.status?.statusMessage}
+            statusMessage={interlocutorStatus?.statusMessage}
           />
         ) : (
           <UserDetailsHeader
             avatarUrl={currentChat?.avatarUrl || groupAvatar}
-            name={currentChat?.name || placeholderChatName}
+            name={currentChat?.name || placeholderChatName!}
           />
         )}
         <div className="w-full flex flex-col items-center mt-4 mb-2">
@@ -91,7 +89,7 @@ function ChatDetails() {
             collapsible
             className="w-4/5 flex flex-col gap-2"
           >
-            {interlocutors.length > 1 && (
+            {!isDmChat && (
               <AccordionItem value="item-1">
                 <AccordionTrigger className="text-center bg-green-500/60 text-white rounded-t p-2">
                   Users In Chat
@@ -163,10 +161,14 @@ function UserDetailsHeader({
         source={avatarUrl}
         shouldInvalidate
         width={200}
-        alt={`User's avatar`}
+        alt={name || "User"}
       />
-      <p className="w-4/5 text-3xl text-center truncate">{name}</p>
-      {statusMessage && <p className="text-center">{statusMessage}</p>}
+      <p className="w-4/5 text-3xl text-center truncate">{name || "User"}</p>
+      <p
+        className={`${statusMessage ? "visible" : "invisible pointer-events-none"} text-center`}
+      >
+        {statusMessage || "No status message"}
+      </p>
     </div>
   );
 }

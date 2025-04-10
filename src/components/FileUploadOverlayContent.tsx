@@ -49,6 +49,7 @@ export function FileUploadOverlayContent({
             <label
               className="flex gap-2 cursor-pointer items-center group group/file text-sm"
               htmlFor={type.id}
+              aria-label={type.id}
             >
               {type.icon}
               {type.text}

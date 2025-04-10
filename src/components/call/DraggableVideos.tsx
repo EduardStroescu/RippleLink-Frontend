@@ -20,7 +20,7 @@ interface PositionMap {
   [key: string]: Position;
 }
 
-export const DraggableVideos = memo(() => {
+export const DraggableVideos = memo(function DragabbleVideos() {
   const location = useLocation();
   const appGlow = useAppStore((state) => state.appGlow);
   const user = useUserStore((state) => state.user);
@@ -277,5 +277,3 @@ export const DraggableVideos = memo(() => {
     </>
   );
 });
-
-DraggableVideos.displayName = "DraggableVideos";

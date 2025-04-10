@@ -73,7 +73,6 @@ export function SettingsIcon({
       xmlns="http://www.w3.org/2000/svg"
       className="group-hover:scale-110 transition-all ease-in-out"
     >
-      <title>Settings</title>
       <path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -86,7 +85,7 @@ export function SettingsIcon({
   );
 }
 
-export function AddIcon({ title }: { title: string }) {
+export function AddIcon() {
   return (
     <svg
       width="30px"
@@ -95,7 +94,6 @@ export function AddIcon({ title }: { title: string }) {
       xmlns="http://www.w3.org/2000/svg"
       className="group-hover:scale-110 transition-all ease-in-out"
     >
-      <title>{title}</title>
       <path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -118,7 +116,6 @@ export function ImageIcon() {
       xmlnsXlink="http://www.w3.org/1999/xlink"
       className="group-hover:scale-110 transition-all ease-in-out"
     >
-      <title>Upload Image</title>
       <defs></defs>
       <g
         id="Page-1"
@@ -148,7 +145,6 @@ export function CloseIcon({ className }: { className?: string }) {
       xmlns="http://www.w3.org/2000/svg"
       className={cn("w-[25px] h-[25px]", className)}
     >
-      <title>Close</title>
       <path
         d="M14.5 9.50002L9.5 14.5M9.49998 9.5L14.5 14.5"
         stroke="#f1f1f1"
@@ -212,12 +208,10 @@ export function CheckIcon({
   width = "12px",
   height = "12px",
   fill = "#ffffff",
-  title,
 }: {
   width?: string;
   height?: string;
   fill?: string;
-  title?: string;
 }) {
   return (
     <svg
@@ -231,7 +225,6 @@ export function CheckIcon({
       viewBox="0 0 512 512"
       xmlSpace="preserve"
     >
-      {title && <title>{title}</title>}
       <g>
         <path
           d="M474.045,173.813c-4.201,1.371-6.494,5.888-5.123,10.088c7.571,23.199,11.411,47.457,11.411,72.1
@@ -314,7 +307,6 @@ export function GifIcon() {
       xmlnsXlink="http://www.w3.org/1999/xlink"
       className="w-[25px] h-[25px] sm:w-[30px] sm:h-[30px]"
     >
-      <title>Pick a Gif</title>
       <g stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
         <g
           id="ic_fluent_gif_24_filled"
@@ -343,7 +335,6 @@ export function AddUsersIcon() {
       fill="#949496"
       className="group-hover:fill-white group-hover:scale-110 transition-all ease-in-out"
     >
-      <title>Add Users to DM</title>
       <g id="XMLID_91_">
         <path
           id="XMLID_92_"
@@ -558,7 +549,6 @@ export function InfoIcon() {
       xmlns="http://www.w3.org/2000/svg"
       className="group-hover:scale-110 transition-all ease-in-out"
     >
-      <title>Chat Details</title>
       <path
         d="M12 17V11"
         strokeWidth="1.5"
@@ -586,11 +576,9 @@ export function InfoIcon() {
 }
 
 export function EditIcon({
-  title = "Edit Message",
   width = "20px",
   height = "20px",
 }: {
-  title?: string;
   width?: string;
   height?: string;
 }) {
@@ -603,7 +591,6 @@ export function EditIcon({
       xmlns="http://www.w3.org/2000/svg"
       className="group-hover:scale-110 transition-all ease-in-out group"
     >
-      <title>{title}</title>
       <path
         d="M20 12C20 16.4183 16.4183 20 12 20C7.58172 20 4 16.4183 4 12C4 7.58172 7.58172 4 12 4M9.35443 12.4346L15.9429 5.92003C16.4684 5.40046 17.3049 5.3718 17.8647 5.85418C18.4812 6.38542 18.5247 7.32554 17.96 7.91149L11.481 14.6335L9 15L9.35443 12.4346Z"
         strokeLinecap="round"
@@ -815,7 +802,6 @@ export function EmojiIcon({ className }: { className?: string }) {
         className
       )}
     >
-      <title>Pick Emoji</title>
       <path
         d="M8.9126 15.9336C10.1709 16.249 11.5985 16.2492 13.0351 15.8642C14.4717 15.4793 15.7079 14.7653 16.64 13.863"
         strokeWidth="1.5"
@@ -869,7 +855,6 @@ export function PopUpIcon() {
       fill="#d2d0d0"
       className="group-hover:fill-[#e6e7e8]"
     >
-      <title>Display Video as Pop Up</title>
       <path d="M15.694 13.541l2.666 2.665 5.016-5.017 2.59 2.59 0.004-7.734-7.785-0.046 2.526 2.525-5.017 5.017zM25.926 16.945l-1.92-1.947 0.035 9.007-16.015 0.009 0.016-15.973 8.958-0.040-2-2h-7c-1.104 0-2 0.896-2 2v16c0 1.104 0.896 2 2 2h16c1.104 0 2-0.896 2-2l-0.074-7.056z"></path>
     </svg>
   );
@@ -889,7 +874,6 @@ export function CameraOrientationSwitchIcon() {
       stroke="#d2d0d0"
       className="group-hover:stroke-[#e6e7e8] group-hover:scale-110 transition-all ease-in-out"
     >
-      <title>Switch Camera Orientation</title>
       <path d="M11 19H4a2 2 0 01-2-2V7a2 2 0 012-2h5" />
       <path d="M13 5h7a2 2 0 012 2v10a2 2 0 01-2 2h-5" />
       <circle cx="12" cy="12" r="3" />
@@ -909,7 +893,6 @@ export function VolumeIcon() {
       xmlns="http://www.w3.org/2000/svg"
       className="group-hover:scale-110 transition-all ease-in-out"
     >
-      <title>Adjust Volume</title>
       <path
         d="M5.00304 11.7155C5.04093 9.87326 5.05988 8.95215 5.68099 8.16363C5.79436 8.0197 5.9607 7.8487 6.10011 7.73274C6.86393 7.09741 7.8724 7.09741 9.88932 7.09741C10.6099 7.09741 10.9702 7.09741 11.3137 7.00452C11.385 6.98522 11.4556 6.96296 11.5253 6.93781C11.8608 6.81674 12.1616 6.60837 12.7632 6.19161C15.137 4.54738 16.3239 3.72527 17.3201 4.08241C17.5111 4.15088 17.6959 4.24972 17.8611 4.37162C18.7222 5.00744 18.7877 6.48675 18.9185 9.44538C18.967 10.5409 19 11.4785 19 12C19 12.5215 18.967 13.4591 18.9185 14.5546C18.7877 17.5132 18.7222 18.9926 17.8611 19.6284C17.6959 19.7503 17.5111 19.8491 17.3201 19.9176C16.3239 20.2747 15.137 19.4526 12.7632 17.8084C12.1616 17.3916 11.8608 17.1833 11.5253 17.0622C11.4556 17.037 11.385 17.0148 11.3137 16.9955C10.9702 16.9026 10.6099 16.9026 9.88932 16.9026C7.8724 16.9026 6.86393 16.9026 6.10011 16.2673C5.9607 16.1513 5.79436 15.9803 5.68099 15.8364C5.05988 15.0478 5.04093 14.1267 5.00304 12.2845C5.00104 12.1878 5 12.0928 5 12C5 11.9072 5.00104 11.8122 5.00304 11.7155Z"
         fill="#d2d0d0"

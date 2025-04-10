@@ -19,19 +19,11 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
   onChange,
 }) => {
   return (
-    <div className="flex items-center">
-      <Popover>
-        <PopoverTrigger className="text-[25px]  cursor-pointer">
-          {children}
-        </PopoverTrigger>
-        <PopoverContent
-          className="p-0
-          border-none
-        "
-        >
-          <RgbaColorPicker color={color} onChange={onChange} />
-        </PopoverContent>
-      </Popover>
-    </div>
+    <Popover>
+      <PopoverTrigger>{children}</PopoverTrigger>
+      <PopoverContent className="p-0 border-none shadow-none w-full h-full">
+        <RgbaColorPicker color={color} onChange={onChange} />
+      </PopoverContent>
+    </Popover>
   );
 };

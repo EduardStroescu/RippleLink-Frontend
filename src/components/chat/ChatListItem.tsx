@@ -71,5 +71,3 @@ export const ChatListItem = ({
     </Link>
   );
 };
-
-ChatListItem.displayName = "ChatListItem";

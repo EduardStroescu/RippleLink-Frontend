@@ -31,48 +31,27 @@ export function useChatEvents() {
   }, 1000);
 
   // Handle chatCreated and chatUpdated events
-  useSocketSubscription("chatCreated", ({ content }: { content: Chat }) => {
-    setChatsCache((prev) => {
-      if (!prev) return [content];
-      return create(prev, (draft) => {
-        const index = draft.findIndex((item) => item._id === content._id);
-
-        if (index === -1) {
-          draft.push(content);
-        } else {
-          draft[index] = { ...draft[index], ...content };
-        }
-      });
-    });
-    if (content.lastMessage.senderId._id !== user?._id && !isWindowActive) {
-      setNewMessageCount((prev) => prev + 1);
-      throttledNotification();
-    }
-  });
-
   useSocketSubscription(
-    "chatUpdated",
-    ({
-      content,
-    }: {
-      content: Chat & { eventType: "create" | "update" | "delete" };
-    }) => {
+    "chatCreatedOrUpdated",
+    ({ chat, eventType }: { chat: Chat; eventType: "create" | "update" }) => {
       setChatsCache((prev) => {
-        if (!prev) return prev;
+        if (!prev) return eventType === "create" ? [chat] : prev;
+
         return create(prev, (draft) => {
-          const index = draft.findIndex((item) => item._id === content._id);
+          const index = draft.findIndex((item) => item._id === chat._id);
 
           if (index === -1) {
-            if (content.eventType !== "create") return draft;
-            draft.push(content);
+            if (eventType !== "create") return draft;
+            draft.push(chat);
           } else {
-            draft[index] = { ...draft[index], ...content };
+            draft[index] = { ...draft[index], ...chat };
           }
         });
       });
+
       if (
-        content.lastMessage.senderId._id !== user?._id &&
-        content.eventType === "create" &&
+        chat.lastMessage.senderId._id !== user?._id &&
+        eventType === "create" &&
         !isWindowActive
       ) {
         setNewMessageCount((prev) => prev + 1);

@@ -26,17 +26,18 @@ export const FileUploadOverlay: React.FC<FileUploadOverlayProps> = ({
   return (
     <div className="flex items-center">
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger className="cursor-pointer group">
+        <PopoverTrigger
+          title="Add File(s)"
+          aria-label="Add File(s)"
+          className="cursor-pointer group"
+        >
           {children}
         </PopoverTrigger>
         <PopoverContent
           align="start"
           side="top"
           sideOffset={25}
-          className="p-0
-          border-none
-          w-auto
-        "
+          className="p-0 border-none w-auto"
         >
           {contentWithProps}
         </PopoverContent>

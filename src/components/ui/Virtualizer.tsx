@@ -10,7 +10,7 @@ interface VirtualizerProps {
 }
 
 export const Virtualizer = forwardRef<HTMLDivElement, VirtualizerProps>(
-  ({ virtualizer, children }, ref) => {
+  function Virtualizer({ virtualizer, children }, ref) {
     const items = virtualizer.getVirtualItems();
 
     return (
@@ -43,5 +43,3 @@ export const Virtualizer = forwardRef<HTMLDivElement, VirtualizerProps>(
     );
   }
 );
-
-Virtualizer.displayName = "Virtualizer";

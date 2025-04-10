@@ -5,7 +5,6 @@ import { v4 as uuidv4 } from "uuid";
 import { useUserTyping } from "@/lib/hooks/useUserTyping";
 import { chunkFilesAndUpload } from "@/lib/utils";
 import { useAppStoreActions } from "@/stores/useAppStore";
-import { useUserStore } from "@/stores/useUserStore";
 import {
   FileMessage,
   Message,
@@ -23,8 +22,7 @@ export type ContentPreviewState = ContentPreview | null;
 export type FileType = ContentPreview[number]["type"];
 
 export function useCreateMessage() {
-  const { getSocket } = useAppStoreActions();
-  const user = useUserStore((state) => state.user);
+  const { socketEmit } = useAppStoreActions();
 
   const chatId = useParams({
     from: "/chat/$chatId",
@@ -39,10 +37,8 @@ export function useCreateMessage() {
   useUserTyping(chatId, message);
 
   const handleSubmitMessage = useCallback(
-    async (e: React.FormEvent<HTMLFormElement>) => {
+    (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      const socket = await getSocket();
-      if (!user || !socket) return;
 
       const payload: PartialMessage = {
         chatId,
@@ -51,7 +47,7 @@ export function useCreateMessage() {
 
       if (gif) {
         payload.content = gif;
-        socket.emit("createMessage", payload);
+        socketEmit("createMessage", payload);
         setGif(null);
 
         // For all types of files
@@ -64,7 +60,7 @@ export function useCreateMessage() {
             fileId: uuidv4(),
           };
         });
-        socket.emit(
+        socketEmit(
           "createMessage",
           payload,
           (response: { message: FileMessage }) => {
@@ -75,12 +71,12 @@ export function useCreateMessage() {
       } else {
         if (message.length === 0) return;
         payload.content = message;
-        socket.emit("createMessage", payload);
+        socketEmit("createMessage", payload);
         setMessage("");
       }
       setMessageType("text");
     },
-    [chatId, contentPreview, getSocket, gif, message, messageType, user]
+    [chatId, contentPreview, socketEmit, gif, message, messageType]
   );
 
   return {

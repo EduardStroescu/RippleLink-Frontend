@@ -1,14 +1,15 @@
 import { VirtualItem } from "@tanstack/react-virtual";
+import { memo } from "react";
 
 interface TypingIndicatorProps {
   interlocutorIsTyping: boolean;
   virtualItem: VirtualItem;
 }
 
-export const TypingIndicator = ({
+export const TypingIndicator = memo(function TypingIndicator({
   interlocutorIsTyping,
   virtualItem,
-}: TypingIndicatorProps) => {
+}: TypingIndicatorProps) {
   return (
     <li
       data-index={virtualItem.index}
@@ -43,4 +44,4 @@ export const TypingIndicator = ({
       </div>
     </li>
   );
-};
+});

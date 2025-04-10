@@ -17,26 +17,26 @@ export const GifPicker: React.FC<GifPickerProps> = ({ children, getValue }) => {
     if (getValue) getValue(selectedGif.url);
   };
   return (
-    <div className="flex items-center">
-      <Popover>
-        <PopoverTrigger className="hover:scale-110 transition-all ease-in-out cursor-pointer group">
-          {children}
-        </PopoverTrigger>
-        <PopoverContent
-          align="end"
-          sideOffset={25}
-          className="p-0
-          border-none w-full mx-2
-        "
-        >
-          <Picker
-            width="min(max(100%, 20vw), 95vw)"
-            theme={Theme.DARK}
-            tenorApiKey={import.meta.env.VITE_TENOR_KEY!}
-            onGifClick={onGifClick}
-          />
-        </PopoverContent>
-      </Popover>
-    </div>
+    <Popover>
+      <PopoverTrigger
+        title="Pick a GIF"
+        aria-label="Pick a GIF"
+        className="hover:scale-110 transition-all ease-in-out cursor-pointer group"
+      >
+        {children}
+      </PopoverTrigger>
+      <PopoverContent
+        align="end"
+        sideOffset={25}
+        className="p-0 border-none w-full mx-2"
+      >
+        <Picker
+          width="min(max(100%, 20vw), 95vw)"
+          theme={Theme.DARK}
+          tenorApiKey={import.meta.env.VITE_TENOR_KEY!}
+          onGifClick={onGifClick}
+        />
+      </PopoverContent>
+    </Popover>
   );
 };

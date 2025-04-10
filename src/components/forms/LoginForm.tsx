@@ -94,7 +94,7 @@ export function LoginForm() {
           {isPending ? "Logging In..." : "Log In"}
         </button>
         <div className="w-full flex gap-2">
-          <p>Don't have an account?</p>{" "}
+          <p>Don't have an account?</p>
           <Link to="/register" className="text-blue-500 hover:text-blue-400">
             Sign Up
           </Link>

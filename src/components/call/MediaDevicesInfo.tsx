@@ -47,7 +47,7 @@ export function MediaDevicesInfo({
   }
 
   return (
-    <div className="flex flex-col gap-2 py-2 px-2 bg-black/60 backdrop-blur rounded border-slate-600 border-[1px]">
+    <div className="flex flex-col gap-2 py-2 px-2 bg-black/60 backdrop-blur rounded border-slate-600 border-[1px] max-h-[50dvh] overflow-y-auto">
       <div className="flex flex-col gap-2 px-2">
         <p className="text-blue-500 font-bold">Input Devices</p>
         <ol className="list-disc pl-4">

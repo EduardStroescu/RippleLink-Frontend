@@ -63,7 +63,7 @@ export function ChangeStatusForm() {
     <form
       ref={formRef}
       onSubmit={handleSubmitStatus}
-      className="my-4 flex gap-2"
+      className="my-4 flex gap-2 items-center"
     >
       <CustomChatInput
         message={statusMessage}
@@ -75,7 +75,7 @@ export function ChangeStatusForm() {
         aria-label="Save Status"
         title="Save Status"
         disabled={isPending}
-        className="group"
+        className="rounded-full group ring-offset-black/60 focus:outline-none focus:ring-1 focus:ring-white focus:ring-offset-2"
       >
         <SendIcon />
       </button>

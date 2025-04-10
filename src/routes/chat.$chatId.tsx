@@ -91,7 +91,6 @@ function ChatId() {
         className={`${parsedPath === "/chat/$chatId/details" ? "hidden" : "flex col-span-8"} xl:flex relative w-full flex-col col-span-5 overflow-hidden`}
       >
         <ChatHeaderSection
-          key={"header" + chatId}
           isDmChat={isDmChat}
           interlocutors={interlocutors}
           currentChat={currentChat}
@@ -100,7 +99,7 @@ function ChatId() {
         {!!currentCallDetails && (
           <CallComponent currentCallDetails={currentCallDetails} />
         )}
-        <ChatContent key={"messages" + chatId} interlocutors={interlocutors} />
+        <ChatContent interlocutors={interlocutors} />
         <CreateMessageSection key={"message" + chatId} />
       </div>
       {parsedPath === "/chat/$chatId/details" && <Outlet />}

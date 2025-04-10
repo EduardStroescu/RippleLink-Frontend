@@ -1,5 +1,4 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { memo } from "react";
 
 import { UserSettingsOverlay } from "@/components/chat/UserSettingsOverlay";
 import { SettingsIcon } from "@/components/Icons";
@@ -7,7 +6,7 @@ import { AvatarCoin } from "@/components/ui/AvatarCoin";
 import { placeholderAvatar } from "@/lib/const";
 import { useUserStore } from "@/stores/useUserStore";
 
-export const ChatHeaderSection = memo(() => {
+export const ChatHeaderSection = () => {
   const user = useUserStore((state) => state.user);
   const location = useLocation();
 
@@ -31,12 +30,12 @@ export const ChatHeaderSection = memo(() => {
               : "/chat"
           }
           className="group flex items-center gap-2"
+          title="Toggle Settings"
+          aria-label="Toggle Settings"
         >
           <SettingsIcon />
         </Link>
       </div>
     </div>
   );
-});
-
-ChatHeaderSection.displayName = "ChatHeaderSection";
+};

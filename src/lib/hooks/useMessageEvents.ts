@@ -19,7 +19,7 @@ export function useMessageEvents() {
 
   const setMessagesCache = useSetTanstackCache<{
     pages: { messages: Message[]; nextCursor: string | null }[];
-    pageParams;
+    pageParams: (string | null)[];
   }>(["messages", chatId]);
 
   useEffect(() => {

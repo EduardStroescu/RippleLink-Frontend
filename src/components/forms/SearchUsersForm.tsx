@@ -53,6 +53,7 @@ export const SearchUsersForm = ({
   };
 
   const handleCreate = () => {
+    if (selectedUsers.length === 0) return;
     const selectedUsersIds = selectedUsers.map((user) => user._id);
     router.navigate({ to: `/chat/create-chat?userIds=${selectedUsersIds}` });
     !!setOpen && setOpen(false);
@@ -62,19 +63,25 @@ export const SearchUsersForm = ({
     <div className="flex flex-col gap-4 py-2 h-full">
       <div className="flex flex-col flex-wrap w-full gap-2">
         <p className="text-md">Selected Users:</p>
-        <div className="flex gap-1">
-          {selectedUsers.map((user, idx) => (
-            <button
-              key={user._id}
-              className="text-sm hover:text-red-500"
-              onClick={() => handleUserClick(user)}
-              aria-label="Remove user"
-              title="Remove user"
-            >
-              {user.displayName}
-              {idx < selectedUsers.length - 1 ? ", " : ""}
-            </button>
-          ))}
+        <div className="flex gap-1 justify-center">
+          {selectedUsers.length ? (
+            selectedUsers.map((user, idx) => (
+              <button
+                key={user._id}
+                className="text-sm hover:text-red-500 text-cyan-400"
+                onClick={() => handleUserClick(user)}
+                aria-label="Remove user"
+                title="Remove user"
+              >
+                {user.displayName}
+                {idx < selectedUsers.length - 1 ? ", " : ""}
+              </button>
+            ))
+          ) : (
+            <p className="text-sm text-red-500 animate-pulse">
+              No users selected
+            </p>
+          )}
         </div>
       </div>
       <Input
@@ -86,15 +93,13 @@ export const SearchUsersForm = ({
         autoComplete="off"
         autoFocus
       />
-      <div
-        className="flex flex-col items-start gap-2 min-h-[180px] max-h-[200px]
-        sm:min-h-[240px] sm:max-h-[240px] overflow-y-auto"
-      >
+      <div className="flex flex-col items-start gap-2 min-h-[180px] max-h-[200px] sm:min-h-[240px] sm:max-h-[240px] overflow-y-auto">
         {filteredUsers.map((user) => (
           <button
             key={user._id}
             className="flex flex-row gap-2 items-center hover:bg-slate-950 w-full rounded"
             onClick={() => handleUserClick(user)}
+            aria-label={"Include or exclude " + user.displayName}
           >
             <AvatarCoin
               source={user.avatarUrl || placeholderAvatar}
@@ -104,7 +109,11 @@ export const SearchUsersForm = ({
             />
             <p className="flex-1 text-start">{user.displayName}</p>
             {selectedUsers.includes(user) && (
-              <div className="px-2">
+              <div
+                className="px-2"
+                aria-label={user.displayName + " included"}
+                title="Included"
+              >
                 <CheckIcon fill="#00fff2" width="15px" height="15px" />
               </div>
             )}
@@ -113,7 +122,8 @@ export const SearchUsersForm = ({
       </div>
       <button
         onClick={handleCreate}
-        className="mt-auto rounded bg-green-800 hover:bg-green-700 p-2 hover:text-white text-slate-200"
+        disabled={selectedUsers.length === 0}
+        className={`${selectedUsers.length === 1 ? "bg-green-800 hover:bg-green-700" : "bg-cyan-800 hover:bg-cyan-700"} mt-auto rounded p-2 hover:text-white text-slate-200 disabled:bg-slate-900 disabled:text-slate-400`}
       >
         Create {selectedUsers.length > 1 ? "Group" : "Chat"}
       </button>

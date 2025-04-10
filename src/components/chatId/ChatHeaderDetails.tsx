@@ -1,12 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 
 import { BackIcon, CheckIcon, EditIcon } from "@/components/Icons";
 import { AvatarCoin } from "@/components/ui/AvatarCoin";
 import { placeholderAvatar } from "@/lib/const";
 import { PublicUser } from "@/types/user";
 
-export function ChatHeaderDetails({
+export const ChatHeaderDetails = memo(function ChatHeaderDetails({
   avatarUrl,
   name,
   lastSeen,
@@ -87,11 +87,15 @@ export function ChatHeaderDetails({
             <button
               onClick={handleEditChatName}
               className="flex items-center justify-center"
+              title={isEditingChatName ? "Save Chat Name" : "Edit Chat Name"}
+              aria-label={
+                isEditingChatName ? "Save Chat Name" : "Edit Chat Name"
+              }
             >
               {isEditingChatName ? (
-                <CheckIcon title="Save Chat Name" width="15px" height="15px" />
+                <CheckIcon width="15px" height="15px" />
               ) : (
-                <EditIcon title="Edit Chat Name" />
+                <EditIcon />
               )}
             </button>
           )}
@@ -106,4 +110,4 @@ export function ChatHeaderDetails({
       </div>
     </div>
   );
-}
+});

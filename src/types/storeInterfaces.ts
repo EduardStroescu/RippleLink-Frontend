@@ -28,6 +28,12 @@ export interface AppStore {
   actions: {
     setSocket: (newSocket: Socket | null) => void;
     getSocket: (retries?: number, delay?: number) => Promise<Socket | null>;
+    socketEmit: (
+      event: string,
+      payload,
+      callback?: (res) => void,
+      options?: { timeout?: number; delay?: number }
+    ) => void;
     setAppBackground: (newBackground: AppStore["appBackground"]) => void;
     setAppTint: (newTint: AppStore["appTint"]) => void;
     setAppGlow: (newGlow: AppStore["appGlow"]) => void;

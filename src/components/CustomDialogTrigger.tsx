@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import React, { useState } from "react";
+import React, { ComponentPropsWithoutRef, useState } from "react";
 
 import {
   Dialog,
@@ -10,9 +10,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/Dialog";
 
-interface CustomDialogTriggerProps {
+interface CustomDialogTriggerProps
+  extends ComponentPropsWithoutRef<typeof DialogTrigger> {
   header?: string;
-  content?: React.ReactElement<{
+  dialogContent?: React.ReactElement<{
     setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
   }>;
   children: React.ReactNode;
@@ -23,21 +24,24 @@ interface CustomDialogTriggerProps {
 
 export const CustomDialogTrigger: React.FC<CustomDialogTriggerProps> = ({
   header,
-  content,
+  dialogContent,
   children,
   description,
   className,
   contentClassName,
+  ...props
 }) => {
   const [open, setOpen] = useState(false);
 
-  const contentWithProps = content
-    ? React.cloneElement(content, { setOpen })
+  const contentWithProps = dialogContent
+    ? React.cloneElement(dialogContent, { setOpen })
     : null;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger className={clsx("", className)}>{children}</DialogTrigger>
+      <DialogTrigger className={clsx("", className)} {...props}>
+        {children}
+      </DialogTrigger>
       <DialogContent
         className={clsx(
           "w-[90%] border-[#282637] border-[1px]",

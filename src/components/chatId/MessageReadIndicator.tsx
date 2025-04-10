@@ -3,6 +3,7 @@ import { AvatarCoin } from "@/components/ui/AvatarCoin";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -15,58 +16,78 @@ interface MessageReadIndicatorProps {
   message: Message;
   portalInto: Element | null | undefined;
   interlocutorsNumber: number;
+  className?: string;
 }
 
 export const MessageReadIndicator: React.FC<MessageReadIndicatorProps> = ({
   message,
   portalInto,
   interlocutorsNumber,
+  className,
 }) => {
   const usersWhoHaveReadMessage = message.readBy;
+  const isMessageReadByAnyone =
+    usersWhoHaveReadMessage.length > 0 &&
+    usersWhoHaveReadMessage.length < interlocutorsNumber;
   const isMessageReadByEveryone =
     usersWhoHaveReadMessage.length === interlocutorsNumber;
 
   return (
     <Sheet>
-      <SheetTrigger title="See users who read this message">
+      <SheetTrigger
+        className={className}
+        title="See users who read this message"
+      >
         <MessageReadIcon
           width="14px"
           height="14px"
           double={isMessageReadByEveryone}
-          className={`${isMessageReadByEveryone ? "fill-cyan-300" : "fill-teal-200"} transition-colors duration-500 ease-in-out`}
+          className={`${isMessageReadByEveryone ? "fill-cyan-300" : isMessageReadByAnyone ? "fill-teal-200" : "fill-white"} transition-colors duration-500 ease-in-out`}
         />
       </SheetTrigger>
-      <SheetContent className="gap-6 flex flex-col" container={portalInto}>
-        <SheetHeader>
-          <SheetTitle>Read By:</SheetTitle>
+      <SheetContent container={portalInto} className="gap-6 flex flex-col">
+        <SheetHeader className="gap-0">
+          <SheetTitle>Message Sent</SheetTitle>
+          <SheetDescription className="hidden">
+            See users who've read this message
+          </SheetDescription>
+          <h2 className="font-semibold text-slate-400">Read by</h2>
         </SheetHeader>
         <ul className="flex flex-col px-2 gap-2 overflow-y-auto">
-          {usersWhoHaveReadMessage.map((readByMember) => {
-            const { date, time } = getLocalDate(
-              readByMember.timestamp,
-              "ro-RO"
-            );
-            return (
-              <div
-                key={readByMember.userId._id}
-                className="flex gap-6 items-center justify-between cursor-default border-b-[1px] border-slate-700 last:border-transparent py-2"
-              >
-                <div className="flex items-center">
-                  <AvatarCoin
-                    source={readByMember.userId?.avatarUrl || placeholderAvatar}
-                    alt={readByMember.userId.displayName + "'s Avatar"}
-                    width={30}
-                  />
-                  <p className="truncate text-sm">
-                    {readByMember.userId.displayName}
+          {usersWhoHaveReadMessage.length ? (
+            usersWhoHaveReadMessage.map((readByMember) => {
+              const { date, time } = getLocalDate(
+                readByMember.timestamp,
+                "ro-RO"
+              );
+              return (
+                <div
+                  key={readByMember.userId._id}
+                  className="flex gap-6 items-center justify-between cursor-default border-b-[1px] border-slate-700 last:border-transparent py-2"
+                >
+                  <div className="flex items-center gap-1">
+                    <AvatarCoin
+                      source={
+                        readByMember.userId?.avatarUrl || placeholderAvatar
+                      }
+                      alt={readByMember.userId.displayName + "'s Avatar"}
+                      width={30}
+                    />
+                    <p className="truncate text-sm">
+                      {readByMember.userId.displayName}
+                    </p>
+                  </div>
+                  <p className="text-xs text-center text-slate-300 mt-0.5">
+                    {date} {time}
                   </p>
                 </div>
-                <p className="text-xs text-center text-slate-300">
-                  {date} {time}
-                </p>
-              </div>
-            );
-          })}
+              );
+            })
+          ) : (
+            <p className="text-sm text-center text-slate-300">
+              Message not read yet
+            </p>
+          )}
         </ul>
       </SheetContent>
     </Sheet>

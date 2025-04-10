@@ -270,45 +270,34 @@ export const lerp = (start: number, end: number, alpha: number): number => {
 */
 export const chunkFilesAndUpload = async (
   message: FileMessage,
-  files: ContentPreview,
-  MAX_RETRIES: number = 3
+  files: ContentPreview
 ) => {
-  const socket = await useAppStore.getState().actions.getSocket();
-  if (!socket) return;
+  const socketEmit = useAppStore.getState().actions.socketEmit;
 
-  await Promise.all(
-    files.flatMap((file, idx) => {
-      const { fileBlob, name } = file;
-      const totalChunks = Math.ceil(fileBlob.size / CHUNK_SIZE);
-      const fileId = message.content[idx].fileId;
+  files.forEach((file, idx) => {
+    const { fileBlob, name } = file;
+    const totalChunks = Math.ceil(fileBlob.size / CHUNK_SIZE);
+    const fileId = message.content[idx].fileId;
 
-      return Array.from({ length: totalChunks }, (_, index) => {
-        const chunk = fileBlob.slice(
-          index * CHUNK_SIZE,
-          (index + 1) * CHUNK_SIZE
-        );
+    for (let index = 0; index < totalChunks; index++) {
+      const chunk = fileBlob.slice(
+        index * CHUNK_SIZE,
+        (index + 1) * CHUNK_SIZE
+      );
 
-        // Recursive retry function
-        const sendChunk = async (attempt = 0): Promise<void> => {
-          return new Promise((resolve) => {
-            socket.emit(
-              "sendChunkedFile",
-              { message, fileId, name, chunk, index, totalChunks },
-              (response: { success: boolean }) => {
-                if (response.success) {
-                  resolve(); // Successfully uploaded chunk
-                } else if (attempt < MAX_RETRIES) {
-                  setTimeout(() => resolve(sendChunk(attempt + 1)), 1000);
-                } else {
-                  resolve(); // Resolve even if failed to prevent blocking other uploads
-                }
-              }
-            );
-          });
-        };
-
-        return sendChunk(); // Start upload
-      });
-    })
-  );
+      socketEmit(
+        "sendChunkedFile",
+        {
+          message,
+          fileId,
+          name,
+          chunk,
+          index,
+          totalChunks,
+        },
+        undefined,
+        { timeout: index === totalChunks - 1 ? 60 * 1000 : 1000 }
+      );
+    }
+  });
 };

@@ -44,7 +44,7 @@ export const UserSettingsOverlay: React.FC<UserSettingsOverlayProps> = ({
       component: (
         <CustomDialogTrigger
           header="Change Avatar"
-          content={<ChangeAvatarForm />}
+          dialogContent={<ChangeAvatarForm />}
         >
           <p className="hover:text-white">Change Avatar</p>
         </CustomDialogTrigger>
@@ -55,7 +55,7 @@ export const UserSettingsOverlay: React.FC<UserSettingsOverlayProps> = ({
       component: (
         <CustomDialogTrigger
           header="Change Status"
-          content={<ChangeStatusForm />}
+          dialogContent={<ChangeStatusForm />}
           contentClassName="h-[80%]
         block
         sm:h-[440px]"

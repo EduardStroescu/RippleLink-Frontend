@@ -1,5 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
 import { create } from "mutative";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useShallow } from "zustand/react/shallow";
 
 import { useSetTanstackCache } from "@/lib/hooks/useSetTanstackCache";
@@ -8,8 +9,14 @@ import { useCallStore, useCallStoreActions } from "@/stores/useCallStore";
 import { useUserStore } from "@/stores/useUserStore";
 import { Call } from "@/types/call";
 
-export function useCallEvents() {
+export function useCallEvents(callsQuery: {
+  queryKey: string[];
+  queryFn: () => Promise<Call[]>;
+  placeholderData: never[];
+  enabled: boolean;
+}) {
   const user = useUserStore((state) => state.user);
+  const { data: calls } = useQuery(callsQuery);
   const { incomingCalls, currentCall, joiningCall } = useCallStore(
     useShallow((state) => ({
       incomingCalls: state.incomingCalls,
@@ -20,6 +27,25 @@ export function useCallEvents() {
   const { setCurrentCall, addIncomingCall, removeIncomingCall } =
     useCallStoreActions();
   const setCallsCache = useSetTanstackCache<Call[]>(["calls", user?._id]);
+
+  // Set up call notifications if users got online after the call started and also for after access_token refreshes, time in which the user stops receiving socket events
+  useEffect(() => {
+    if (!calls || !user?._id) return;
+    calls.forEach((call) => {
+      if (
+        useCallStore
+          .getState()
+          .incomingCalls.some(
+            (incomingCall) => incomingCall.chatId._id === call.chatId._id
+          ) ||
+        call.participants.find(
+          (participant) => participant.userId._id === user?._id
+        )?.status !== "notified"
+      )
+        return;
+      addIncomingCall(call);
+    });
+  }, [addIncomingCall, calls, user?._id]);
 
   const notifyUserOfIncomingCall = useCallback(
     (content: Call) => {
