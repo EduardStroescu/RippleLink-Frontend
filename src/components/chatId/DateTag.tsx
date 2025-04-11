@@ -1,12 +1,14 @@
+import { memo } from "react";
+
 import { Message } from "@/types/message";
 
-export const DateTag = ({
+export const DateTag = memo(function DateTag({
   shouldDisplay,
   message,
 }: {
   shouldDisplay: boolean;
   message: Message;
-}) => {
+}) {
   if (!shouldDisplay || !message?.createdAt) return null;
   return (
     <p className="text-sm text-slate-200 self-center bg-cyan-900/60 py-2 px-3 rounded-sm text-center mt-6">
@@ -16,4 +18,4 @@ export const DateTag = ({
       })}
     </p>
   );
-};
+});

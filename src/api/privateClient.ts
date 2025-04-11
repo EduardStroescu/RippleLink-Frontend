@@ -94,8 +94,8 @@ privateClient.interceptors.response.use(
           });
 
           useUserStore.getState().actions.setUser(response.data);
-          privateClient.isRefreshingToken = false;
 
+          privateClient.isRefreshingToken = false;
           processQueue(response.data.access_token);
 
           originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`;

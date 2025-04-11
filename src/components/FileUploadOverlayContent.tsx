@@ -36,7 +36,7 @@ export function FileUploadOverlayContent({
     {
       text: "Add File",
       id: "Upload File",
-      icon: <FileIcon width="25px" height="25px" />,
+      icon: <FileIcon className="w-[25px] h-[25px]" />,
       fileType: "file",
     },
   ];

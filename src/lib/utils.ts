@@ -161,10 +161,7 @@ export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export const canEditMessage = (
-  isOwnMessage: boolean,
-  message: Message
-): boolean => {
+export const canEditMessage = (message: Message): boolean => {
   if (!message.createdAt) return false;
 
   const messageCreatedAt = new Date(message.createdAt).getTime();
@@ -177,9 +174,7 @@ export const canEditMessage = (
   const isGif = isTextMessage && isImageUrl(message.content);
 
   // Return true if the message is still within the allowed edit interval
-  return (
-    timeDifferenceInMinutes <= 15 && isOwnMessage && isTextMessage && !isGif
-  );
+  return timeDifferenceInMinutes <= 15 && isTextMessage && !isGif;
 };
 
 export const bytesToMegabytes = (bytes: number) => {

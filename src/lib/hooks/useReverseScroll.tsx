@@ -10,7 +10,7 @@ export const useReverseScroll = (
 ) => {
   const [scrollType, setScrollType] = useState<"wheel" | "touch" | "manual">(
     "wheel"
-  ); // Store the scroll type
+  );
 
   const isMiddleMouseDownRef = useRef(false);
   const animationFrameRef = useRef<number | null>(null);

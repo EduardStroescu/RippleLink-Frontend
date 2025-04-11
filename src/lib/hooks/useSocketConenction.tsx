@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 
-import { useAppStoreActions } from "@/stores/useAppStore";
+import { useAppStore } from "@/stores/useAppStore";
 import { useUserStore } from "@/stores/useUserStore";
 
 export function useSocketConnection() {
@@ -10,7 +10,6 @@ export function useSocketConnection() {
   const queryClient = useQueryClient();
 
   const socketRef = useRef<Socket | null>(null);
-  const { setSocket } = useAppStoreActions();
 
   const handleSocketCleanup = useCallback(() => {
     if (!socketRef?.current) return;
@@ -18,8 +17,8 @@ export function useSocketConnection() {
     socketRef.current.removeAllListeners();
     socketRef.current.disconnect();
     socketRef.current = null;
-    setSocket(null);
-  }, [setSocket]);
+    useAppStore.getState().actions.setSocket(null);
+  }, []);
 
   const initSocket = useCallback(() => {
     if (!user?.access_token) return;
@@ -30,7 +29,7 @@ export function useSocketConnection() {
         displayName: user.displayName,
       },
       extraHeaders: {
-        Authorization: user.access_token,
+        Authorization: `Bearer ${user.access_token}`,
       },
     });
 
@@ -47,14 +46,8 @@ export function useSocketConnection() {
     };
 
     socketRef.current.on("error", handleError);
-    setSocket(socketRef.current);
-  }, [
-    setSocket,
-    user?._id,
-    user?.access_token,
-    user?.displayName,
-    queryClient,
-  ]);
+    useAppStore.getState().actions.setSocket(socketRef.current);
+  }, [queryClient, user?._id, user?.access_token, user?.displayName]);
 
   useEffect(() => {
     if (socketRef.current) return;

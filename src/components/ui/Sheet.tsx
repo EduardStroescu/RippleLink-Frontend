@@ -49,10 +49,7 @@ const sheetVariants = cva(
   }
 );
 
-type SheetPortalProps = React.ComponentPropsWithoutRef<
-  typeof SheetPrimitive.Portal
->;
-
+type SheetPortalProps = { container?: Element | null };
 interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
     SheetPortalProps,

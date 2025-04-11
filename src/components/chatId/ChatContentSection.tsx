@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
-import { memo, useCallback, useMemo } from "react";
+import { memo, useMemo } from "react";
 
 import { MessageComponent } from "@/components/chatId/MessageComponent";
 import { MessagesLoadingIndicator } from "@/components/chatId/MessagesLoadingIndicator";
@@ -11,7 +11,6 @@ import { useMessageEvents } from "@/lib/hooks/useMessageEvents";
 import { useMessageReadStatus } from "@/lib/hooks/useMessageReadStatus";
 import { useVirtualizer } from "@/lib/hooks/useVirtualizer";
 import { getLastMessagesOfDay } from "@/lib/utils";
-import { useAppStoreActions } from "@/stores/useAppStore";
 import { Message } from "@/types/message";
 import { PublicUser } from "@/types/user";
 
@@ -23,8 +22,6 @@ export const ChatContent = memo(function ChatContent({
   interlocutors: PublicUser[];
 }) {
   const { messagesQuery } = Route.useLoaderData();
-  const { chatId } = Route.useParams();
-  const { socketEmit } = useAppStoreActions();
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteQuery(messagesQuery);
@@ -43,12 +40,6 @@ export const ChatContent = memo(function ChatContent({
   });
   useMessageReadStatus(messages);
 
-  const handleDelete = useCallback(
-    (messageId: string) => {
-      socketEmit("deleteMessage", { chatId, messageId });
-    },
-    [chatId, socketEmit]
-  );
   const firstMessagesOfDay = useMemo(
     () => getLastMessagesOfDay(messages),
     [messages]
@@ -65,7 +56,6 @@ export const ChatContent = memo(function ChatContent({
               virtualizer={virtualizer}
               virtualItemStart={virtualItem.start}
               message={getRowContent(virtualItem.index)}
-              handleDelete={handleDelete}
               idx={virtualItem.index}
               canDeleteMessage={virtualItem.index !== messages.length}
               interlocutorsNumber={interlocutors.length}

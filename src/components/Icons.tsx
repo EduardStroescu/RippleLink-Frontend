@@ -36,16 +36,17 @@ export function SendIcon({ className }: { className?: string }) {
   );
 }
 
-export function ArrowSvg() {
+export function ArrowSvg({ className }: { className?: string }) {
   return (
     <svg
-      width="25px"
-      height="25px"
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       stroke="#b5b5b5"
-      className="group-hover:scale-110 transition-all ease-in-out group-hover:stroke-[#e6e7e8]"
+      className={cn(
+        "w-[25px] h-[25px] group-hover:scale-110 transition-[colors,scale] duration-300 ease-in-out group-hover:stroke-[#e6e7e8]",
+        className
+      )}
     >
       <path
         d="M7 10L12 15L17 10"
@@ -57,21 +58,16 @@ export function ArrowSvg() {
   );
 }
 
-export function SettingsIcon({
-  width = 25,
-  height = 25,
-}: {
-  width?: number;
-  height?: number;
-}) {
+export function SettingsIcon({ className }: { className?: string }) {
   return (
     <svg
-      width={width}
-      height={height}
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="group-hover:scale-110 transition-all ease-in-out"
+      className={cn(
+        "w-[25px] h-[25px] group-hover:scale-110 transition-all ease-in-out",
+        className
+      )}
     >
       <path
         fillRule="evenodd"
@@ -85,14 +81,15 @@ export function SettingsIcon({
   );
 }
 
-export function AddIcon() {
+export function AddIcon({ className }: { className?: string }) {
   return (
     <svg
-      width="30px"
-      height="30px"
-      viewBox="0 0 24 24"
+      viewBox="2 1.5 21 21"
       xmlns="http://www.w3.org/2000/svg"
-      className="group-hover:scale-110 transition-all ease-in-out"
+      className={cn(
+        "w-[30px] h-[30px] group-hover:scale-110 transition-all ease-in-out",
+        className
+      )}
     >
       <path
         fillRule="evenodd"
@@ -105,16 +102,17 @@ export function AddIcon() {
   );
 }
 
-export function ImageIcon() {
+export function ImageIcon({ className }: { className?: string }) {
   return (
     <svg
-      width="25px"
-      height="25px"
       viewBox="0 0 32 32"
       version="1.1"
       xmlns="http://www.w3.org/2000/svg"
       xmlnsXlink="http://www.w3.org/1999/xlink"
-      className="group-hover:scale-110 transition-all ease-in-out"
+      className={cn(
+        "w-[25px] h-[25px] group-hover:scale-110 transition-all ease-in-out",
+        className
+      )}
     >
       <defs></defs>
       <g
@@ -161,69 +159,66 @@ export function CloseIcon({ className }: { className?: string }) {
   );
 }
 
-export function TrashIcon() {
+export function TrashIcon({ className }: { className?: string }) {
   return (
     <svg
-      width="15px"
-      height="15px"
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      className={cn(
+        "w-[15px] h-[15px] shrink-0 group-hover:scale-110 transition-all ease-in-out",
+        className
+      )}
     >
       <path
         d="M9.17065 4C9.58249 2.83481 10.6937 2 11.9999 2C13.3062 2 14.4174 2.83481 14.8292 4"
-        strokeWidth="1.5"
+        strokeWidth="1"
         strokeLinecap="round"
         stroke="#f1f1f1"
+        className="group-hover:stroke-[#fffefe]"
       />
       <path
         d="M20.5 6H3.49988"
-        strokeWidth="1.5"
+        strokeWidth="1"
         strokeLinecap="round"
         stroke="#f1f1f1"
+        className="group-hover:stroke-[#fffefe]"
       />
       <path
         d="M18.3735 15.3991C18.1965 18.054 18.108 19.3815 17.243 20.1907C16.378 21 15.0476 21 12.3868 21H11.6134C8.9526 21 7.6222 21 6.75719 20.1907C5.89218 19.3815 5.80368 18.054 5.62669 15.3991L5.16675 8.5M18.8334 8.5L18.6334 11.5"
-        strokeWidth="1.5"
+        strokeWidth="1"
         strokeLinecap="round"
         stroke="#f1f1f1"
+        className="group-hover:stroke-[#fffefe]"
       />
       <path
         d="M9.5 11L10 16"
-        strokeWidth="1.5"
+        strokeWidth="1"
         strokeLinecap="round"
         stroke="#f1f1f1"
+        className="group-hover:stroke-[#fffefe]"
       />
       <path
         d="M14.5 11L14 16"
-        strokeWidth="1.5"
+        strokeWidth="1"
         strokeLinecap="round"
         stroke="#f1f1f1"
+        className="group-hover:stroke-[#fffefe]"
       />
     </svg>
   );
 }
 
-export function CheckIcon({
-  width = "12px",
-  height = "12px",
-  fill = "#ffffff",
-}: {
-  width?: string;
-  height?: string;
-  fill?: string;
-}) {
+export function CheckIcon({ className }: { className?: string }) {
   return (
     <svg
-      fill={fill}
-      height={width}
-      width={height}
       version="1.1"
       id="Capa_1"
       xmlns="http://www.w3.org/2000/svg"
       xmlnsXlink="http://www.w3.org/1999/xlink"
       viewBox="0 0 512 512"
       xmlSpace="preserve"
+      className={cn("w-[12px] h-[12px] fill-white", className)}
     >
       <g>
         <path
@@ -254,29 +249,25 @@ export function CheckIcon({
 }
 
 export function MessageReadIcon({
-  width = "12px",
-  height = "12px",
   className,
+  backgroundClassName,
   double,
 }: {
-  width?: string;
-  height?: string;
   className?: string;
+  backgroundClassName?: string;
   double?: boolean;
 }) {
   return (
     <svg
-      height={height}
-      width={width}
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
-      className="scale-110"
+      className={cn("w-[12px] h-[12px] scale-110", className)}
     >
       <g id="SVGRepo_iconCarrier">
         {/* Outer Circle */}
         <path
           d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z"
-          className={className}
+          className={backgroundClassName}
         />
 
         <g transform={`scale(${1.5}) translate(-4, -4)`}>
@@ -298,14 +289,14 @@ export function MessageReadIcon({
   );
 }
 
-export function GifIcon() {
+export function GifIcon({ className }: { className?: string }) {
   return (
     <svg
-      viewBox="0 0 24 24"
+      viewBox="2 1.5 21 21"
       version="1.1"
       xmlns="http://www.w3.org/2000/svg"
       xmlnsXlink="http://www.w3.org/1999/xlink"
-      className="w-[25px] h-[25px] sm:w-[30px] sm:h-[30px]"
+      className={cn("w-[25px] h-[25px] sm:w-[30px] sm:h-[30px]", className)}
     >
       <g stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
         <g
@@ -321,11 +312,9 @@ export function GifIcon() {
   );
 }
 
-export function AddUsersIcon() {
+export function AddUsersIcon({ className }: { className?: string }) {
   return (
     <svg
-      height="25px"
-      width="25px"
       version="1.1"
       id="Layer_1"
       xmlns="http://www.w3.org/2000/svg"
@@ -333,7 +322,10 @@ export function AddUsersIcon() {
       viewBox="0 0 368.373 368.373"
       xmlSpace="preserve"
       fill="#949496"
-      className="group-hover:fill-white group-hover:scale-110 transition-all ease-in-out"
+      className={cn(
+        "w-[25px] h-[25px] group-hover:fill-white group-hover:scale-110 transition-all ease-in-out",
+        className
+      )}
     >
       <g id="XMLID_91_">
         <path
@@ -371,11 +363,9 @@ export function AddUsersIcon() {
   );
 }
 
-export function BackIcon() {
+export function BackIcon({ className }: { className?: string }) {
   return (
     <svg
-      height="17px"
-      width="17px"
       version="1.1"
       id="Layer_1"
       xmlns="http://www.w3.org/2000/svg"
@@ -383,7 +373,10 @@ export function BackIcon() {
       viewBox="0 0 330 330"
       xmlSpace="preserve"
       fill="#949496"
-      className="group-hover:fill-white group-hover:scale-110 transition-all ease-in-out"
+      className={cn(
+        "w-[17px] h-[17px] group-hover:fill-white group-hover:scale-110 transition-all ease-in-out",
+        className
+      )}
     >
       <path
         id="XMLID_6_"
@@ -396,22 +389,17 @@ export function BackIcon() {
   );
 }
 
-export function FileIcon({
-  width = "100px",
-  height = "100px",
-}: {
-  width?: string;
-  height?: string;
-}) {
+export function FileIcon({ className }: { className?: string }) {
   return (
     <svg
-      width={width}
-      height={height}
       viewBox="2 2 20 21"
       fill="none"
       fillRule="evenodd"
       xmlns="http://www.w3.org/2000/svg"
-      className="group-hover/file:fill-white/80 group-hover/file:scale-110 transition-all ease-in-out"
+      className={cn(
+        "w-[100px] h-[100px] group-hover/file:fill-white/80 group-hover/file:scale-110 transition-all ease-in-out",
+        className
+      )}
     >
       <path
         d="M20 9.98822V17.2C20 18.8802 20 19.7202 19.673 20.362C19.3854 20.9265 18.9265 21.3854 18.362 21.673C17.7202 22 16.8802 22 15.2 22H8.8C7.11984 22 6.27976 22 5.63803 21.673C5.07354 21.3854 4.6146 20.9265 4.32698 20.362C4 19.7202 4 18.8802 4 17.2V6.8C4 5.11984 4 4.27976 4.32698 3.63803C4.6146 3.07354 5.07354 2.6146 5.63803 2.32698C6.27976 2 7.11984 2 8.8 2H12.0118C12.7455 2 13.1124 2 13.4577 2.08289C13.7638 2.15638 14.0564 2.27759 14.3249 2.44208C14.6276 2.6276 14.887 2.88703 15.4059 3.40589L18.5941 6.59411C19.113 7.11297 19.3724 7.3724 19.5579 7.67515C19.7224 7.94356 19.8436 8.2362 19.9171 8.5423C20 8.88757 20 9.25445 20 9.98822Z"
@@ -428,15 +416,16 @@ export function FileIcon({
   );
 }
 
-export function VideoIcon() {
+export function VideoIcon({ className }: { className?: string }) {
   return (
     <svg
-      width="25px"
-      height="25px"
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="group-hover:stroke-white/80 group-hover:scale-110 transition-all ease-in-out"
+      className={cn(
+        "w-[25px] h-[25px] group-hover:stroke-white/80 group-hover:scale-110 transition-all ease-in-out",
+        className
+      )}
     >
       <path
         d="M19.5617 7C19.7904 5.69523 18.7863 4.5 17.4617 4.5H6.53788C5.21323 4.5 4.20922 5.69523 4.43784 7"
@@ -463,17 +452,9 @@ export function VideoIcon() {
   );
 }
 
-export function CallIcon({
-  width = "25px",
-  height = "25px",
-}: {
-  width?: string;
-  height?: string;
-}) {
+export function CallIcon({ className }: { className?: string }) {
   return (
     <svg
-      height={width}
-      width={height}
       version="1.1"
       id="Capa_1"
       xmlns="http://www.w3.org/2000/svg"
@@ -481,7 +462,10 @@ export function CallIcon({
       viewBox="0 0 473.806 473.806"
       xmlSpace="preserve"
       fill="#ababab"
-      className="group-hover:fill-white group-hover:scale-110 transition-all ease-in-out"
+      className={cn(
+        "w-[25px] h-[25px] group-hover:fill-white group-hover:scale-110 transition-all ease-in-out",
+        className
+      )}
     >
       <g>
         <g>
@@ -519,15 +503,16 @@ export function CallIcon({
   );
 }
 
-export function AudioIcon() {
+export function AudioIcon({ className }: { className?: string }) {
   return (
     <svg
-      width="25px"
-      height="25px"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
-      className="group-hover:scale-110 transition-all ease-in-out"
+      className={cn(
+        "w-[25px] h-[25px] group-hover:scale-110 transition-all ease-in-out",
+        className
+      )}
     >
       <path d="M9.66984 13.9219C8.92984 13.9219 8.33984 14.5219 8.33984 15.2619C8.33984 16.0019 8.93984 16.5919 9.66984 16.5919C10.4098 16.5919 11.0098 15.9919 11.0098 15.2619C11.0098 14.5219 10.4098 13.9219 9.66984 13.9219Z" />
       <path
@@ -539,15 +524,16 @@ export function AudioIcon() {
   );
 }
 
-export function InfoIcon() {
+export function InfoIcon({ className }: { className?: string }) {
   return (
     <svg
-      width="25px"
-      height="25px"
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="group-hover:scale-110 transition-all ease-in-out"
+      className={cn(
+        "w-[25px] h-[25px] group-hover:scale-110 transition-all ease-in-out",
+        className
+      )}
     >
       <path
         d="M12 17V11"
@@ -575,42 +561,38 @@ export function InfoIcon() {
   );
 }
 
-export function EditIcon({
-  width = "20px",
-  height = "20px",
-}: {
-  width?: string;
-  height?: string;
-}) {
+export function EditIcon({ className }: { className?: string }) {
   return (
     <svg
-      width={width}
-      height={height}
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="group-hover:scale-110 transition-all ease-in-out group"
+      className={cn(
+        "w-[20px] h-[20px] shrink-0 group-hover:scale-110 transition-all ease-in-out",
+        className
+      )}
     >
       <path
         d="M20 12C20 16.4183 16.4183 20 12 20C7.58172 20 4 16.4183 4 12C4 7.58172 7.58172 4 12 4M9.35443 12.4346L15.9429 5.92003C16.4684 5.40046 17.3049 5.3718 17.8647 5.85418C18.4812 6.38542 18.5247 7.32554 17.96 7.91149L11.481 14.6335L9 15L9.35443 12.4346Z"
         strokeLinecap="round"
         strokeLinejoin="round"
-        stroke="#D9D9D9"
-        className="group-hover:stroke-[#e6e7e8]"
+        stroke="#f1f1f1"
+        className="group-hover:stroke-[#fffefe]"
       />
     </svg>
   );
 }
 
-export function MuteAudioIcon() {
+export function MuteAudioIcon({ className }: { className?: string }) {
   return (
     <svg
-      width="25px"
-      height="25px"
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="group-hover:scale-110 transition-all ease-in-out"
+      className={cn(
+        "w-[25px] h-[25px] group-hover:scale-110 transition-all ease-in-out",
+        className
+      )}
     >
       <path
         d="M15 5.25C15 4.98265 14.8577 4.73551 14.6264 4.60132C14.3952 4.46713 14.11 4.46617 13.8779 4.59882L8.80083 7.5H5.25C4.83579 7.5 4.5 7.83579 4.5 8.25V15.75C4.5 16.1642 4.83579 16.5 5.25 16.5H8.80083L13.8779 19.4012C14.11 19.5338 14.3952 19.5329 14.6264 19.3987C14.8577 19.2645 15 19.0174 15 18.75V5.25Z"
@@ -626,17 +608,18 @@ export function MuteAudioIcon() {
   );
 }
 
-export function MuteMicIcon() {
+export function MuteMicIcon({ className }: { className?: string }) {
   return (
     <svg
-      width="25px"
-      height="25px"
       viewBox="0 0 64 64"
       xmlns="http://www.w3.org/2000/svg"
       strokeWidth="5"
       fill="none"
       stroke="#b5b5b5"
-      className="group-hover:scale-110 transition-all ease-in-out group-hover:stroke-[#e6e7e8]"
+      className={cn(
+        "w-[25px] h-[25px] group-hover:scale-110 transition-all ease-in-out group-hover:stroke-[#e6e7e8]",
+        className
+      )}
     >
       <path
         d="M47.67,28.43v3.38a15.67,15.67,0,0,1-31.34,0V28.43"
@@ -657,17 +640,18 @@ export function MuteMicIcon() {
   );
 }
 
-export function UnmuteMicIcon() {
+export function UnmuteMicIcon({ className }: { className?: string }) {
   return (
     <svg
-      width="25px"
-      height="25px"
       viewBox="0 0 64 64"
       xmlns="http://www.w3.org/2000/svg"
       strokeWidth="5"
       fill="none"
       stroke="#b5b5b5"
-      className="group-hover:scale-110 transition-all ease-in-out group-hover:stroke-[#e6e7e8]"
+      className={cn(
+        "w-[25px] h-[25px] group-hover:scale-110 transition-all ease-in-out group-hover:stroke-[#e6e7e8]",
+        className
+      )}
     >
       <path
         d="M47.67,28.43v3.38a15.67,15.67,0,0,1-31.34,0V28.43"
@@ -689,21 +673,24 @@ export function UnmuteMicIcon() {
 
 export function ScreenShareIcon({
   screenShare = false,
+  className,
 }: {
   screenShare?: boolean;
+  className?: string;
 }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="25px"
-      height="25px"
       viewBox="0 0 24 24"
       fill="none"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
       stroke="#b5b5b5"
-      className="group-hover:scale-110 transition-all ease-in-out group-hover:stroke-[#e6e7e8]"
+      className={cn(
+        "w-[25px] h-[25px] group-hover:scale-110 transition-all ease-in-out group-hover:stroke-[#e6e7e8]",
+        className
+      )}
     >
       <path d="M13 3H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2v-3" />
       <path d="M8 21h8" />
@@ -723,15 +710,16 @@ export function ScreenShareIcon({
   );
 }
 
-export function VideoCallIcon() {
+export function VideoCallIcon({ className }: { className?: string }) {
   return (
     <svg
-      width="25px"
-      height="25px"
-      viewBox="0 0 24 24"
+      viewBox="1.5 1.5 21 21"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="group-hover:scale-110 transition-all ease-in-out"
+      className={cn(
+        "w-[25px] h-[25px] group-hover:scale-110 transition-all ease-in-out",
+        className
+      )}
     >
       <path
         d="M16 10L18.5768 8.45392C19.3699 7.97803 19.7665 7.74009 20.0928 7.77051C20.3773 7.79703 20.6369 7.944 20.806 8.17433C21 8.43848 21 8.90095 21 9.8259V14.1741C21 15.099 21 15.5615 20.806 15.8257C20.6369 16.056 20.3773 16.203 20.0928 16.2295C19.7665 16.2599 19.3699 16.022 18.5768 15.5461L16 14M6.2 18H12.8C13.9201 18 14.4802 18 14.908 17.782C15.2843 17.5903 15.5903 17.2843 15.782 16.908C16 16.4802 16 15.9201 16 14.8V9.2C16 8.0799 16 7.51984 15.782 7.09202C15.5903 6.71569 15.2843 6.40973 14.908 6.21799C14.4802 6 13.9201 6 12.8 6H6.2C5.0799 6 4.51984 6 4.09202 6.21799C3.71569 6.40973 3.40973 6.71569 3.21799 7.09202C3 7.51984 3 8.07989 3 9.2V14.8C3 15.9201 3 16.4802 3.21799 16.908C3.40973 17.2843 3.71569 17.5903 4.09202 17.782C4.51984 18 5.07989 18 6.2 18Z"
@@ -745,15 +733,16 @@ export function VideoCallIcon() {
   );
 }
 
-export function StopVideoIcon() {
+export function StopVideoIcon({ className }: { className?: string }) {
   return (
     <svg
-      width="25px"
-      height="25px"
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="group-hover:scale-110 transition-all ease-in-out"
+      className={cn(
+        "w-[25px] h-[25px] group-hover:scale-110 transition-all ease-in-out",
+        className
+      )}
     >
       <path
         d="M11.65 6H12.8C13.9201 6 14.4802 6 14.908 6.21799C15.2843 6.40973 15.5903 6.71569 15.782 7.09202C16 7.51984 16 8.0799 16 9.2V10L18.5768 8.45392C19.3699 7.97803 19.7665 7.74009 20.0928 7.77051C20.3773 7.79703 20.6369 7.944 20.806 8.17433C21 8.43848 21 8.90095 21 9.8259V14.1741C21 14.679 21 15.0462 20.9684 15.3184M3 3L6.00005 6.00005M21 21L15.9819 15.9819M6.00005 6.00005C5.01167 6.00082 4.49359 6.01337 4.09202 6.21799C3.71569 6.40973 3.40973 6.71569 3.21799 7.09202C3 7.51984 3 8.07989 3 9.2V14.8C3 15.9201 3 16.4802 3.21799 16.908C3.40973 17.2843 3.71569 17.5903 4.09202 17.782C4.51984 18 5.07989 18 6.2 18H12.8C13.9201 18 14.4802 18 14.908 17.782C15.2843 17.5903 15.5903 17.2843 15.782 16.908C15.9049 16.6668 15.9585 16.3837 15.9819 15.9819M6.00005 6.00005L15.9819 15.9819"
@@ -767,21 +756,16 @@ export function StopVideoIcon() {
   );
 }
 
-export function RejectCallIcon({
-  width = "25px",
-  height = "25px",
-}: {
-  width?: string;
-  height?: string;
-}) {
+export function RejectCallIcon({ className }: { className?: string }) {
   return (
     <svg
-      width={width}
-      height={height}
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
       fill="#b5b5b5"
-      className="group-hover:scale-110 transition-all ease-in-out group-hover:fill-[#e6e7e8]"
+      className={cn(
+        "w-[25px] h-[25px] group-hover:scale-110 transition-all ease-in-out group-hover:fill-[#e6e7e8]",
+        className
+      )}
     >
       <path
         fillRule="evenodd"
@@ -798,7 +782,7 @@ export function EmojiIcon({ className }: { className?: string }) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={cn(
-        "group-hover:scale-110 transition-all ease-in-out w-[25px] h-[25px] sm:w-[30px] sm:h-[30px]",
+        "w-[25px] h-[25px] sm:w-[30px] sm:h-[30px] group-hover:scale-110 transition-all ease-in-out",
         className
       )}
     >
@@ -844,35 +828,38 @@ export function EmojiIcon({ className }: { className?: string }) {
   );
 }
 
-export function PopUpIcon() {
+export function PopUpIcon({ className }: { className?: string }) {
   return (
     <svg
-      width="20px"
-      height="20px"
       viewBox="0 0 32 32"
       version="1.1"
       xmlns="http://www.w3.org/2000/svg"
       fill="#d2d0d0"
-      className="group-hover:fill-[#e6e7e8]"
+      className={cn("w-[20px] h-[20px] group-hover:fill-[#e6e7e8]", className)}
     >
       <path d="M15.694 13.541l2.666 2.665 5.016-5.017 2.59 2.59 0.004-7.734-7.785-0.046 2.526 2.525-5.017 5.017zM25.926 16.945l-1.92-1.947 0.035 9.007-16.015 0.009 0.016-15.973 8.958-0.040-2-2h-7c-1.104 0-2 0.896-2 2v16c0 1.104 0.896 2 2 2h16c1.104 0 2-0.896 2-2l-0.074-7.056z"></path>
     </svg>
   );
 }
 
-export function CameraOrientationSwitchIcon() {
+export function CameraOrientationSwitchIcon({
+  className,
+}: {
+  className?: string;
+}) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="25px"
-      height="25px"
       fill="none"
       viewBox="0 0 24 24"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
       stroke="#d2d0d0"
-      className="group-hover:stroke-[#e6e7e8] group-hover:scale-110 transition-all ease-in-out"
+      className={cn(
+        "w-[25px] h-[25px] group-hover:stroke-[#e6e7e8] group-hover:scale-110 transition-all ease-in-out",
+        className
+      )}
     >
       <path d="M11 19H4a2 2 0 01-2-2V7a2 2 0 012-2h5" />
       <path d="M13 5h7a2 2 0 012 2v10a2 2 0 01-2 2h-5" />
@@ -883,15 +870,16 @@ export function CameraOrientationSwitchIcon() {
   );
 }
 
-export function VolumeIcon() {
+export function VolumeIcon({ className }: { className?: string }) {
   return (
     <svg
-      width="25px"
-      height="25px"
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="group-hover:scale-110 transition-all ease-in-out"
+      className={cn(
+        "w-[25px] h-[25px] group-hover:scale-110 transition-all ease-in-out",
+        className
+      )}
     >
       <path
         d="M5.00304 11.7155C5.04093 9.87326 5.05988 8.95215 5.68099 8.16363C5.79436 8.0197 5.9607 7.8487 6.10011 7.73274C6.86393 7.09741 7.8724 7.09741 9.88932 7.09741C10.6099 7.09741 10.9702 7.09741 11.3137 7.00452C11.385 6.98522 11.4556 6.96296 11.5253 6.93781C11.8608 6.81674 12.1616 6.60837 12.7632 6.19161C15.137 4.54738 16.3239 3.72527 17.3201 4.08241C17.5111 4.15088 17.6959 4.24972 17.8611 4.37162C18.7222 5.00744 18.7877 6.48675 18.9185 9.44538C18.967 10.5409 19 11.4785 19 12C19 12.5215 18.967 13.4591 18.9185 14.5546C18.7877 17.5132 18.7222 18.9926 17.8611 19.6284C17.6959 19.7503 17.5111 19.8491 17.3201 19.9176C16.3239 20.2747 15.137 19.4526 12.7632 17.8084C12.1616 17.3916 11.8608 17.1833 11.5253 17.0622C11.4556 17.037 11.385 17.0148 11.3137 16.9955C10.9702 16.9026 10.6099 16.9026 9.88932 16.9026C7.8724 16.9026 6.86393 16.9026 6.10011 16.2673C5.9607 16.1513 5.79436 15.9803 5.68099 15.8364C5.05988 15.0478 5.04093 14.1267 5.00304 12.2845C5.00104 12.1878 5 12.0928 5 12C5 11.9072 5.00104 11.8122 5.00304 11.7155Z"

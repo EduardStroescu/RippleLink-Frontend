@@ -6,15 +6,17 @@ import {
   PopoverTrigger,
 } from "@/components/ui/Popover";
 
-interface FileUploadOverlayProps {
+interface MessageOptionsOverlayProps {
   content?: React.ReactElement<{
     setOpen?: React.Dispatch<React.SetStateAction<boolean>>;
   }>;
+  portalInto?: Element | null;
   children: React.ReactNode;
 }
 
-export const FileUploadOverlay: React.FC<FileUploadOverlayProps> = ({
+export const MessageOptionsOverlay: React.FC<MessageOptionsOverlayProps> = ({
   content,
+  portalInto,
   children,
 }) => {
   const [open, setOpen] = useState(false);
@@ -25,17 +27,19 @@ export const FileUploadOverlay: React.FC<FileUploadOverlayProps> = ({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        title="Add File(s)"
-        aria-label="Add File(s)"
-        className="cursor-pointer group"
-      >
-        {children}
-      </PopoverTrigger>
+      <div className="w-[40px] h-[35px] absolute z-[10] justify-end py-1 px-1.5 -right-1 -top-1 invisible pointer-events-none group-hover/message:visible flex bg-message-gradient">
+        <PopoverTrigger
+          title="Options"
+          aria-label="Options"
+          className="cursor-pointer group rotate-180 h-fit group-hover/message:pointer-events-auto"
+        >
+          {children}
+        </PopoverTrigger>
+      </div>
       <PopoverContent
-        align="start"
+        container={portalInto}
+        align="end"
         side="top"
-        sideOffset={25}
         className="p-0 border-none w-auto"
       >
         {contentWithProps}

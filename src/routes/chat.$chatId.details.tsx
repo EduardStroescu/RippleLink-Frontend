@@ -106,6 +106,7 @@ function ChatDetails() {
                       >
                         <AvatarCoin
                           width={30}
+                          shouldInvalidate
                           source={interlocutor?.avatarUrl || placeholderAvatar}
                           alt={interlocutor.displayName}
                         />

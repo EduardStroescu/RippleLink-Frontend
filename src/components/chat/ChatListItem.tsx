@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 
+import { TrashIcon } from "@/components/Icons";
 import { AvatarCoin } from "@/components/ui/AvatarCoin";
-import { DeleteButton } from "@/components/ui/DeleteButton";
 import { placeholderAvatar } from "@/lib/const";
 import { getLastMessageDate } from "@/lib/utils";
 import { Message } from "@/types/message";
@@ -29,7 +29,7 @@ export const ChatListItem = ({
       to={`/chat/${linkTo}`}
       preload={false}
       activeProps={activeProps}
-      className="flex items-center text-white hover:bg-black/80 group"
+      className="flex items-center text-white hover:bg-black/80 group/chat"
     >
       <AvatarCoin
         source={avatarUrl || placeholderAvatar}
@@ -54,19 +54,21 @@ export const ChatListItem = ({
         </p>
       </div>
       <div className="flex gap-2 items-center border-b-[1px] border-slate-700 h-full">
-        <p className="text-xs font-normal pr-2 group-hover:pr-0">
+        <p className="text-xs font-normal pr-2 group-hover/chat:pr-0">
           {getLastMessageDate(lastMessage.createdAt, "ro-RO")}
         </p>
-        <DeleteButton
+        <button
           title="Delete Chat"
           aria-label="Delete Chat"
-          className="group pr-2 hidden group-hover:block"
+          className="group mr-2 hidden group-hover/chat:block"
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
             handleDeleteChat(linkTo);
           }}
-        />
+        >
+          <TrashIcon />
+        </button>
       </div>
     </Link>
   );

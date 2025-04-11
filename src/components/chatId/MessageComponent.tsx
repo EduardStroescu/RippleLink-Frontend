@@ -1,20 +1,22 @@
+import { useParams } from "@tanstack/react-router";
 import { VirtualItem, Virtualizer } from "@tanstack/react-virtual";
-import { memo, useState } from "react";
+import { memo, useCallback, useState } from "react";
 
 import { DateTag } from "@/components/chatId/DateTag";
 import { MessageContent } from "@/components/chatId/MessageContent";
 import { MessageEditor } from "@/components/chatId/MessageEditor";
+import { MessageOptionsOverlay } from "@/components/chatId/MessageOptionsOverlay";
+import { MessageOptionsOverlayContent } from "@/components/chatId/MessageOptionsOverlayContent";
 import { MessageReadIndicator } from "@/components/chatId/MessageReadIndicator";
-import { EditIcon } from "@/components/Icons";
-import { DeleteButton } from "@/components/ui/DeleteButton";
+import { ArrowSvg } from "@/components/Icons";
 import { canEditMessage, getLocalDate } from "@/lib/utils";
+import { useAppStoreActions } from "@/stores/useAppStore";
 import { useUserStore } from "@/stores/useUserStore";
 import { Message, TextMessage } from "@/types/message";
 
 interface MessageComponentProps {
   isNewDay: boolean;
   message: Message;
-  handleDelete: (messageId: string) => void;
   idx: number;
   virtualItemStart: VirtualItem["start"];
   virtualizer: Virtualizer<HTMLDivElement, Element>;
@@ -25,7 +27,6 @@ interface MessageComponentProps {
 export const MessageComponent = memo(function MessageComponent({
   isNewDay,
   message,
-  handleDelete,
   idx,
   virtualItemStart,
   virtualizer,
@@ -34,11 +35,26 @@ export const MessageComponent = memo(function MessageComponent({
 }: MessageComponentProps) {
   const user = useUserStore((state) => state.user);
   const [isEditing, setIsEditing] = useState(false);
+  const { chatId } = useParams({ from: "/chat/$chatId" });
+  const { socketEmit } = useAppStoreActions();
 
   const isOwnMessage = message.senderId._id === user?._id;
   const messageCreatedAt = getLocalDate(message.createdAt, "ro-RO").time;
-  const ableToEditMessage = canEditMessage(isOwnMessage, message);
+  const ableToEditMessage = isOwnMessage && canEditMessage(message);
   const ableToDeleteMessage = isOwnMessage && canDeleteMessage;
+
+  const handleDelete = useCallback(
+    (messageId: string) => {
+      if (!ableToDeleteMessage) return;
+      socketEmit("deleteMessage", { chatId, messageId });
+    },
+    [chatId, socketEmit, ableToDeleteMessage]
+  );
+
+  const handleStartEditing = useCallback(() => {
+    if (!ableToEditMessage) return;
+    setIsEditing((prev) => !prev);
+  }, [ableToEditMessage]);
 
   return (
     <li
@@ -58,11 +74,11 @@ export const MessageComponent = memo(function MessageComponent({
         // Added slide and opacity animations to mask some of the jank from the virtualizer
         className={`${
           isOwnMessage
-            ? "justify-end slide-in-from-right-1/2"
+            ? "justify-end slide-in-from-right-1/2 group/message"
             : message.type === "event"
               ? "justify-center"
               : "justify-start slide-in-from-left-1/2"
-        } group flex flex-row gap-2 items-center max-w-full py-1 animate-in fade-in duration-500 ease-in-out`}
+        } flex flex-row gap-2 items-center max-w-full py-1 animate-in fade-in duration-500 ease-in-out`}
       >
         {message.type !== "event" ? (
           <div
@@ -80,16 +96,6 @@ export const MessageComponent = memo(function MessageComponent({
                 />
               )}
               <div className="flex gap-1 items-center self-end">
-                {ableToEditMessage && (
-                  <button
-                    onClick={() => setIsEditing((prev) => !prev)}
-                    className="hidden group-hover:block"
-                    title={isEditing ? "Save Message" : "Edit Message"}
-                    aria-label={isEditing ? "Save Message" : "Edit Message"}
-                  >
-                    <EditIcon width="13px" height="13px" />
-                  </button>
-                )}
                 {!isOwnMessage && (
                   <p className="text-xs text-slate-200">
                     {message.senderId.displayName}
@@ -105,16 +111,19 @@ export const MessageComponent = memo(function MessageComponent({
                 )}
               </div>
             </div>
-            {ableToDeleteMessage && (
-              <div className="w-[40px] h-[35px] absolute z-[10] justify-end py-1.5 px-2 -right-1 -top-1 hidden group-hover:flex bg-message-gradient pointer-events-none">
-                <DeleteButton
-                  title="Delete Message"
-                  aria-label="Delete Message"
-                  className="group h-fit pointer-events-auto"
-                  onClick={() => handleDelete(message._id)}
+            <MessageOptionsOverlay
+              portalInto={virtualizer.scrollElement?.parentElement}
+              content={
+                <MessageOptionsOverlayContent
+                  ableToEditMessage={ableToEditMessage}
+                  ableToDeleteMessage={ableToDeleteMessage}
+                  handleDelete={() => handleDelete(message._id)}
+                  handleStartEditing={handleStartEditing}
                 />
-              </div>
-            )}
+              }
+            >
+              <ArrowSvg className="w-[20px] h-[20px]" />
+            </MessageOptionsOverlay>
           </div>
         ) : (
           <div className="bg-black/60 relative flex flex-row py-2 px-2 max-w-full md:max-w-md lg:max-w-xl rounded-md overflow-hidden">

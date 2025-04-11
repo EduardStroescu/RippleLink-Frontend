@@ -255,7 +255,7 @@ export const CreateMessageForm = memo(function CreateMessageForm({
       )}
       {shouldRenderInput && (
         <div
-          className={`${!contentPreview ? "fade-in-up" : "fade-out-down"} py-3 px-2 sm:px-6 flex justify-center items-center gap-1 sm:gap-4 text-white border-t-slate-700 border-t-[1px]`}
+          className={`${!contentPreview ? "fade-in-up" : "fade-out-down"} py-3 px-2 sm:px-6 flex justify-center items-center gap-1 sm:gap-2 text-white border-t-slate-700 border-t-[1px]`}
         >
           <FileUploadOverlay
             content={
@@ -264,7 +264,7 @@ export const CreateMessageForm = memo(function CreateMessageForm({
               />
             }
           >
-            <AddIcon />
+            <AddIcon className="w-[25px] h-[25px] sm:w-[30px] sm:h-[30px]" />
           </FileUploadOverlay>
           <CustomChatInput
             disabled={!!contentPreview}

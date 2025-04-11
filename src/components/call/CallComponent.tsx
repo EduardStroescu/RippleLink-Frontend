@@ -198,7 +198,7 @@ export const CallComponent = memo(function CallComponent({
             />
             <MediaDevicesPicker getValue={handleSwitchDevice}>
               <div className="p-1 max-w-fit h-fit rounded-full bg-blue-950 hover:bg-blue-900">
-                <SettingsIcon width={20} height={20} />
+                <SettingsIcon className="w-[20px] h-[20px]" />
               </div>
             </MediaDevicesPicker>
           </>

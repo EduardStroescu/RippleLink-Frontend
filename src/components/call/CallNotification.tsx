@@ -104,7 +104,7 @@ export const CallNotification = memo(function CallNotification() {
                 onClick={() => handleCallAnswer(call)}
                 className="group p-2 bg-green-950 rounded-full hover:bg-green-900"
               >
-                <CallIcon width="15px" height="15px" />
+                <CallIcon className="w-[15px] h-[15px]" />
               </button>
               <button
                 onClick={() => handleRejectCall(call)}
