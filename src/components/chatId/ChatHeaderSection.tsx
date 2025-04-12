@@ -2,7 +2,6 @@ import { getRouteApi, Link } from "@tanstack/react-router";
 import { memo } from "react";
 
 import { ChatHeaderDetails } from "@/components/chatId/ChatHeaderDetails";
-import { CustomDialogTrigger } from "@/components/CustomDialogTrigger";
 import { SearchUsersForm } from "@/components/forms/SearchUsersForm";
 import {
   AddUsersIcon,
@@ -10,6 +9,7 @@ import {
   InfoIcon,
   VideoCallIcon,
 } from "@/components/Icons";
+import { CustomDialogTrigger } from "@/components/ui/CustomDialogTrigger";
 import { groupAvatar, placeholderAvatar } from "@/lib/const";
 import { useChatName } from "@/lib/hooks/useChatName";
 import { useIsInterlocutorOnline } from "@/lib/hooks/useIsInterlocutorOnline";

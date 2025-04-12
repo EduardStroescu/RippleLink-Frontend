@@ -86,14 +86,14 @@ export const ChatHeaderDetails = memo(function ChatHeaderDetails({
           {handleEditChatName && (
             <button
               onClick={handleEditChatName}
-              className="flex items-center justify-center"
+              className="group flex items-center justify-center"
               title={isEditingChatName ? "Save Chat Name" : "Edit Chat Name"}
               aria-label={
                 isEditingChatName ? "Save Chat Name" : "Edit Chat Name"
               }
             >
               {isEditingChatName ? (
-                <CheckIcon width="15px" height="15px" />
+                <CheckIcon className="w-[15px] h-[15px]" />
               ) : (
                 <EditIcon />
               )}

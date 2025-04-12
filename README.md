@@ -4,10 +4,12 @@
 
 # RippleLink FrontEnd
 
+### Link to the Live Demo: https://ripple-link.vercel.app
+
 ### Links to the Backend:
 
-https://github.com/EduardStroescu/RippleLink-Backend - Backend GIT Repository
-https://ripple-link.koyeb.app - Backend Home Page
+https://github.com/EduardStroescu/RippleLink-Backend - Backend GIT Repository<br>
+https://ripple-link.koyeb.app - Backend Home Page<br>
 https://ripple-link.koyeb.app/api/docs - Backend API Documentation made with Swagger
 
 # Introduction
@@ -18,7 +20,7 @@ Full-Stack live calls and messaging service using SocketIO, WebRTC and NestJS wi
 
 Used Tanstack Router in combination with Tanstack Query in order to preload and manage the content required for all routes. Real-time data comes through web sockets with SocketIO, and calls are made through a WebRTC mesh pattern with simple-peer(please check the notes from the bottom of the page regarding WebRTC). Any media uploaded by the users is sent to Cloudinary where it gets optimized and linked to the users stored on the backend.
 
-In order not to keep asking the user to log in for every visit I've used the browser's local storage to keep track of the user's last session state (JWT), which is then managed by Zustand. I know local storage is not the best option, but for the moment it suits my needs, as the app is not used in production.
+In order not to keep asking the user to log in for every visit I've used the browser's local storage to keep track of the user's last session state (JWT), which is then managed by Zustand. I know local storage is not the best option, but for the moment it suits my needs.
 
 ## Technologies Used
 
@@ -79,4 +81,4 @@ For both individual and group calls, I've implemented a Mesh Pattern WebRTC conn
 
 To address this scalability issue, a more efficient approach would be to implement an SFU (Selective Forwarding Unit) pattern. In this model, a backend server acts as a media relay, with clients sending their video and audio streams to the server. The server then forwards these streams to the other clients, reducing the number of connections each peer needs to manage.
 
-For my purposes the current implementation is sufficient. Maybe I'll consider implementing the SFU pattern in the future, it depends. If you want to look into it check out [MediaSoup](https://mediasoup.org/).
+For my purposes the current implementation is sufficient. I'll consider implementing the SFU pattern in the future. If you want to look into it check out [MediaSoup](https://mediasoup.org/).

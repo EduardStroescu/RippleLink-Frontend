@@ -3,9 +3,9 @@ import { useRouter } from "@tanstack/react-router";
 import React from "react";
 
 import { userApi } from "@/api/modules/user.api";
-import { CustomDialogTrigger } from "@/components/CustomDialogTrigger";
 import { ChangeAvatarForm } from "@/components/forms/ChangeAvatarForm";
 import { ChangeStatusForm } from "@/components/forms/ChangeStatusForm";
+import { CustomDialogTrigger } from "@/components/ui/CustomDialogTrigger";
 import {
   Popover,
   PopoverContent,

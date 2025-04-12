@@ -125,8 +125,7 @@ export function RegisterForm() {
           autoFocus
           type="text"
           placeholder="Email"
-          className="rounded p-1.5
-           transition-colors ease-in-out duration-700 text-center shadow-lg shadow-cyan-500/50 text-white bg-neutral-950 focus-within:bg-black hover:bg-black text-xl outline-none"
+          className="rounded p-1.5 transition-[color,background-color,shadow] ease-in-out duration-700 text-center shadow-lg shadow-cyan-500/50 hover:shadow-cyan-400/50 focus:shadow-cyan-400/50 text-white bg-neutral-950 focus-within:bg-black hover:bg-black text-xl outline-none"
         />
       </div>
       <div className="flex flex-col gap-1">
@@ -137,8 +136,7 @@ export function RegisterForm() {
           {...register("firstName")}
           type="text"
           placeholder="First Name"
-          className="rounded p-1.5
-           transition-colors ease-in-out duration-700 text-center shadow-lg shadow-cyan-500/50 text-white bg-neutral-950 focus-within:bg-black hover:bg-black text-xl outline-none"
+          className="rounded p-1.5 transition-[color,background-color,shadow] ease-in-out duration-700 text-center shadow-lg shadow-cyan-500/50 hover:shadow-cyan-400/50 focus:shadow-cyan-400/50 text-white bg-neutral-950 focus-within:bg-black hover:bg-black text-xl outline-none"
         />
       </div>
       <div className="flex flex-col gap-1">
@@ -149,8 +147,7 @@ export function RegisterForm() {
           {...register("lastName")}
           type="text"
           placeholder="Last Name"
-          className="rounded p-1.5
-           transition-colors ease-in-out duration-700 text-center shadow-lg shadow-cyan-500/50 text-white bg-neutral-950 focus-within:bg-black hover:bg-black text-xl outline-none"
+          className="rounded p-1.5 transition-[color,background-color,shadow] ease-in-out duration-700 text-center shadow-lg shadow-cyan-500/50 hover:shadow-cyan-400/50 focus:shadow-cyan-400/50 text-white bg-neutral-950 focus-within:bg-black hover:bg-black text-xl outline-none"
         />
       </div>
       <div className="flex flex-col gap-1">
@@ -161,8 +158,7 @@ export function RegisterForm() {
           {...register("displayName", { required: false })}
           placeholder="Display Name"
           type="text"
-          className="rounded p-1.5
-           transition-colors ease-in-out duration-700 text-center shadow-lg shadow-cyan-500/50 text-white bg-neutral-950 focus-within:bg-black hover:bg-black text-xl outline-none"
+          className="rounded p-1.5 transition-[color,background-color,shadow] ease-in-out duration-700 text-center shadow-lg shadow-cyan-500/50 hover:shadow-cyan-400/50 focus:shadow-cyan-400/50 text-white bg-neutral-950 focus-within:bg-black hover:bg-black text-xl outline-none"
         />
       </div>
       <div className="flex flex-col gap-1">
@@ -173,8 +169,7 @@ export function RegisterForm() {
           {...register("password")}
           type="password"
           placeholder="Password"
-          className="rounded p-1.5
-           transition-colors ease-in-out duration-700 text-center shadow-lg shadow-cyan-500/50 text-white bg-neutral-950 focus-within:bg-black hover:bg-black text-xl outline-none"
+          className="rounded p-1.5 transition-[color,background-color,shadow] ease-in-out duration-700 text-center shadow-lg shadow-cyan-500/50 hover:shadow-cyan-400/50 focus:shadow-cyan-400/50 text-white bg-neutral-950 focus-within:bg-black hover:bg-black text-xl outline-none"
         />
       </div>
       <div className="flex flex-col gap-1">
@@ -187,8 +182,7 @@ export function RegisterForm() {
           {...register("confirmPassword")}
           type="password"
           placeholder="Confirm Password"
-          className="rounded p-1.5
-           transition-colors ease-in-out duration-700 text-center shadow-lg shadow-cyan-500/50 text-white bg-neutral-950 focus-within:bg-black hover:bg-black text-xl outline-none"
+          className="rounded p-1.5 transition-[color,background-color,shadow] ease-in-out duration-700 text-center shadow-lg shadow-cyan-500/50 hover:shadow-cyan-400/50 focus:shadow-cyan-400/50 text-white bg-neutral-950 focus-within:bg-black hover:bg-black text-xl outline-none"
         />
       </div>
       <div className="my-4 flex flex-col gap-4">
@@ -196,7 +190,7 @@ export function RegisterForm() {
           type="submit"
           aria-label="Register"
           disabled={isPending}
-          className="px-2 py-1 transition-colors ease-in-out duration-700 min-w-[140px] place-self-center text-center shadow-lg shadow-cyan-500/50 text-neutral-300 hover:text-white bg-cyan-800 hover:bg-cyan-600 hover:shadow-cyan-400/50 rounded text-xl"
+          className="px-2 py-1 transition-[color,background-color,shadow] ease-in-out duration-700 min-w-[140px] place-self-center text-center shadow-lg shadow-cyan-500/50 hover:shadow-cyan-400/50 text-neutral-300 hover:text-white bg-cyan-800 hover:bg-cyan-600 rounded text-xl"
         >
           {isPending ? "Registering..." : "Register"}
         </button>

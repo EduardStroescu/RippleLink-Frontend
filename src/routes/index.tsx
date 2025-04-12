@@ -26,13 +26,13 @@ function HomePage() {
           <div className="flex flex-row justify-evenly items-center">
             <Link
               to="/login"
-              className="text-center min-w-[120px] shadow-lg shadow-cyan-500/50 text-neutral-300 hover:text-white bg-cyan-800 hover:bg-cyan-600 hover:shadow-cyan-400/50 transition-colors ease-in-out duration-700 rounded px-6 py-2 text-xl"
+              className="text-center min-w-[120px] shadow-lg shadow-cyan-500/50 text-neutral-300 hover:text-white bg-cyan-800 hover:bg-cyan-600 hover:shadow-cyan-400/50 transition-[color,background-color,shadow] ease-in-out duration-700 rounded px-6 py-2 text-xl"
             >
               Log In
             </Link>
             <Link
               to="/register"
-              className="text-center min-w-[120px] shadow-lg shadow-cyan-500/50 text-neutral-300 hover:text-white bg-cyan-800 hover:bg-cyan-600 hover:shadow-cyan-400/50 transition-colors ease-in-out duration-700 rounded px-6 py-2 text-xl"
+              className="text-center min-w-[120px] shadow-lg shadow-cyan-500/50 text-neutral-300 hover:text-white bg-cyan-800 hover:bg-cyan-600 hover:shadow-cyan-400/50 transition-[color,background-color,shadow] ease-in-out duration-700 rounded px-6 py-2 text-xl"
             >
               Register
             </Link>

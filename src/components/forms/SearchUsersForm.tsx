@@ -114,7 +114,7 @@ export const SearchUsersForm = ({
                 aria-label={user.displayName + " included"}
                 title="Included"
               >
-                <CheckIcon fill="#00fff2" width="15px" height="15px" />
+                <CheckIcon className="w-[15px] h-[15px] fill-[#00fff2]" />
               </div>
             )}
           </button>

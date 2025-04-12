@@ -48,7 +48,7 @@ export const MessageEditor = memo(function MessageEditor({
       <form
         ref={formRef}
         onSubmit={handleSubmit}
-        className="w-screen max-w-full min-w-fit flex gap-1 sm:gap-2 text-white"
+        className="w-screen max-w-full min-w-fit flex gap-2 text-white"
       >
         <CustomChatInput
           message={updatedMessage}

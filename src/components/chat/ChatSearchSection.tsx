@@ -1,9 +1,9 @@
 import { memo } from "react";
 
-import { CustomDialogTrigger } from "@/components/CustomDialogTrigger";
 import { SearchForm } from "@/components/forms/SearchForm";
 import { SearchUsersForm } from "@/components/forms/SearchUsersForm";
 import { AddIcon } from "@/components/Icons";
+import { CustomDialogTrigger } from "@/components/ui/CustomDialogTrigger";
 
 export const ChatSearchSection = memo(function ChatSearchSection({
   handleSearch,

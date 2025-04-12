@@ -7,8 +7,8 @@ import React, {
   useState,
 } from "react";
 
-import { FileUploadOverlay } from "@/components/FileUploadOverlay";
-import { FileUploadOverlayContent } from "@/components/FileUploadOverlayContent";
+import { FileUploadOverlay } from "@/components/chatId/FileUploadOverlay";
+import { FileUploadOverlayContent } from "@/components/chatId/FileUploadOverlayContent";
 import { AddIcon, CloseIcon, GifIcon, SendIcon } from "@/components/Icons";
 import { GifPicker } from "@/components/pickers/GifPicker";
 import { AudioComponent } from "@/components/ui/AudioComponent";

@@ -44,7 +44,7 @@ export function ArrowSvg({ className }: { className?: string }) {
       xmlns="http://www.w3.org/2000/svg"
       stroke="#b5b5b5"
       className={cn(
-        "w-[25px] h-[25px] group-hover:scale-110 transition-[colors,scale] duration-300 ease-in-out group-hover:stroke-[#e6e7e8]",
+        "w-[25px] h-[25px] group-hover:scale-110 transition-[colors,scale,transform] duration-300 ease-in-out group-hover:stroke-[#e6e7e8]",
         className
       )}
     >
@@ -218,7 +218,10 @@ export function CheckIcon({ className }: { className?: string }) {
       xmlnsXlink="http://www.w3.org/1999/xlink"
       viewBox="0 0 512 512"
       xmlSpace="preserve"
-      className={cn("w-[12px] h-[12px] fill-white", className)}
+      className={cn(
+        "w-[12px] h-[12px] fill-white group-hover:scale-110 transition-all ease-in-out",
+        className
+      )}
     >
       <g>
         <path

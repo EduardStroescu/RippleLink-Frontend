@@ -53,7 +53,7 @@ export function DemoAccountLoginPanel() {
           <button
             key={userName}
             onClick={() => handleUserClick(userName)}
-            className="min-w-[93px] shadow-lg shadow-cyan-500/50 text-neutral-300 hover:text-white bg-neutral-950 hover:bg-neutral-900 rounded px-2 py-2 text-md"
+            className="min-w-[93px] shadow-lg shadow-cyan-500/50 transition-[color,background-color,shadow] hover:shadow-cyan-400/50 text-neutral-300 hover:text-white bg-neutral-950 hover:bg-neutral-900 rounded px-2 py-2 text-md"
           >
             User {userName}
           </button>

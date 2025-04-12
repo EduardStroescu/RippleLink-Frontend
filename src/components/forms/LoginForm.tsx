@@ -68,7 +68,7 @@ export function LoginForm() {
           type="email"
           placeholder="Email"
           className="rounded p-1.5
-           transition-colors ease-in-out duration-700 text-center shadow-lg shadow-cyan-500/50 text-white bg-neutral-950 focus-within:bg-black hover:bg-black text-xl outline-none"
+           transition-[color,background-color,shadow] ease-in-out duration-700 text-center shadow-lg shadow-cyan-500/50 hover:shadow-cyan-400/50 focus:shadow-cyan-400/50 text-white bg-neutral-950 focus-within:bg-black hover:bg-black text-xl outline-none"
           autoComplete="email"
         />
       </div>
@@ -82,14 +82,14 @@ export function LoginForm() {
           placeholder="Password"
           autoComplete="password"
           className="rounded p-1.5
-           transition-colors ease-in-out duration-700 text-center shadow-lg shadow-cyan-500/50 text-white bg-neutral-950 focus-within:bg-black hover:bg-black text-xl outline-none"
+           transition-[color,background-color,shadow] ease-in-out duration-700 text-center shadow-lg shadow-cyan-500/50 hover:shadow-cyan-400/50 focus:shadow-cyan-400/50 text-white bg-neutral-950 focus-within:bg-black hover:bg-black text-xl outline-none"
         />
       </div>
       <div className="flex flex-col gap-4">
         <button
           type="submit"
           disabled={isPending}
-          className="px-2 py-1 transition-colors ease-in-out duration-700 min-w-[140px] place-self-center text-center shadow-lg shadow-cyan-500/50 text-neutral-300 hover:text-white bg-cyan-800 hover:bg-cyan-600 hover:shadow-cyan-400/50 rounded text-xl"
+          className="px-2 py-1 transition-[color,background-color,shadow] ease-in-out duration-700 min-w-[140px] place-self-center text-center shadow-lg shadow-cyan-500/50 text-neutral-300 hover:text-white bg-cyan-800 hover:bg-cyan-600 hover:shadow-cyan-400/50 rounded text-xl"
         >
           {isPending ? "Logging In..." : "Log In"}
         </button>
