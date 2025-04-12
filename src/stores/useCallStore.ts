@@ -1,22 +1,22 @@
-import { CallStore } from "@/types/storeInterfaces";
 import { create } from "zustand";
-import { useUserStore } from "./useUserStore";
-import { useAppStore } from "./useAppStore";
-import { Call } from "@/types";
-import { useStreamsStore } from "./useStreamsStore";
-import { useConnectionsStore } from "./useConnectionsStore";
+
+import { useAppStore } from "@/stores/useAppStore";
+import { useConnectionsStore } from "@/stores/useConnectionsStore";
+import { useStreamsStore } from "@/stores/useStreamsStore";
+import { useUserStore } from "@/stores/useUserStore";
+import { Call } from "@/types/call";
+import { CallStore } from "@/types/storeInterfaces";
 
 const getStreamsStoreActions = () => useStreamsStore.getState().actions;
 const getConnectionsStoreActions = () => useConnectionsStore.getState().actions;
 const getStreamsStoreState = () => useStreamsStore.getState();
-const getConnectionsStoreState = () => useConnectionsStore.getState();
-const getAppStoreState = () => useAppStore.getState();
-const getUserStoreState = () => useUserStore.getState();
+const getConnections = () => useConnectionsStore.getState().connections;
+const socketEmit = useAppStore.getState().actions.socketEmit;
+const getUserId = () => useUserStore.getState().user?._id;
 
 export const useCallStore = create<CallStore>((set, get) => ({
   currentCall: null,
   incomingCalls: [],
-  recentlyEndedCalls: [],
   joiningCall: null,
 
   actions: {
@@ -42,38 +42,15 @@ export const useCallStore = create<CallStore>((set, get) => ({
           (call) => call && call.chatId._id !== chatId
         ),
       })),
-    addRecentlyEndedCall: (newEndedCall) =>
-      set((state) => {
-        if (!newEndedCall || !newEndedCall.chatId._id) return state;
-
-        const existingCallIndex = state.recentlyEndedCalls.findIndex(
-          (call) => call && call.chatId._id === newEndedCall.chatId._id
-        );
-        if (existingCallIndex !== -1) {
-          const updatedCalls = [...state.incomingCalls];
-          updatedCalls[existingCallIndex] = newEndedCall;
-          return { recentlyEndedCalls: updatedCalls };
-        } else {
-          return {
-            recentlyEndedCalls: [...state.recentlyEndedCalls, newEndedCall],
-          };
-        }
-      }),
-    removeRecentlyEndedCall: (chatId) =>
-      set((state) => ({
-        recentlyEndedCalls: state.recentlyEndedCalls.filter(
-          (call) => call && call.chatId._id !== chatId
-        ),
-      })),
     resetIncomingCalls: () => set({ incomingCalls: [] }),
     setJoiningCall: (chatId) => set(() => ({ joiningCall: chatId })),
     startCall: async (chat, videoEnabled) => {
-      const userId = getUserStoreState().user?._id;
-      const { socket } = getAppStoreState();
+      const userId = getUserId();
+
+      if (!chat || !userId) return;
+
       const { addStream } = getStreamsStoreActions();
       const attachStreamToCall = getStreamsStoreActions().attachStreamToCall;
-
-      if (!chat || !userId || !socket) return;
 
       const currUserStream = await attachStreamToCall({
         videoEnabled,
@@ -82,71 +59,81 @@ export const useCallStore = create<CallStore>((set, get) => ({
       if (!currUserStream) return;
       addStream(userId, currUserStream);
 
-      socket.emit("joinCall", {
-        chatId: chat._id,
-        isInitiator: true,
-      });
-      socket.on("callJoined", (data: { call: Call }) => {
-        if (data.call) {
-          get().actions.setCurrentCall(data.call);
-          socket.off("callJoined");
+      socketEmit(
+        "joinCall",
+        {
+          chatId: chat._id,
+          isInitiator: true,
+        },
+        ({ call }: { call: Call }) => {
+          if (call) {
+            get().actions.setCurrentCall(call);
+          }
         }
-      });
+      );
     },
     answerCall: async (callDetails, videoEnabled) => {
-      const userId = getUserStoreState().user?._id;
-      const { socket } = getAppStoreState();
+      const userId = getUserId();
+      if (!callDetails || !userId) return;
+
       const { addStream } = getStreamsStoreActions();
       const attachStreamToCall = getStreamsStoreActions().attachStreamToCall;
-      if (!callDetails || !userId || !socket) return;
 
       const currUserStream = await attachStreamToCall({
-        videoEnabled,
+        videoEnabled: videoEnabled,
         audioEnabled: true,
       });
       if (!currUserStream) return;
       addStream(userId, currUserStream);
       get().actions.setJoiningCall(callDetails.chatId._id);
+      get().actions.removeIncomingCall(callDetails.chatId._id);
 
-      socket.emit("joinCall", {
-        chatId: callDetails.chatId._id,
-      });
-
-      socket.on("callJoined", (data: { call: Call }) => {
-        if (data.call) {
-          get().actions.setCurrentCall(data.call);
-          get().actions.setJoiningCall(null);
-          socket.off("callJoined");
-        }
-      });
+      socketEmit(
+        "joinCall",
+        {
+          chatId: callDetails.chatId._id,
+        },
+        ({ call }: { call: Call }) => {
+          if (call) {
+            get().actions.setCurrentCall(call);
+            get().actions.setJoiningCall(null);
+          }
+        },
+        { timeout: 1500 }
+      );
     },
-    endCall: (call) => {
-      const userId = getUserStoreState().user?._id;
+    endCall: async (call) => {
+      const userId = getUserId();
+      if (!userId) return;
+
       const { streams } = getStreamsStoreState();
-      const { setIsUserMicrophoneMuted, setIsUserSharingVideo } =
+      const { setIsUserMicrophoneMuted, setIsUserSharingVideo, removeStream } =
         getStreamsStoreActions();
-      const { socket } = getAppStoreState();
       const { resetConnections } = getConnectionsStoreActions();
 
-      if (!userId || !socket) return;
       const userStream = streams[userId]?.stream;
-      const peerConnections = getConnectionsStoreState().connections;
+      const peerConnections = getConnections();
       if (
         call.participants.some(
           (participant) => participant.userId._id === userId
         )
       ) {
-        socket.emit("endCall", { callId: call._id });
-        get().actions.addRecentlyEndedCall(call);
+        socketEmit("endCall", { chatId: call?.chatId?._id });
         get().actions.setCurrentCall(null);
       }
       userStream?.getTracks().forEach((track) => track.stop());
       Object.values(peerConnections).forEach((peer) => {
         peer.destroy();
       });
+      removeStream(userId);
+
       resetConnections();
       setIsUserSharingVideo(false);
       setIsUserMicrophoneMuted(false);
+    },
+    rejectCall: async (call) => {
+      socketEmit("rejectCall", { chatId: call?.chatId?._id });
+      get().actions.removeIncomingCall(call.chatId._id);
     },
   },
 }));

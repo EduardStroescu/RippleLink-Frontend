@@ -1,21 +1,35 @@
-import { useUserStore } from "@/stores/useUserStore";
 import axios, {
-  InternalAxiosRequestConfig,
-  AxiosRequestHeaders,
   AxiosError,
+  AxiosInstance,
+  AxiosRequestHeaders,
+  InternalAxiosRequestConfig,
 } from "axios";
 import queryString from "query-string";
 
+import { useUserStore } from "@/stores/useUserStore";
+
 const baseURL = import.meta.env.VITE_BACKEND_URL + "/api/";
+
+interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+interface CustomAxiosError extends AxiosError<{ message: string }> {
+  config: CustomAxiosRequestConfig;
+}
+
+interface PrivateClient extends AxiosInstance {
+  refreshToken: () => Promise<void>;
+  isRefreshingToken: boolean;
+}
 
 const privateClient = axios.create({
   baseURL,
   paramsSerializer: {
     encode: (params) => queryString.stringify(params),
   },
-});
+}) as PrivateClient;
 
-let isRefreshing = false;
+privateClient.isRefreshingToken = false;
 let failedQueue: Array<(token: string) => void> = [];
 
 const processQueue = (token: string | null) => {
@@ -43,31 +57,31 @@ privateClient.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error: AxiosError<{ message: string }>) => Promise.reject(error)
 );
 
 privateClient.interceptors.response.use(
   (response) => response.data,
-  async (error) => {
+  async (error: CustomAxiosError) => {
     const originalRequest = error.config;
 
     if (error?.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      if (isRefreshing) {
+      if (privateClient.isRefreshingToken) {
         return new Promise((resolve, reject) => {
           failedQueue.push((token: string) => {
             if (token) {
               originalRequest.headers.Authorization = `Bearer ${token}`;
               resolve(privateClient(originalRequest));
             } else {
-              reject(new Error("Token refresh failed"));
+              reject(new Error("Invalid session. Please log in again!"));
             }
           });
         });
       }
 
-      isRefreshing = true;
+      privateClient.isRefreshingToken = true;
 
       try {
         const user = window.localStorage.getItem("user");
@@ -79,18 +93,19 @@ privateClient.interceptors.response.use(
             refresh_token: refreshToken,
           });
 
-          useUserStore.setState({ user: response.data });
-          window.localStorage.setItem("user", JSON.stringify(response.data));
-          isRefreshing = false;
+          useUserStore.getState().actions.setUser(response.data);
 
+          privateClient.isRefreshingToken = false;
           processQueue(response.data.access_token);
 
           originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`;
           return privateClient(originalRequest);
         }
       } catch (error) {
-        const refreshError = error as AxiosError;
-        window.localStorage.removeItem("user");
+        const refreshError = error as AxiosError<{ message: string }>;
+
+        useUserStore.getState().actions.removeUser();
+        privateClient.isRefreshingToken = false;
         processQueue(null);
 
         // Redirect to home page with the original URL
@@ -98,13 +113,15 @@ privateClient.interceptors.response.use(
           "/?redirect=" + encodeURIComponent(window.location.href);
 
         return Promise.reject(
-          refreshError?.response?.data || "Token refresh failed"
+          refreshError?.response?.data.message ||
+            "Invalid session. Please log in again!"
         );
       }
     }
 
     return Promise.reject(
-      error?.response?.data?.message || "An error occurred"
+      error?.response?.data.message ||
+        "An unexpected error occurred. Please try again later!"
     );
   }
 );

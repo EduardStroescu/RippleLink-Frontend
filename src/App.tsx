@@ -1,10 +1,10 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ErrorComponent } from "@/components/ErrorComponent.tsx";
+import { Toaster } from "@/components/ui/Toaster.tsx";
+
 import { routeTree } from "./routeTree.gen";
-import { Toaster } from "./components/ui/Toaster.tsx";
-import { ErrorComponent } from "./components/ErrorComponent.tsx";
-// import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,6 +33,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
       <Toaster />
+      {/* Only enable in dev mode to inspect query state */}
       {/* <ReactQueryDevtools /> */}
     </QueryClientProvider>
   );

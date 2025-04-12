@@ -1,12 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
-import {
-  ChangeBackgroundForm,
-  ChangePasswordForm,
-  ChangeUserDetailsForm,
-  DeleteAccountForm,
-  BackIcon,
-} from "@/components";
+import { ChangeBackgroundForm } from "@/components/forms/ChangeBackgroundForm";
+import { ChangePasswordForm } from "@/components/forms/ChangePasswordForm";
+import { ChangeUserDetailsForm } from "@/components/forms/ChangeUserDetailsForm";
+import { DeleteAccountForm } from "@/components/forms/DeleteAccountForm";
+import { BackIcon } from "@/components/Icons";
 import {
   Accordion,
   AccordionContent,

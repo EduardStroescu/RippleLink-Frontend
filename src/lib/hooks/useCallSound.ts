@@ -24,6 +24,7 @@ export const useCallSound = () => {
   const stopSound = () => {
     if (audioRef.current) {
       audioRef.current.pause();
+      audioRef.current.currentTime = 0;
     }
   };
 

@@ -1,9 +1,11 @@
+import { create } from "zustand";
+
 import { toast } from "@/components/ui/use-toast";
 import { audioConstraints, videoConstraints } from "@/lib/const";
-import { StreamsStore } from "@/types";
-import { create } from "zustand";
+import { useConnectionsStore } from "@/stores/useConnectionsStore";
+import { StreamsStore } from "@/types/storeInterfaces";
+
 import { useUserStore } from "./useUserStore";
-import { useConnectionsStore } from "./useConnectionsStore";
 
 const getStreamsStoreState = () => useStreamsStore.getState();
 const getConnectionsStoreState = () => useConnectionsStore.getState();

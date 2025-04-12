@@ -1,4 +1,4 @@
-import { PublicUser } from "./user";
+import { PublicUser } from "@/types/user";
 
 export interface Status {
   _id?: string;

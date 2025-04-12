@@ -4,6 +4,7 @@
 
 @layer base {
   :root {
+    --default: 248, 100%, 88%;
     --destructive: 0 75% 25%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
@@ -11,6 +12,18 @@
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
   }
+}
+
+/* Autofill override */
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #ffffff;
+  color: #ffffff;
+  caret-color: white;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 html,
@@ -25,7 +38,7 @@ body {
 
 @layer base {
   body {
-    @apply text-[#cac2ff];
+    @apply text-default;
   }
 }
 
@@ -62,11 +75,13 @@ body {
 /* Scrollbar width */
 ::-webkit-scrollbar {
   width: 5px;
+  height: 7px;
 }
 
 /* Scrollbar Track */
 ::-webkit-scrollbar-track {
   background: #005f70;
+  border-radius: 1rem;
 }
 
 /* Scrollbar Handle */
@@ -78,14 +93,4 @@ body {
 /* Scrollbar Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
   background: #06b6d4;
-}
-
-/* Autofill override */
-
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-input:-webkit-autofill:active {
-  -webkit-text-fill-color: #ffffff;
-  transition: background-color 5000s ease-in-out 0s;
 }

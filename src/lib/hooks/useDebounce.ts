@@ -1,6 +1,5 @@
 import { useCallback, useRef } from "react";
 
-// Define a type for functions that can be debounced
 type DebounceFunction<T extends unknown[]> = (...args: T) => void;
 
 function debounce<T extends unknown[]>(

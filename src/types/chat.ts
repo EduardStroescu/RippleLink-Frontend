@@ -1,5 +1,5 @@
-import { Message } from "./message";
-import { PublicUser } from "./user";
+import { Message } from "@/types/message";
+import { PublicUser } from "@/types/user";
 
 export type Chat = {
   _id: string;

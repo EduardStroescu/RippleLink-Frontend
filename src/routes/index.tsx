@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
+
 import { useUserStore } from "@/stores/useUserStore";
 
 export const Route = createFileRoute("/")({
@@ -8,14 +8,10 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const user = useUserStore((state) => state.user);
-  const router = useRouter();
 
-  useEffect(() => {
-    if (user) {
-      router.history.push("/chat");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  if (user) {
+    return <Navigate to="/chat" replace />;
+  }
 
   return (
     <div className="flex flex-col justify-normal md:justify-evenly items-center h-full text-white py-10 px-4 overflow-hidden overflow-y-auto">
@@ -30,13 +26,13 @@ function HomePage() {
           <div className="flex flex-row justify-evenly items-center">
             <Link
               to="/login"
-              className="text-center min-w-[120px] shadow-lg shadow-cyan-500/50 text-neutral-300 hover:text-white bg-cyan-800 hover:bg-cyan-600 hover:shadow-cyan-400/50 transition-colors ease-in-out duration-700 rounded px-6 py-2 text-xl"
+              className="text-center min-w-[120px] shadow-lg shadow-cyan-500/50 text-neutral-300 hover:text-white bg-cyan-800 hover:bg-cyan-600 hover:shadow-cyan-400/50 transition-[color,background-color,shadow] ease-in-out duration-700 rounded px-6 py-2 text-xl"
             >
               Log In
             </Link>
             <Link
               to="/register"
-              className="text-center min-w-[120px] shadow-lg shadow-cyan-500/50 text-neutral-300 hover:text-white bg-cyan-800 hover:bg-cyan-600 hover:shadow-cyan-400/50 transition-colors ease-in-out duration-700 rounded px-6 py-2 text-xl"
+              className="text-center min-w-[120px] shadow-lg shadow-cyan-500/50 text-neutral-300 hover:text-white bg-cyan-800 hover:bg-cyan-600 hover:shadow-cyan-400/50 transition-[color,background-color,shadow] ease-in-out duration-700 rounded px-6 py-2 text-xl"
             >
               Register
             </Link>

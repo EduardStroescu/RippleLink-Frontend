@@ -1,17 +1,14 @@
-import { useUserStore } from "@/stores/useUserStore";
-import { useEffect, useState } from "react";
-import { Chat } from "@/types";
-
-import {
-  useNotificationSound,
-  useThrottle,
-  useWindowVisibility,
-  useSocketSubscription,
-  useSetChatsCache,
-} from "@/lib/hooks";
-
 import { create } from "mutative";
+import { useEffect, useState } from "react";
+
+import { useNotificationSound } from "@/lib/hooks/useNotificationSound";
+import { useSetTanstackCache } from "@/lib/hooks/useSetTanstackCache";
+import { useSocketSubscription } from "@/lib/hooks/useSocketSubscription";
+import { useThrottle } from "@/lib/hooks/useThrottle";
+import { useWindowVisibility } from "@/lib/hooks/useWindowVisibility";
 import { useAppStore } from "@/stores/useAppStore";
+import { useUserStore } from "@/stores/useUserStore";
+import { Chat } from "@/types/chat";
 
 export function useChatEvents() {
   const user = useUserStore((state) => state.user);
@@ -19,7 +16,7 @@ export function useChatEvents() {
   const playSound = useNotificationSound();
   const isWindowActive = useWindowVisibility();
   const [newMessageCount, setNewMessageCount] = useState(0);
-  const setChatsCache = useSetChatsCache();
+  const setChatsCache = useSetTanstackCache<Chat[]>(["chats", user?._id]);
 
   useEffect(() => {
     if (!socket || !user?._id) return;
@@ -30,54 +27,34 @@ export function useChatEvents() {
   }, [socket, user?._id]);
 
   const throttledNotification = useThrottle(() => {
-    setNewMessageCount((prev) => prev + 1);
     playSound();
   }, 1000);
 
   // Handle chatCreated and chatUpdated events
-  useSocketSubscription("chatCreated", ({ content }: { content: Chat }) => {
-    setChatsCache((prev) => {
-      if (!prev) return [content];
-      return create(prev, (draft) => {
-        const index = draft.findIndex((item) => item._id === content._id);
-
-        if (index === -1) {
-          draft.push(content);
-        } else {
-          draft[index] = { ...draft[index], ...content };
-        }
-      });
-    });
-    if (content.lastMessage.senderId._id !== user?._id && !isWindowActive) {
-      throttledNotification();
-    }
-  });
-
   useSocketSubscription(
-    "chatUpdated",
-    ({
-      content,
-    }: {
-      content: Chat & { eventType: "create" | "update" | "delete" };
-    }) => {
+    "chatCreatedOrUpdated",
+    ({ chat, eventType }: { chat: Chat; eventType: "create" | "update" }) => {
       setChatsCache((prev) => {
-        if (!prev) return prev;
+        if (!prev) return eventType === "create" ? [chat] : prev;
+
         return create(prev, (draft) => {
-          const index = draft.findIndex((item) => item._id === content._id);
+          const index = draft.findIndex((item) => item._id === chat._id);
 
           if (index === -1) {
-            if (content.eventType !== "create") return draft;
-            draft.push(content);
+            if (eventType !== "create") return draft;
+            draft.push(chat);
           } else {
-            draft[index] = { ...draft[index], ...content };
+            draft[index] = { ...draft[index], ...chat };
           }
         });
       });
+
       if (
-        content.lastMessage.senderId._id !== user?._id &&
-        content.eventType === "create" &&
+        chat.lastMessage.senderId._id !== user?._id &&
+        eventType === "create" &&
         !isWindowActive
       ) {
+        setNewMessageCount((prev) => prev + 1);
         throttledNotification();
       }
     }

@@ -1,21 +1,37 @@
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
-import { useSocketSubscription } from "./useSocketSubscription";
-import { PublicUser } from "@/types";
+
+import { chatApi } from "@/api/modules/chat.api";
+import { useSocketSubscription } from "@/lib/hooks/useSocketSubscription";
+import { Chat } from "@/types/chat";
+import { PublicUser } from "@/types/user";
 
 export function useIsInterlocutorOnline({
-  interlocutors,
-  params,
+  interlocutor,
+  chatId,
+  isDmChat,
 }: {
-  interlocutors: PublicUser[] | undefined;
-  params;
+  interlocutor: PublicUser | undefined;
+  chatId: Chat["_id"];
+  isDmChat: boolean;
 }) {
   const [isInterlocutorOnline, setIsInterlocutorOnline] =
     useState<boolean>(false);
-  const interlocutor = interlocutors?.[0];
+
+  const shouldQueryInterlocutorStatus = !!interlocutor?._id && isDmChat;
+  const { data: interlocutorStatus } = useQuery({
+    queryKey: ["interlocutorStatus", interlocutor?._id],
+    queryFn: () => chatApi.getInterlocutorStatus(interlocutor?._id as string),
+    enabled: shouldQueryInterlocutorStatus,
+  });
 
   useEffect(() => {
-    setIsInterlocutorOnline(interlocutor?.status?.online || false);
-  }, [interlocutor?.status?.online, params.chatId]);
+    setIsInterlocutorOnline((prev) => {
+      if (interlocutorStatus?.online === undefined) return prev;
+
+      return interlocutorStatus.online;
+    });
+  }, [interlocutorStatus?.online, chatId]);
 
   const handleInterlocutorOnlineStatus = useCallback(
     ({
@@ -23,13 +39,14 @@ export function useIsInterlocutorOnline({
     }: {
       content: { _id: PublicUser["_id"]; isOnline: boolean };
     }) => {
-      if (interlocutor?._id === content._id) {
-        setIsInterlocutorOnline(content.isOnline);
-      }
+      if (interlocutor?._id !== content._id) return;
+      setIsInterlocutorOnline((prev) =>
+        prev === content.isOnline ? prev : content.isOnline
+      );
     },
     [interlocutor?._id]
   );
   useSocketSubscription("broadcastUserStatus", handleInterlocutorOnlineStatus);
 
-  return { isInterlocutorOnline };
+  return { isInterlocutorOnline, lastSeen: interlocutorStatus?.lastSeen };
 }

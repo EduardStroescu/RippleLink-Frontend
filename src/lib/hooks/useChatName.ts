@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useState } from "react";
-import { useParams } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
-import chatApi from "@/api/modules/chat.api";
-import { useToast } from "@/components/ui";
-import { Chat, PublicUser } from "@/types";
-import { getGroupChatNamePlaceholder } from "../utils";
+import { useParams } from "@tanstack/react-router";
+import { useCallback, useEffect, useState } from "react";
+
+import { chatApi } from "@/api/modules/chat.api";
+import { toast } from "@/components/ui/use-toast";
+import { getGroupChatNamePlaceholder } from "@/lib/utils";
+import { Chat } from "@/types/chat";
+import { PublicUser } from "@/types/user";
 
 export function useChatName({
   currentChat,
@@ -12,16 +14,18 @@ export function useChatName({
   isDmChat,
 }: {
   currentChat: Chat | undefined;
-  interlocutors: PublicUser[] | undefined;
+  interlocutors: PublicUser[];
   isDmChat: boolean;
 }) {
-  const params = useParams({ from: "/chat/$chatId" });
-  const { toast } = useToast();
-  const [chatName, setChatName] = useState("");
+  const chatId = useParams({
+    from: "/chat/$chatId",
+    select: (params) => params.chatId,
+  });
+  const [chatName, setChatName] = useState(() => currentChat?.name || "");
   const [isEditingChatName, setIsEditingChatName] = useState(false);
 
   const updateChatNameMutation = useMutation({
-    mutationFn: () => chatApi.updateChat(params.chatId, { name: chatName }),
+    mutationFn: () => chatApi.updateChat(chatId, { name: chatName }),
     onSuccess: (response) => {
       setChatName(response.name);
     },
@@ -35,26 +39,26 @@ export function useChatName({
     },
   });
 
-  const handleResetInput = () => {
+  const placeholderChatName = getGroupChatNamePlaceholder(interlocutors);
+
+  const handleResetInput = useCallback(() => {
     setChatName(currentChat?.name || placeholderChatName);
     setIsEditingChatName(false);
-  };
+  }, [currentChat?.name, placeholderChatName]);
 
   const handleEditChatName = async () => {
-    if (chatName && chatName !== currentChat?.name) {
+    if (
+      !!chatName.length &&
+      chatName !== currentChat?.name &&
+      currentChat?.name !== placeholderChatName
+    ) {
       await updateChatNameMutation.mutateAsync();
     }
     setIsEditingChatName((state) => !state);
   };
 
-  const placeholderChatName = getGroupChatNamePlaceholder(interlocutors);
-
   const handleInitChatName = useCallback(() => {
-    if (
-      (chatName.length && chatName === currentChat?.name) ||
-      chatName === placeholderChatName
-    )
-      return;
+    if (!!chatName.length && chatName === currentChat?.name) return;
     if (!isDmChat && !isEditingChatName) {
       setChatName(currentChat?.name || placeholderChatName);
     }

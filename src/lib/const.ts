@@ -16,3 +16,8 @@ export const audioConstraints: MediaTrackConstraints = {
   sampleRate: 48000,
   sampleSize: 16,
 };
+
+/**
+Socket.IO's default transfer size is 1,000,000 bytes (about 976 KB/1024*976), don't exceed that or messages will fail. Left a small difference/buffer to 976 to stay on the safe side. Otherwise, increase the limit on the backend.
+*/
+export const CHUNK_SIZE = 1024 * 960;

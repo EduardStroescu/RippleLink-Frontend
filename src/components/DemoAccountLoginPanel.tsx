@@ -1,18 +1,15 @@
-import userApi from "@/api/modules/user.api";
 import { useMutation } from "@tanstack/react-query";
-import { useToast } from "./ui/use-toast";
-import { useUserStoreActions } from "@/stores/useUserStore";
 import { useRouter, useRouterState } from "@tanstack/react-router";
-import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
-import { User } from "@/types/user";
+
+import { userApi } from "@/api/modules/user.api";
+import { toast } from "@/components/ui/use-toast";
+import { useUserStoreActions } from "@/stores/useUserStore";
 
 const users = ["One", "Two", "Three"];
 
 export function DemoAccountLoginPanel() {
   const { setUser } = useUserStoreActions();
-  const { setItem } = useLocalStorage<User>("user");
   const router = useRouter();
-  const { toast } = useToast();
   const redirectUrl = useRouterState({
     select: (state) => state.location.search.redirect,
   });
@@ -34,7 +31,6 @@ export function DemoAccountLoginPanel() {
       { email, password },
       {
         onSuccess: (response) => {
-          setItem(response);
           setUser(response);
           router.history.push(redirectUrl ? redirectUrl : "/chat");
         },
@@ -57,7 +53,7 @@ export function DemoAccountLoginPanel() {
           <button
             key={userName}
             onClick={() => handleUserClick(userName)}
-            className="min-w-[93px] shadow-lg shadow-cyan-500/50 text-neutral-300 hover:text-white bg-neutral-950 hover:bg-neutral-900 rounded px-2 py-2 text-md"
+            className="min-w-[93px] shadow-lg shadow-cyan-500/50 transition-[color,background-color,shadow] hover:shadow-cyan-400/50 text-neutral-300 hover:text-white bg-neutral-950 hover:bg-neutral-900 rounded px-2 py-2 text-md"
           >
             User {userName}
           </button>

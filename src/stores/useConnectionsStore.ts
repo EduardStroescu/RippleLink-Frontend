@@ -1,14 +1,15 @@
-import { ConnectionsStore } from "@/types";
-import { create } from "zustand";
 import Peer, { SignalData } from "simple-peer";
-import { useStreamsStore } from "./useStreamsStore";
-import { useAppStore } from "./useAppStore";
-import { useUserStore } from "./useUserStore";
+import { create } from "zustand";
+
+import { useAppStore } from "@/stores/useAppStore";
+import { useStreamsStore } from "@/stores/useStreamsStore";
+import { useUserStore } from "@/stores/useUserStore";
+import { ConnectionsStore } from "@/types/storeInterfaces";
 
 const getStreamsStoreActions = () => useStreamsStore.getState().actions;
-const getStreamsStoreState = () => useStreamsStore.getState();
-const getAppStoreState = () => useAppStore.getState();
-const getUserStoreState = () => useUserStore.getState();
+const getStreams = () => useStreamsStore.getState().streams;
+const socketEmit = useAppStore.getState().actions.socketEmit;
+const getUserId = () => useUserStore.getState().user?._id;
 
 export const useConnectionsStore = create<ConnectionsStore>((set, get) => ({
   connections: {},
@@ -27,13 +28,13 @@ export const useConnectionsStore = create<ConnectionsStore>((set, get) => ({
         return { connections: newConnections };
       }),
     resetConnections: () => set({ connections: {} }),
-    sendCallOffers: (participant, currentCall) => {
-      const userId = getUserStoreState().user?._id;
-      const { socket } = getAppStoreState();
-      const { streams } = getStreamsStoreState();
+    sendCallOffers: async (participant, currentCall) => {
+      const userId = getUserId();
+      if (!userId) return;
+
+      const streams = getStreams();
       const { addStream, removeStream } = getStreamsStoreActions();
 
-      if (!userId || !socket) return;
       const userStream = streams[userId]?.stream;
       if (!participant || !currentCall || !userStream) return;
 
@@ -48,26 +49,19 @@ export const useConnectionsStore = create<ConnectionsStore>((set, get) => ({
       });
 
       peer.on("signal", (data) => {
-        if (data.type === "offer") {
-          socket.emit("initiateCall", {
+        if (data.type === "candidate") {
+          socketEmit("saveIceCandidates", {
+            iceCandidates: JSON.stringify(data),
             chatId: currentCall.chatId._id,
-            offer: JSON.stringify(data),
-            participantId: participant.userId._id,
-            saveToDb: true,
+            candidatesType: "offer",
+            to: participant.userId._id,
           });
         } else {
-          if (data.type === "candidate") {
-            socket.emit("saveIceCandidates", {
-              iceCandidates: JSON.stringify(data),
-              chatId: currentCall.chatId._id,
-              candidatesType: "offer",
-              to: participant.userId._id,
-            });
-          }
-          socket.emit("initiateCall", {
+          socketEmit("sendCallEvent", {
             chatId: currentCall.chatId._id,
             offer: JSON.stringify(data),
             participantId: participant.userId._id,
+            saveToDb: data.type === "offer",
           });
         }
       });
@@ -80,39 +74,26 @@ export const useConnectionsStore = create<ConnectionsStore>((set, get) => ({
         addStream(participant.userId._id, stream);
       });
 
-      socket.on(
-        "callAnswered",
-        (data: { answer: string; participantId: string }) => {
-          if (participant.userId._id === data.participantId) {
-            const parsedSignal = JSON.parse(data.answer);
-            peer.signal(parsedSignal);
-          }
-        }
-      );
-
       peer.on("close", () => {
         removeStream(participant.userId._id);
         get().actions.removeConnection(participant.userId._id);
-        socket.off("callAnswered");
         peer.destroy();
       });
 
       peer.on("error", () => {
         removeStream(participant.userId._id);
         get().actions.removeConnection(participant.userId._id);
-        socket.off("callAnswered");
         peer.destroy();
       });
 
       get().actions.addConnection(participant.userId._id, peer);
     },
-    sendCallAnswers: (participant, currentCall) => {
-      const userId = getUserStoreState().user?._id;
-      const { socket } = getAppStoreState();
-      const { streams } = getStreamsStoreState();
-      const { addStream, removeStream } = getStreamsStoreActions();
+    sendCallAnswers: async (participant, currentCall) => {
+      const userId = getUserId();
+      if (!userId) return;
 
-      if (!userId || !socket) return;
+      const streams = getStreams();
+      const { addStream, removeStream } = getStreamsStoreActions();
 
       const userStream = streams[userId]?.stream;
       if (!participant || !currentCall || !participant.offers || !userStream)
@@ -129,27 +110,18 @@ export const useConnectionsStore = create<ConnectionsStore>((set, get) => ({
       });
 
       peer.on("signal", (data) => {
-        if (!participant.userId._id || !currentCall) return;
-        if (data.type === "answer") {
-          socket.emit("sendCallAnswer", {
+        socketEmit("sendCallEvent", {
+          chatId: currentCall.chatId._id,
+          answer: JSON.stringify(data),
+          participantId: participant.userId._id,
+          saveToDb: data.type === "answer",
+        });
+        if (data.type === "candidate") {
+          socketEmit("saveIceCandidates", {
+            iceCandidates: JSON.stringify(data),
             chatId: currentCall.chatId._id,
-            answer: JSON.stringify(data),
-            participantId: participant.userId._id,
-            saveToDb: true,
-          });
-        } else {
-          if (data.type === "candidate") {
-            socket.emit("saveIceCandidates", {
-              iceCandidates: JSON.stringify(data),
-              chatId: currentCall.chatId._id,
-              candidatesType: "answer",
-              to: participant.userId._id,
-            });
-          }
-          socket.emit("sendCallAnswer", {
-            chatId: currentCall.chatId._id,
-            answer: JSON.stringify(data),
-            participantId: participant.userId._id,
+            candidatesType: "answer",
+            to: participant.userId._id,
           });
         }
       });
@@ -162,27 +134,15 @@ export const useConnectionsStore = create<ConnectionsStore>((set, get) => ({
         addStream(participant.userId._id, stream);
       });
 
-      socket.on(
-        "callCreated",
-        (data: { offer: string; participantId: string }) => {
-          if (participant.userId._id === data.participantId) {
-            const parsedSignal = JSON.parse(data.offer);
-            peer.signal(parsedSignal);
-          }
-        }
-      );
-
       peer.on("close", () => {
         removeStream(participant.userId._id);
         get().actions.removeConnection(participant.userId._id);
-        socket.off("callCreated");
         peer.destroy();
       });
 
       peer.on("error", () => {
         removeStream(participant.userId._id);
         get().actions.removeConnection(participant.userId._id);
-        socket.off("callCreated");
         peer.destroy();
       });
 

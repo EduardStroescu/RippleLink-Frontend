@@ -1,20 +1,26 @@
-import { useCallback, useEffect, useRef } from "react";
-import { useCallStore, useCallStoreActions } from "@/stores/useCallStore";
+import { useEffect, useRef } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { useUserStore } from "@/stores/useUserStore";
+
+import { toast } from "@/components/ui/use-toast";
 import { useAppStore } from "@/stores/useAppStore";
-import { useToast } from "@/components/ui";
-import { useStreamsStore } from "@/stores/useStreamsStore";
+import { useCallStore, useCallStoreActions } from "@/stores/useCallStore";
 import {
   useConnectionsStore,
   useConnectionsStoreActions,
 } from "@/stores/useConnectionsStore";
+import { useStreamsStore } from "@/stores/useStreamsStore";
+import { useUserStore } from "@/stores/useUserStore";
 
 export const useCurrentCallState = () => {
   const socket = useAppStore((state) => state.socket);
   const user = useUserStore((state) => state.user);
+
   const currentCall = useCallStore((state) => state.currentCall);
+  const { endCall } = useCallStoreActions();
+
   const peerConnections = useConnectionsStore((state) => state.connections);
+  const { sendCallAnswers, sendCallOffers } = useConnectionsStoreActions();
+
   const { streams, selectedDevices, outputVolume } = useStreamsStore(
     useShallow((state) => ({
       streams: state.streams,
@@ -23,59 +29,121 @@ export const useCurrentCallState = () => {
     }))
   );
 
-  const { endCall } = useCallStoreActions();
-  const { sendCallAnswers, sendCallOffers } = useConnectionsStoreActions();
-
   const userId = user?._id;
-  const audioTracksRef = useRef({});
-  const { toast } = useToast();
+  const audioTracksRef = useRef<{ [userId: string]: HTMLAudioElement | null }>(
+    {}
+  );
 
-  // Helper to get all users in the current call who have not yet connected
-  const getOffersNotAnsweredTo = useCallback(() => {
-    const peerConnections = useConnectionsStore.getState().connections;
-    return currentCall?.participants.filter(
-      (participant) =>
-        participant.userId._id !== userId &&
-        !peerConnections[participant.userId._id] &&
-        participant?.offers?.some((offer) => offer.to === userId)
+  // Signal on other participants' events
+  useEffect(() => {
+    if (!socket || !currentCall || !userId) return;
+    socket.on(
+      "callEvent",
+      (data: { message: string; participantId: string }) => {
+        const parsedSignal = JSON.parse(data.message);
+        peerConnections[data.participantId]?.signal(parsedSignal);
+      }
     );
-  }, [currentCall?.participants, userId]);
+
+    return () => {
+      socket.off("callEvent");
+    };
+  }, [currentCall, peerConnections, socket, userId]);
 
   // Send answers to all users in current call who you are not connected to
   useEffect(() => {
     if (!currentCall) return;
+    const peerConnections = useConnectionsStore.getState().connections;
 
-    const offersNotAnsweredTo = getOffersNotAnsweredTo();
+    const offersNotAnsweredTo = currentCall?.participants.filter(
+      (participant) =>
+        participant.userId._id !== userId &&
+        participant?.offers?.some((offer) => offer.to === userId) &&
+        participant.status === "inCall" &&
+        !peerConnections[participant.userId._id]
+    );
 
     offersNotAnsweredTo?.forEach((participant) => {
       sendCallAnswers(participant, currentCall);
     });
-  }, [currentCall, getOffersNotAnsweredTo, sendCallAnswers]);
+  }, [currentCall, sendCallAnswers, userId]);
 
   // Send requests to all users in current call who you are not connected to
   useEffect(() => {
     if (!currentCall || !userId) return;
-    // Extract user IDs from the current call participants
-    const currentCallParticipantIds = currentCall.participants.map(
-      (participant) => participant.userId._id
-    );
 
     // Filter users in the chat who are not the current user, have no connection, and are not in the current call participants
-    const usersInCurrentCallWithoutAConnection = currentCall.chatId.users
-      .filter(
+    const usersInCurrentCallWithoutAConnection =
+      currentCall.participants.filter(
         (participant) =>
-          participant._id !== userId && // Exclude current user
-          !peerConnections[participant._id] && // Exclude users with existing connections
-          !currentCallParticipantIds.includes(participant._id) // Include only those who are not in the current call
-      )
-      .map((user) => ({
-        userId: user, // Map to an object with the user ID
-      }));
+          participant.userId._id !== userId && // Exclude current user
+          !participant?.offers?.some((offer) => offer.to === userId) &&
+          !peerConnections[participant.userId._id] // Exclude users with existing connections
+      );
 
     usersInCurrentCallWithoutAConnection.forEach((participant) => {
       sendCallOffers(participant, currentCall);
     });
   }, [peerConnections, currentCall, sendCallOffers, userId]);
+
+  // Create audio elements for each user in the current call, to be available globally
+  useEffect(() => {
+    // Get state directly from  the store as not to trigger the effect unnecesarily
+    const currentCall = useCallStore.getState().currentCall;
+    const userId = useUserStore.getState().user?._id;
+    if (!currentCall || !userId) return;
+
+    const currentParticipants = currentCall.participants.filter(
+      (participant) => participant.userId._id !== userId
+    );
+
+    currentParticipants.forEach((participant) => {
+      const userId = participant.userId._id;
+      const stream = streams[userId]?.stream;
+
+      if (stream) {
+        const audioTrack = stream.getAudioTracks()?.[0];
+        if (
+          !audioTrack ||
+          (
+            audioTracksRef.current[userId]?.srcObject as MediaStream | null
+          )?.getAudioTracks()?.[0] === audioTrack
+        )
+          return;
+
+        const audioElement = new Audio();
+        const audioOnlyStream = new MediaStream([audioTrack]);
+
+        audioElement.srcObject = audioOnlyStream;
+        audioElement.autoplay = true;
+        audioElement.volume = 1;
+
+        audioElement.play().catch((_) => undefined);
+        audioTracksRef.current[userId] = audioElement;
+      } else if (!stream && audioTracksRef.current[userId]) {
+        const audioElement = audioTracksRef.current[userId];
+        if (audioElement) {
+          audioElement.pause();
+          audioElement.srcObject = null;
+          delete audioTracksRef.current[userId];
+        }
+      }
+    });
+
+    const cleanupAudioTracks = () => {
+      if (Object.values(streams)?.length) return;
+      Object.keys(audioTracksRef.current).forEach((userId) => {
+        const audioElement = audioTracksRef.current[userId];
+        if (audioElement) {
+          audioElement.pause();
+          audioElement.srcObject = null;
+          delete audioTracksRef.current[userId];
+        }
+      });
+    };
+
+    return cleanupAudioTracks;
+  }, [streams]);
 
   // Switch output device according to selected device from state
   useEffect(() => {
@@ -104,7 +172,7 @@ export const useCurrentCallState = () => {
     if (selectedDevices.audioOutput) {
       switchOutputDevice(selectedDevices.audioOutput.deviceId);
     }
-  }, [selectedDevices, toast]);
+  }, [selectedDevices]);
 
   // Adjust volume according to state
   useEffect(() => {
@@ -119,66 +187,7 @@ export const useCurrentCallState = () => {
     handleAdjustVolume(outputVolume);
   }, [outputVolume]);
 
-  // Create audio elements for each user in the current call, to be available globally
-  useEffect(() => {
-    if (!currentCall) return;
-
-    const currentParticipants = currentCall.participants.filter(
-      (participant) => participant.userId._id !== userId
-    );
-
-    currentParticipants.forEach((participant) => {
-      const userId = participant.userId._id;
-      const stream = streams[userId]?.stream;
-
-      if (stream) {
-        const audioTrack = stream.getAudioTracks()?.[0];
-        if (
-          !audioTrack ||
-          audioTracksRef.current[userId]?.srcObject?.getAudioTracks()?.[0] ===
-            audioTrack
-        )
-          return;
-
-        const audioElement = new Audio();
-        const audioOnlyStream = new MediaStream([audioTrack]);
-
-        audioElement.srcObject = audioOnlyStream;
-        audioElement.autoplay = true;
-        audioElement.volume = 1;
-
-        audioTracksRef.current[userId] = audioElement;
-        audioElement.play().catch((error) => {
-          console.error("Error playing the audio stream:", error);
-        });
-      } else if (!stream && audioTracksRef.current[userId]) {
-        const audioElement = audioTracksRef.current[userId];
-        if (audioElement) {
-          audioElement.pause();
-          audioElement.srcObject = null;
-          delete audioTracksRef.current[userId];
-        }
-      }
-    });
-  }, [currentCall, streams, userId]);
-
-  // Cleanup each audio elements  when the component unmounts
-  useEffect(() => {
-    const cleanupAudioTracks = () => {
-      Object.keys(audioTracksRef.current).forEach((userId) => {
-        const audioElement = audioTracksRef.current[userId];
-        if (audioElement) {
-          audioElement.pause();
-          audioElement.srcObject = null;
-          delete audioTracksRef.current[userId];
-        }
-      });
-    };
-
-    return cleanupAudioTracks;
-  }, []);
-
-  // Force end call when the component unmounts
+  // Force end call when the component unmounts - user navigates away from the /chat/
   useEffect(() => {
     if (!socket || !currentCall) return;
 

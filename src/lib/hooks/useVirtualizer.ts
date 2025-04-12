@@ -1,21 +1,30 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useVirtualizer as useTSVirtualizer } from "@tanstack/react-virtual";
-import { useIsAtBottom, useReverseScroll } from "@/lib/hooks";
+import { useCallback, useEffect, useRef } from "react";
 
-export const useVirtualizer = ({
+import { useIsAtBottom } from "@/lib/hooks/useIsAtBottom";
+import { useReverseScroll } from "@/lib/hooks/useReverseScroll";
+
+interface UseVirtualizerParams<T> {
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
+  fetchNextPage: () => void;
+  data: T[];
+}
+
+export const useVirtualizer = <T extends { _id?: string }>({
   hasNextPage,
   isFetchingNextPage,
   fetchNextPage,
-  messages,
-}) => {
+  data,
+}: UseVirtualizerParams<T>) => {
   const scrollParentRef = useRef<HTMLDivElement | null>(null);
-  const count = useMemo(() => (messages ? messages.length + 1 : 0), [messages]);
   const virtualizer = useTSVirtualizer({
-    count,
+    count: data.length + 1,
     getScrollElement: () => scrollParentRef?.current,
     estimateSize: () => 64,
-    overscan: 10,
-    getItemKey: (index) => messages?.[index]?._id || index,
+    overscan: 15,
+    getItemKey: (index) =>
+      index === 0 ? "typingIndicator" : data[index - 1]?._id || index,
   });
 
   useReverseScroll(scrollParentRef);
@@ -40,14 +49,14 @@ export const useVirtualizer = ({
     setIsAtBottom,
   ]);
 
-  const getMessageContent = useCallback(
-    (virtualIndex: number) => messages?.[virtualIndex - 1],
-    [messages]
+  const getRowContent = useCallback(
+    (virtualIndex: number) => data[virtualIndex - 1],
+    [data]
   );
 
   return {
     scrollParentRef,
     virtualizer,
-    getMessageContent,
+    getRowContent,
   };
 };

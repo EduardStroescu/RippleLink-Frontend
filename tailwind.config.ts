@@ -17,6 +17,7 @@ export default {
     },
     extend: {
       colors: {
+        default: "hsl(var(--default))",
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",

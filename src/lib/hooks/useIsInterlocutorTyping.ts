@@ -1,21 +1,15 @@
-import { useCallback, useEffect, useState } from "react";
-import { useSocketSubscription } from "./useSocketSubscription";
-import { PublicUser } from "@/types";
+import { useCallback, useState } from "react";
+
+import { useSocketSubscription } from "@/lib/hooks/useSocketSubscription";
+import { PublicUser } from "@/types/user";
 
 export function useIsInterlocutorTyping({
   interlocutors,
-  params,
 }: {
   interlocutors: PublicUser[] | undefined;
-  params;
 }) {
   const [interlocutorIsTyping, setInterlocutorIsTyping] =
     useState<boolean>(false);
-
-  useEffect(() => {
-    // State doesn't reset as Tanstack Router reuses components nested under the same route - see dynamic routes
-    setInterlocutorIsTyping(false);
-  }, [params.chatId]);
 
   const handleInterlocutorTyping = useCallback(
     ({

@@ -1,86 +1,83 @@
-import { useState } from "react";
 import { useParams } from "@tanstack/react-router";
-import { useUserTyping } from "./useUserTyping";
-import { Message, PublicUser } from "@/types";
-import { useSetMessagesCache } from "./useSetMessagesCache";
-import { create } from "mutative";
+import { useCallback, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { useUserStore } from "@/stores/useUserStore";
-import { useAppStore } from "@/stores/useAppStore";
+
+import { useUserTyping } from "@/lib/hooks/useUserTyping";
+import { chunkFilesAndUpload } from "@/lib/utils";
+import { useAppStoreActions } from "@/stores/useAppStore";
+import {
+  FileMessage,
+  Message,
+  PartialMessage,
+  TextMessage,
+} from "@/types/message";
+
+export type ContentPreview = {
+  content: string;
+  fileBlob: Blob;
+  name: string;
+  type: "file" | "image" | "video" | "audio";
+}[];
+export type ContentPreviewState = ContentPreview | null;
+export type FileType = ContentPreview[number]["type"];
 
 export function useCreateMessage() {
-  const socket = useAppStore((state) => state.socket);
-  const user = useUserStore((state) => state.user);
+  const { socketEmit } = useAppStoreActions();
 
-  const params = useParams({ from: "/chat/$chatId" });
-  const [message, setMessage] = useState<Message["content"]>("");
+  const chatId = useParams({
+    from: "/chat/$chatId",
+    select: (params) => params.chatId,
+  });
+  const [message, setMessage] = useState<TextMessage["content"]>("");
   const [messageType, setMessageType] = useState<Message["type"]>("text");
   const [gif, setGif] = useState<string | null>(null);
-  const [contentPreview, setContentPreview] = useState<{
-    content: string | null;
-    name: string | null;
-  } | null>(null);
+  const [contentPreview, setContentPreview] =
+    useState<ContentPreviewState>(null);
 
-  const setMessagesCache = useSetMessagesCache(params.chatId);
+  useUserTyping(chatId, message);
 
-  useUserTyping(params, message);
+  const handleSubmitMessage = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
 
-  const handleSubmitMessage = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!user) return;
-    if (gif) {
-      const payload = { room: params.chatId, message: gif, type: "text" };
-      socket?.emit("createMessage", payload);
-      setGif(null);
-    } else if (contentPreview?.content && messageType !== "text") {
-      const payload = {
-        room: params.chatId,
-        message: contentPreview.content,
+      const payload: PartialMessage = {
+        chatId,
         type: messageType,
-        tempId: uuidv4(),
       };
-      socket?.emit("createMessage", payload);
-      setContentPreview(null);
 
-      // Create a temporary message to display the preview
-      const tempMessage = {
-        _id: payload.tempId,
-        chatId: payload.room,
-        content: payload.message,
-        type: payload.type,
-        senderId: {
-          _id: user?._id,
-          displayName: user?.displayName,
-        } as PublicUser,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      } as Message;
-      setMessagesCache((prevData) => {
-        if (!prevData) {
+      if (gif) {
+        payload.content = gif;
+        socketEmit("createMessage", payload);
+        setGif(null);
+
+        // For all types of files
+      } else if (contentPreview?.length && messageType !== "text") {
+        payload.content = contentPreview.map((content) => {
+          URL.revokeObjectURL(content.content);
           return {
-            pages: [{ messages: [tempMessage], nextCursor: null }],
-            pageParams: [],
+            type: content.type,
+            content: "placeholder",
+            fileId: uuidv4(),
           };
-        }
-
-        return create(prevData, (draft) => {
-          // Add new message to the end of the latest page's messages
-          if (draft.pages.length > 0) {
-            draft.pages[0].messages.push(tempMessage);
-          } else {
-            // No pages exist, initialize with the new message
-            draft.pages.push({ messages: [tempMessage], nextCursor: null });
-          }
         });
-      });
-    } else {
-      if (message.length === 0) return;
-
-      const payload = { room: params.chatId, message, type: "text" };
-      socket?.emit("createMessage", payload);
-      setMessage("");
-    }
-  };
+        socketEmit(
+          "createMessage",
+          payload,
+          (response: { message: FileMessage }) => {
+            chunkFilesAndUpload(response.message, contentPreview);
+          }
+        );
+        setContentPreview(null);
+      } else {
+        if (message.length === 0) return;
+        payload.content = message;
+        socketEmit("createMessage", payload);
+        setMessage("");
+      }
+      setMessageType("text");
+    },
+    [chatId, contentPreview, socketEmit, gif, message, messageType]
+  );
 
   return {
     handleSubmitMessage,
